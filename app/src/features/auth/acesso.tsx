@@ -22,13 +22,15 @@ const Ctx = createContext<Valor | null>(null);
  * (import.meta.env.DEV é false).
  */
 function modoDemo(): boolean {
-  if (!import.meta.env.DEV) return false;
-  try {
-    if (new URLSearchParams(location.search).get("demo") === "1") sessionStorage.setItem("imobinsta-demo", "1");
-    return sessionStorage.getItem("imobinsta-demo") === "1";
-  } catch {
-    return false;
+  if (import.meta.env.DEV) {
+    try {
+      if (new URLSearchParams(location.search).get("demo") === "1") sessionStorage.setItem("imobinsta-demo", "1");
+      return sessionStorage.getItem("imobinsta-demo") === "1";
+    } catch {
+      return false;
+    }
   }
+  return false;
 }
 
 const CONTA_DEMO: Conta = { conta_id: "00000000-0000-4000-a000-000000000001", nome: "WSA Sistemas de IA", ig_username: "wsasistemas.ia", papel: "dono" };
@@ -76,7 +78,7 @@ export function AcessoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const sair = useCallback(async () => {
-    if (demo) {
+    if (import.meta.env.DEV && demo) {
       try { sessionStorage.removeItem("imobinsta-demo"); } catch { /* sem storage */ }
       location.href = "/entrar";
       return;
