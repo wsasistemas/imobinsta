@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   Estúdio imobinsta — design system Apple HIG (mesmos tokens do mockup v2)
+   Escuro é o padrão; <html data-theme="light"> troca para o claro.
+   ===================================================================== */
+
+@custom-variant light (&:where([data-theme=light], [data-theme=light] *));
+
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, "Segoe UI", system-ui, sans-serif;
+
+  --blue: #0a84ff; --green: #30d158; --indigo: #5e5ce6; --orange: #ff9f0a; --pink: #ff375f;
+  --purple: #bf5af2; --red: #ff453a; --teal: #64d2ff; --yellow: #ffd60a; --gray: #8e8e93;
+  --g3: #48484a;
+  --bg: #000; --bg2: #1c1c1e; --bg3: #2c2c2e;
+  --label: #fff; --label2: rgba(235, 235, 245, 0.6); --label3: rgba(235, 235, 245, 0.3);
+  --fill: rgba(120, 120, 128, 0.24); --fill2: rgba(120, 120, 128, 0.16); --fill3: rgba(118, 118, 128, 0.12);
+  --sep: rgba(84, 84, 88, 0.6);
+  --tint-bg: rgba(10, 132, 255, 0.18);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --seg-on: #3a3a3c;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --blue: #007aff; --green: #34c759; --indigo: #5856d6; --orange: #ff9500; --pink: #ff2d55;
+  --purple: #af52de; --red: #ff3b30; --teal: #5ac8fa; --yellow: #ffcc00;
+  --g3: #c7c7cc;
+  --bg: #f2f2f7; --bg2: #fff; --bg3: #f2f2f7;
+  --label: #000; --label2: rgba(60, 60, 67, 0.6); --label3: rgba(60, 60, 67, 0.3);
+  --fill: rgba(120, 120, 128, 0.2); --fill2: rgba(120, 120, 128, 0.16); --fill3: rgba(118, 118, 128, 0.12);
+  --sep: rgba(60, 60, 67, 0.29);
+  --tint-bg: rgba(0, 122, 255, 0.12);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --seg-on: #fff;
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: var(--font);
+  --color-blue: var(--blue);
+  --color-green: var(--green);
+  --color-indigo: var(--indigo);
+  --color-orange: var(--orange);
+  --color-pink: var(--pink);
+  --color-purple: var(--purple);
+  --color-red: var(--red);
+  --color-teal: var(--teal);
+  --color-yellow: var(--yellow);
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-bg3: var(--bg3);
+  --color-label: var(--label);
+  --color-label2: var(--label2);
+  --color-label3: var(--label3);
+  --color-fill: var(--fill);
+  --color-fill2: var(--fill2);
+  --color-fill3: var(--fill3);
+  --color-sep: var(--sep);
+  --color-tint: var(--tint-bg);
+  --color-seg-on: var(--seg-on);
+  --shadow-hig: var(--shadow);
+
+  /* Escala de texto iOS */
+  --text-cap2: 11px; --text-cap1: 12px; --text-foot: 13px; --text-sub: 15px; --text-body: 17px;
+  --text-t3: 20px; --text-t2: 22px; --text-t1: 28px; --text-lt: 34px; --text-disp: 56px;
+
+  /* Raios concêntricos */
+  --radius-hig-sm: 8px; --radius-hig-md: 12px; --radius-hig-lg: 16px; --radius-hig-xl: 20px; --radius-hig-2xl: 24px;
+
+  /* Curvas e durações da Apple */
+  --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-apple-out: cubic-bezier(0, 0, 0.58, 1);
+}
+
+@layer base {
+  * { border-color: var(--sep); }
+  html, body, #root { min-height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--label);
+    font-size: 15px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.45); border-radius: 12px; }
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.022em; line-height: 1.15; }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+}
+
+@layer components {
+  /* Campo de texto HIG: 44 pt, fundo de preenchimento, anel de foco */
+  .campo {
+    width: 100%; min-height: 44px; padding: 11px 14px; border-radius: 12px;
+    background: var(--fill3); border: 1px solid transparent; color: var(--label); font-size: 15px;
+    transition: box-shadow 200ms var(--ease-apple), border-color 200ms;
+  }
+  .campo:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.25); }
+  .campo::placeholder { color: var(--label3); }
+
+  .pagina-entra { animation: entra 300ms cubic-bezier(0, 0, 0.58, 1); }
+}
+
+@keyframes entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -5,3 +5,4 @@ dist/
 data/raw/
 *.log
 .DS_Store
+.playwright-mcp/

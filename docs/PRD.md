@@ -4,7 +4,7 @@
 **Conta analisada:** Instagram @wsasistemas.ia
 **Integração:** Chatfyre via MCP (`https://chatfyre.com/api/mcp`)
 **Dono:** Wagner Antunes
-**Status:** Rascunho v0.1 — out/2026
+**Status:** Rascunho v0.1, out/2026. **Fase 0 apenas.** O produto continua em `docs/PRD-v2-estudio.md`.
 
 ---
 
@@ -32,7 +32,7 @@ conteúdo pode estar indo para o que menos converte.
 
 | Item | Motivo |
 |---|---|
-| Publicar posts, responder comentários ou enviar DMs | O projeto é de análise; escrita na conta traz risco sem ganho na v1 |
+| Publicar posts e responder comentários/DMs manualmente | O projeto é de análise. **Exceção (25/10/2026):** automações de comentário→DM do Chatfyre para ganhar seguidores, criadas pausadas e ativadas só com OK do Wagner |
 | Análise de concorrentes / perfis de terceiros | A Graph API só expõe insights da própria conta; scraping fere os termos da Meta |
 | Multi-conta / SaaS para clientes | Só depois de validar o valor na conta própria (ver P2) |
 | Anúncios pagos (Meta Ads) | Outra API e outro problema; pode virar módulo separado |
@@ -130,10 +130,10 @@ Usar **mediana** nas comparações por grupo, para que um post viral não distor
 
 | # | Pergunta | Quem responde | Bloqueia? |
 |---|---|---|---|
-| 1 | O Chatfyre usa OAuth ou chave de API? | Chatfyre / teste | Sim |
-| 2 | Quais ferramentas e métricas o Chatfyre expõe (insights de alcance, Reels, stories)? | Prompt 01 | Sim |
-| 3 | @wsasistemas.ia já é conta Business ou Creator ligada a uma página do Facebook? | Wagner | Sim |
-| 4 | Há limite de chamadas ou custo por uso no Chatfyre? | Chatfyre | Não |
+| 1 | O Chatfyre usa OAuth ou chave de API? **Respondida (25/10/2026): OAuth** — `/.well-known/oauth-protected-resource` aponta servidor de autorização `https://chatfyre.com`, token Bearer no header, escopos `automacoes:ler` e `automacoes:escrever`. `CHATFYRE_API_KEY` não é necessária. | Chatfyre / teste | Não (resolvida) |
+| 2 | Quais ferramentas e métricas o Chatfyre expõe (insights de alcance, Reels, stories)? **Parcial (25/10/2026):** 7 ferramentas, todas de leitura (ver `docs/chatfyre-tools.md`). Por post: views, alcance, curtidas, comentários, compartilhamentos, salvamentos. Não declara seguidores, insights da conta nem stories. Retorno real em 25/10: posts com tipo/data/legenda vêm; **métricas por post dão IG API 403 code=10** (falta permissão de insights no app do Chatfyre). | Prompt 01 | Sim |
+| 3 | @wsasistemas.ia já é conta Business ou Creator ligada a uma página do Facebook? **Parcial (25/10/2026):** conectada ao Chatfyre (`ig_user_id` 17841419660248771) e a API devolve a mídia, o que exige conta profissional; ligação com página do Facebook não verificada. | Wagner | Não |
+| 4 | Há limite de chamadas ou custo por uso no Chatfyre? **Respondida (25/10/2026):** o acesso via MCP exige plano pago (Solo, Pro ou Enterprise); sem assinatura toda chamada é recusada (assinatura ativada em 25/10). Limite de chamadas: desconhecido. | Chatfyre | Não (resolvida) |
 | 5 | O Chatfyre oferece API REST para o app da Fase 1, ou só MCP? | Chatfyre | Não (bloqueia Fase 1) |
 | 6 | Por quanto tempo guardar os JSON brutos (LGPD, dados de comentários de terceiros)? | Wagner | Não |
 

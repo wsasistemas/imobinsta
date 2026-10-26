@@ -2,7 +2,10 @@
   "mcpServers": {
     "chatfyre": {
       "type": "http",
-      "url": "https://chatfyre.com/api/mcp"
+      "url": "https://chatfyre.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${CHATFYRE_TOKEN}"
+      }
     }
   }
 }

@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estúdio imobinsta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+  /* =====================================================================
+     Estúdio imobinsta — Design System (Apple HIG)
+     Tokens: tipografia SF, cores de sistema (dark/light), grade de 8 pt,
+     raios concêntricos, curvas e durações da Apple.
+     ===================================================================== */
+  :root{
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",Inter,"Segoe UI",system-ui,sans-serif;
+    --t-cap2:11px;--t-cap1:12px;--t-foot:13px;--t-sub:15px;--t-body:17px;--t-t3:20px;--t-t2:22px;--t-t1:28px;--t-lt:34px;--t-disp:56px;
+    --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;--s12:48px;
+    --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-2xl:24px;--r-full:9999px;
+    --ease:cubic-bezier(.25,.1,.25,1);--ease-out:cubic-bezier(0,0,.58,1);--spring:cubic-bezier(.175,.885,.32,1.275);
+    --d-in:100ms;--d-fast:200ms;--d-norm:300ms;
+
+    /* Dark (padrão do estúdio) */
+    --blue:#0A84FF;--green:#30D158;--indigo:#5E5CE6;--orange:#FF9F0A;--pink:#FF375F;--purple:#BF5AF2;--red:#FF453A;--teal:#64D2FF;--yellow:#FFD60A;--mint:#63E6E2;--gray:#8E8E93;
+    --g2:#636366;--g3:#48484A;--g4:#3A3A3C;--g5:#2C2C2E;--g6:#1C1C1E;
+    --bg:#000;--bg2:#1C1C1E;--bg3:#2C2C2E;--elev:#1C1C1E;
+    --label:#fff;--label2:rgba(235,235,245,.6);--label3:rgba(235,235,245,.3);
+    --fill:rgba(120,120,128,.24);--fill2:rgba(120,120,128,.16);--fill3:rgba(118,118,128,.12);
+    --sep:rgba(84,84,88,.6);--sep-o:#38383A;
+    --tint:var(--blue);--tint-bg:rgba(10,132,255,.18);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+  :root[data-theme=light]{
+    --blue:#007AFF;--green:#34C759;--indigo:#5856D6;--orange:#FF9500;--pink:#FF2D55;--purple:#AF52DE;--red:#FF3B30;--teal:#5AC8FA;--yellow:#FFCC00;--mint:#00C7BE;
+    --g2:#AEAEB2;--g3:#C7C7CC;--g4:#D1D1D6;--g5:#E5E5EA;--g6:#F2F2F7;
+    --bg:#F2F2F7;--bg2:#FFFFFF;--bg3:#F2F2F7;--elev:#FFFFFF;
+    --label:#000;--label2:rgba(60,60,67,.6);--label3:rgba(60,60,67,.3);
+    --fill:rgba(120,120,128,.2);--fill2:rgba(120,120,128,.16);--fill3:rgba(118,118,128,.12);
+    --sep:rgba(60,60,67,.29);--sep-o:#C6C6C8;
+    --tint-bg:rgba(0,122,255,.12);
+    --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.08);
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--label);display:flex;min-height:100vh;font-size:var(--t-sub);line-height:1.4;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  :focus-visible{outline:none;box-shadow:0 0 0 4px rgba(10,132,255,.45);border-radius:var(--r-md)}
+  input,textarea,select{font:inherit;font-size:var(--t-sub);color:var(--label);background:var(--fill3);border:1px solid transparent;border-radius:var(--r-md);padding:11px 14px;min-height:44px;width:100%;outline:none;transition:box-shadow var(--d-fast) var(--ease),border-color var(--d-fast)}
+  textarea{resize:vertical;min-height:110px;line-height:1.5}
+  input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(10,132,255,.25)}
+  svg{width:20px;height:20px;flex:none}
+  .mut{color:var(--label2)}
+  .row{display:flex;align-items:center;gap:var(--s3)}
+
+  /* ---------- Ícones em bloco (estilo Ajustes do iOS) ---------- */
+  .tile{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;color:#fff;flex:none;background:var(--gray);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12)}
+  .tile svg{width:18px;height:18px;stroke-width:2}
+  .tile.lg{width:52px;height:52px;border-radius:12px}.tile.lg svg{width:28px;height:28px}
+  .tile.xl{width:72px;height:72px;border-radius:16px}.tile.xl svg{width:38px;height:38px}
+  .c-blue{background:linear-gradient(180deg,#3B9BFF,var(--blue))}
+  .c-orange{background:linear-gradient(180deg,#FFB340,var(--orange))}
+  .c-teal{background:linear-gradient(180deg,#7ADBFF,#32ADE6)}
+  .c-red{background:linear-gradient(180deg,#FF6961,var(--red))}
+  .c-purple{background:linear-gradient(180deg,#D17BF6,var(--purple))}
+  .c-indigo{background:linear-gradient(180deg,#7D7AFF,var(--indigo))}
+  .c-green{background:linear-gradient(180deg,#5BE07D,#28B44A)}
+  .c-pink{background:linear-gradient(180deg,#FF6482,var(--pink))}
+  .c-gray{background:linear-gradient(180deg,#A1A1A6,#7C7C80)}
+  .c-yellow{background:linear-gradient(180deg,#FFE066,#F5B800);color:#3a2a00}
+  .c-ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285AEB 90%)}
+
+  /* ---------- Sidebar (lista agrupada, HIG) ---------- */
+  aside{width:280px;background:var(--bg2);border-right:.5px solid var(--sep);padding:var(--s4) var(--s3);display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow:auto;flex:none}
+  .acc{display:flex;align-items:center;gap:var(--s3);padding:var(--s1) var(--s2) var(--s4)}
+  .acc .av{width:40px;height:40px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;color:#0A4FD6;font-size:12px;box-shadow:0 0 0 .5px var(--sep)}
+  .acc b{display:block;font-size:var(--t-sub);font-weight:600}.acc small{color:var(--label2);font-size:var(--t-foot)}
+  .btn-criar{background:var(--blue);color:#fff;border-radius:var(--r-full);min-height:44px;padding:0 var(--s5);display:flex;gap:var(--s2);align-items:center;justify-content:center;font-weight:600;font-size:var(--t-sub);margin-bottom:var(--s3);transition:transform var(--d-in) var(--ease-out),filter var(--d-fast)}
+  .btn-criar:hover{filter:brightness(1.08)}.btn-criar:active{transform:scale(.97)}
+  .nav{display:flex;align-items:center;gap:var(--s3);min-height:44px;padding:0 var(--s2);border-radius:10px;color:var(--label);font-weight:500;font-size:var(--t-sub);width:100%;text-align:left;transition:background var(--d-fast) var(--ease)}
+  .nav:hover{background:var(--fill3)}
+  .nav.on{background:var(--tint-bg)}
+  .nav.on .lbl-t{color:var(--blue);font-weight:600}
+  .nav .tag{margin-left:auto;font-size:var(--t-cap2);font-weight:600;background:var(--fill2);padding:2px 8px;border-radius:var(--r-full);color:var(--label2)}
+  .nav .tag.free{background:rgba(48,209,88,.18);color:var(--green)}
+  .grp{font-size:var(--t-foot);color:var(--label2);padding:var(--s4) var(--s2) var(--s1);font-weight:400;text-transform:none}
+  aside .me{margin-top:auto;display:flex;gap:var(--s3);align-items:center;padding:var(--s4) var(--s2) 0;border-top:.5px solid var(--sep)}
+  aside .me .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#FF9F0A,#FF375F)}
+  aside .me b{font-size:var(--t-sub);font-weight:600}aside .me small{color:var(--label2);display:block;font-size:var(--t-foot)}
+
+  /* ---------- Barra superior ---------- */
+  main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{position:sticky;top:0;z-index:5;background:var(--bg2);border-bottom:.5px solid var(--sep);padding:0 var(--s8);min-height:52px;display:flex;align-items:center;gap:var(--s3);font-size:var(--t-foot);color:var(--label2)}
+  .topbar b{color:var(--label);font-weight:600}
+  .topbar>*{white-space:nowrap}.topbar .desc{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .topbar .pill{border-radius:var(--r-full);padding:3px 10px;font-weight:600;font-size:var(--t-cap2);letter-spacing:.02em;background:rgba(48,209,88,.18);color:var(--green)}
+  .topbar .sp{margin-left:auto}
+  .seg{display:inline-flex;background:var(--fill3);border-radius:9px;padding:2px}
+  .seg button{min-height:28px;padding:0 12px;border-radius:7px;font-size:var(--t-foot);font-weight:500;color:var(--label)}
+  .seg button.on{background:var(--bg3);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  :root[data-theme=light] .seg button.on{background:#fff}
+
+  /* ---------- Página ---------- */
+  .page{display:none;padding:var(--s8) var(--s10) var(--s12);max-width:1480px;width:100%}
+  .page.on{display:block;animation:in var(--d-norm) var(--ease-out)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1{font-size:var(--t-lt);font-weight:700;letter-spacing:-.022em;line-height:1.15}
+  h2{font-size:var(--t-t2);font-weight:700;letter-spacing:-.02em}
+  h3{font-size:var(--t-t3);font-weight:600;letter-spacing:-.015em}
+  .sub{color:var(--label2);margin-top:var(--s1);font-size:var(--t-sub)}
+  .head{display:flex;align-items:center;gap:var(--s4);margin-bottom:var(--s8)}
+  .head .act{margin-left:auto;display:flex;gap:var(--s3)}
+
+  /* Botões: cápsula, 44 pt, feedback de toque */
+  .b{border-radius:var(--r-full);min-height:44px;padding:0 var(--s5);display:inline-flex;align-items:center;gap:var(--s2);font-weight:600;font-size:var(--t-sub);transition:transform var(--d-in) var(--ease-out),filter var(--d-fast),background var(--d-fast)}
+  .b:active{transform:scale(.97)}
+  .b svg{width:18px;height:18px}
+  .b.p{background:var(--blue);color:#fff}.b.p:hover{filter:brightness(1.08)}
+  .b.o{background:var(--fill2);color:var(--blue)}.b.o:hover{background:var(--fill)}
+  .b.g{background:var(--green);color:#fff}
+  .b.v{background:var(--indigo);color:#fff}
+
+  .card{background:var(--bg2);border-radius:var(--r-xl);padding:var(--s6);box-shadow:var(--shadow)}
+  .grid{display:grid;gap:var(--s4)}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+
+  /* Controle segmentado (tabs) */
+  .tabs{display:inline-flex;background:var(--fill3);border-radius:10px;padding:2px;gap:0;margin-bottom:var(--s6)}
+  .tabs button{min-height:32px;padding:0 var(--s4);border-radius:8px;color:var(--label);font-weight:500;font-size:var(--t-foot)}
+  .tabs button.on{background:var(--bg3);box-shadow:0 1px 3px rgba(0,0,0,.25);font-weight:600}
+  :root[data-theme=light] .tabs button.on{background:#fff}
+  .tabs .n{color:var(--label2);margin-left:6px;font-weight:400}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:var(--t-cap1);font-weight:600;padding:3px 9px;border-radius:var(--r-full)}
+  .badge svg{width:13px;height:13px}
+  .bd-ig{background:rgba(255,55,95,.16);color:var(--pink)}
+  .bd-ok{background:rgba(48,209,88,.16);color:var(--green)}
+  .bd-wait{background:rgba(255,159,10,.16);color:var(--orange)}
+  .bd-off{background:var(--fill2);color:var(--label2)}
+  .bd-blue{background:var(--tint-bg);color:var(--blue)}
+  .note{border-radius:var(--r-lg);padding:var(--s3) var(--s4);color:var(--label2);font-size:var(--t-foot);display:flex;gap:var(--s3);align-items:flex-start;background:var(--fill3);line-height:1.5}
+  .note b{color:var(--label)}
+  .note svg{color:var(--orange);width:18px;height:18px;margin-top:1px}
+
+  /* ---------- Explorar ---------- */
+  .hero{border-radius:28px;background:radial-gradient(110% 130% at 88% 25%,#2E5BFF 0%,#1A1F5C 42%,#0B0B14 78%);color:#fff;padding:var(--s12);display:grid;grid-template-columns:1.1fr 1fr;align-items:center;gap:var(--s8);min-height:460px;overflow:hidden;box-shadow:var(--shadow)}
+  .hero h1{font-size:var(--t-disp);letter-spacing:-.03em;line-height:1.05;color:#fff}
+  .hero .sub{font-size:var(--t-body);max-width:460px;line-height:1.5;color:rgba(255,255,255,.72)}
+  .hero .b.o{background:rgba(255,255,255,.14);color:#fff}
+  .phones{position:relative;height:380px}
+  .phone{position:absolute;width:214px;height:380px;border-radius:34px;border:6px solid #111;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55);color:#fff}
+  .phone.a{left:8%;top:28px;transform:rotate(-6deg);opacity:.8}
+  .phone.b{left:38%;top:0}
+  .htabs{display:flex;gap:var(--s6);margin-top:var(--s8)}
+  .htabs div{width:170px;border-bottom:3px solid rgba(255,255,255,.18);padding-bottom:var(--s2);font-weight:600;color:rgba(255,255,255,.55);font-size:var(--t-sub)}
+  .htabs div.on{border-color:#fff;color:#fff}
+  .short{display:flex;flex-direction:column;gap:var(--s3);transition:transform var(--d-fast) var(--ease)}
+  .short:hover{transform:translateY(-2px)}
+  .short p{font-size:var(--t-foot)}
+
+  /* ---------- Posts ---------- */
+  .post{border-radius:var(--r-xl);overflow:hidden;position:relative;aspect-ratio:4/5;cursor:pointer;color:#fff;box-shadow:var(--shadow);transition:transform var(--d-fast) var(--ease)}
+  .post:hover{transform:scale(1.015)}
+  .post .art{position:absolute;inset:0;padding:var(--s5);display:flex;flex-direction:column}
+  .post .art h4{font-size:22px;font-weight:900;line-height:1.05;text-transform:uppercase;letter-spacing:-.01em}
+  .post .art .logo{font-weight:800;font-size:11px;opacity:.85;margin-bottom:var(--s2);letter-spacing:.04em}
+  .post .ov{position:absolute;inset:auto 0 0 0;padding:var(--s4);background:linear-gradient(transparent,rgba(0,0,0,.85))}
+  .post .ov b{display:block;font-size:var(--t-sub);font-weight:600}
+  .post .ov small{color:rgba(255,255,255,.7);font-size:var(--t-foot)}
+  .post .net{position:absolute;top:var(--s3);right:var(--s3);background:rgba(0,0,0,.45);color:#fff;backdrop-filter:none}
+  .post .ratio{position:absolute;bottom:var(--s3);right:var(--s3);background:rgba(0,0,0,.55);border-radius:var(--r-sm);padding:2px 8px;font-size:var(--t-cap1);font-weight:600}
+  .t-blue{background:linear-gradient(160deg,#0B2A6B,#0A58D6 60%,#05B4FF)}
+  .t-dark{background:linear-gradient(160deg,#0D1B2A,#111 60%,#1E3A8A)}
+  .t-choc{background:linear-gradient(160deg,#2A1308,#5B2A12 55%,#D97706)}
+  .t-pink{background:linear-gradient(160deg,#4A044E,#BE185D 60%,#F472B6)}
+  .t-green{background:linear-gradient(160deg,#052E16,#166534 60%,#22C55E)}
+  .t-purple{background:linear-gradient(160deg,#1E1B4B,#4C1D95 60%,#8B5CF6)}
+
+  /* ---------- Criar ---------- */
+  .ctype{background:var(--bg2);border-radius:var(--r-2xl);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:transform var(--d-fast) var(--ease),box-shadow var(--d-fast)}
+  .ctype:hover{transform:translateY(-3px);box-shadow:0 0 0 2px var(--blue),var(--shadow)}
+  .ctype:active{transform:scale(.98)}
+  .ctype .ill{height:170px;display:grid;place-items:center;background:var(--fill3)}
+  .ctype .bd{padding:var(--s5) var(--s6) var(--s6)}
+  .ctype h3{margin-bottom:var(--s2)}
+  .ctype p{color:var(--label2);font-size:var(--t-foot);line-height:1.5}
+  .ctype .nets{display:flex;gap:var(--s3);margin-top:var(--s4);color:var(--label2)}
+  .ctype .nets svg{width:18px;height:18px}
+  .ctype .cost{margin-top:var(--s3)}
+
+  .steps{display:flex;justify-content:center;gap:var(--s2);margin:0 0 var(--s8);flex-wrap:wrap}
+  .steps span{display:flex;align-items:center;gap:var(--s2);color:var(--label2);font-weight:500;font-size:var(--t-foot);padding:6px 14px;border-radius:var(--r-full);background:var(--fill3)}
+  .steps span::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--label3)}
+  .steps span.on{color:#fff;background:var(--blue)}.steps span.on::before{background:#fff}
+  .steps span.ok{color:var(--green)}.steps span.ok::before{background:var(--green)}
+  .center{text-align:center;max-width:820px;margin:0 auto var(--s8)}
+  .center h1{font-size:40px}
+  .center .sub{font-size:var(--t-body);line-height:1.5}
+  .chips{display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s5)}
+  .chip{min-height:36px;padding:0 var(--s4);border-radius:var(--r-full);background:var(--fill3);display:inline-flex;gap:var(--s2);align-items:center;font-weight:500;font-size:var(--t-foot);transition:background var(--d-fast)}
+  .chip svg{width:16px;height:16px}
+  .chip:hover{background:var(--fill2)}
+  .chip.on{background:var(--label);color:var(--bg)}
+  .chip.dis{opacity:.4}
+  .fmt{border-radius:var(--r-2xl);aspect-ratio:3/3.6;padding:var(--s5);display:flex;flex-direction:column;cursor:pointer;position:relative;color:#fff;transition:transform var(--d-fast) var(--ease)}
+  .fmt:hover{transform:translateY(-3px)}
+  .fmt.on{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--blue)}
+  .fmt .top{display:flex;justify-content:space-between;align-items:center}
+  .fmt .hot{background:rgba(0,0,0,.28);border-radius:var(--r-full);padding:3px 10px;font-size:var(--t-cap1);font-weight:700}
+  .fmt .shape{margin:auto;width:64px;height:84px;border:2.5px solid rgba(255,255,255,.55);border-radius:14px}
+  .fmt b{font-size:var(--t-body);font-weight:700}.fmt small{opacity:.85;font-size:var(--t-foot)}
+  .f1{background:linear-gradient(160deg,#FF375F,#BF5AF2)}.f2{background:linear-gradient(160deg,#BF5AF2,#5E5CE6)}
+  .f3{background:linear-gradient(160deg,#FF453A,#FF9F0A)}.f4{background:linear-gradient(160deg,#FF2D92,#FF375F)}
+  .f5{background:linear-gradient(160deg,#0A84FF,#64D2FF)}
+  .opt{background:var(--bg2);border-radius:var(--r-xl);padding:var(--s6);cursor:pointer;box-shadow:var(--shadow);transition:box-shadow var(--d-fast),transform var(--d-in) var(--ease-out)}
+  .opt:active{transform:scale(.98)}
+  .opt.on{box-shadow:0 0 0 2px var(--blue),var(--shadow)}
+  .opt .oi{margin-bottom:var(--s4)}
+  .opt h3{margin-bottom:var(--s1)}
+  .opt p{color:var(--label2);line-height:1.5;font-size:var(--t-foot)}
+  .lbl{color:var(--label2);margin:var(--s8) 0 var(--s3);font-weight:400;font-size:var(--t-foot);text-transform:uppercase;letter-spacing:.02em}
+  .lbl small{text-transform:none}
+
+  /* ---------- Prompt ---------- */
+  .src{background:var(--bg2);border-radius:var(--r-xl);padding:var(--s6);box-shadow:var(--shadow)}
+  .src .ex{border-left:3px solid var(--blue);padding-left:var(--s4);margin-top:var(--s4);color:var(--label2);font-size:var(--t-foot)}
+  .src .ex b{color:var(--label)}
+  .prompt{background:var(--bg2);border-radius:var(--r-lg);padding:var(--s5);line-height:1.7;max-height:300px;overflow:auto;font-size:var(--t-sub);box-shadow:inset 0 0 0 .5px var(--sep)}
+  .prompt b{color:var(--blue)}
+  /* Toggle iOS 51×31 */
+  .switch{width:51px;height:31px;border-radius:var(--r-full);background:var(--green);position:relative;display:inline-block;flex:none;transition:background var(--d-fast)}
+  .switch::after{content:"";position:absolute;right:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06)}
+  .switch.off{background:var(--fill)}.switch.off::after{right:auto;left:2px}
+
+  /* ---------- Editor ---------- */
+  .editor{display:grid;grid-template-columns:104px 1fr 400px;border-radius:var(--r-2xl);overflow:hidden;min-height:720px;background:var(--bg2);box-shadow:var(--shadow)}
+  .slides{border-right:.5px solid var(--sep);padding:var(--s3);display:flex;flex-direction:column;gap:var(--s3);background:var(--bg2)}
+  .slides .s{aspect-ratio:4/5;border-radius:var(--r-sm);font-size:11px;font-weight:700;padding:6px;display:flex;align-items:flex-end;color:#fff;box-shadow:0 0 0 .5px var(--sep)}
+  .slides .s.on{box-shadow:0 0 0 2px var(--bg2),0 0 0 4px var(--blue)}
+  .slides .add{aspect-ratio:4/5;border-radius:var(--r-sm);border:1.5px dashed var(--g3);display:grid;place-items:center;color:var(--label2)}
+  .canvas{display:grid;place-items:center;padding:var(--s8);position:relative;background:var(--bg)}
+  .canvas .save{position:absolute;top:var(--s4);left:50%;transform:translateX(-50%);color:var(--green);font-size:var(--t-foot);display:flex;gap:6px;align-items:center}
+  .art-big{width:420px;aspect-ratio:4/5;border-radius:var(--r-sm);padding:28px 26px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;position:relative;overflow:hidden;color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+  .art-big .brand{font-weight:900;letter-spacing:.02em;font-size:20px}
+  .art-big .brand span{font-size:12px;display:block;letter-spacing:.2em}
+  .art-big h3{font-size:25px;font-weight:900;line-height:1.08;text-transform:uppercase}
+  .art-big h3 em{color:#22D3EE;font-style:normal}
+  .eco{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+  .eco div{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:8px 4px;font-size:10px;font-weight:700}
+  .eco svg{width:16px;height:16px;display:block;margin:0 auto 4px;color:#7DD3FC}
+  .art-big ul{list-style:none;text-align:left;font-size:12px;width:100%;display:grid;gap:5px}
+  .art-big li{border-left:3px solid #22D3EE;padding-left:9px}
+  .art-big .cta{border:2px solid #22D3EE;border-radius:12px;padding:10px 14px;font-weight:800;font-size:12px;margin-top:auto;box-shadow:0 0 20px rgba(34,211,238,.35)}
+  .chat{border-left:.5px solid var(--sep);display:flex;flex-direction:column;background:var(--bg2)}
+  .chat .ch{padding:var(--s4);border-bottom:.5px solid var(--sep);display:flex;gap:var(--s3);align-items:center}
+  .chat .ed{padding:var(--s2) var(--s4);color:var(--blue);background:var(--tint-bg);font-size:var(--t-foot);font-weight:500}
+  .msgs{flex:1;padding:var(--s4);display:flex;flex-direction:column;gap:var(--s3);overflow:auto}
+  .msg{display:flex;gap:var(--s2)}
+  .msg .who{color:var(--label2);font-size:var(--t-cap1);font-weight:600}
+  .msg p{font-size:var(--t-sub);line-height:1.45;margin-top:2px;background:var(--fill3);padding:10px 14px;border-radius:18px 18px 18px 4px}
+  .msg small{color:var(--label2);font-size:var(--t-cap2)}
+  .msg.me{justify-content:flex-end}
+  .msg.me p{background:var(--blue);color:#fff;border-radius:18px 18px 4px 18px;max-width:85%}
+  .qa{display:flex;gap:var(--s2);padding:var(--s2) var(--s4);overflow:auto;scrollbar-width:none}
+  .qa button{white-space:nowrap;background:var(--fill3);border-radius:var(--r-full);min-height:32px;padding:0 var(--s3);font-size:var(--t-foot);font-weight:500}
+  .chat .in{padding:var(--s3) var(--s4);border-top:.5px solid var(--sep);display:flex;gap:var(--s2);align-items:center}
+  .chat .in input{border-radius:var(--r-full)}
+  .chat .in .b{width:44px;padding:0;justify-content:center}
+  .ebar{display:flex;align-items:center;gap:var(--s3);margin-bottom:var(--s4)}
+  .ebar .sp{margin-left:auto}
+
+  /* ---------- Publicar ---------- */
+  .final{display:grid;grid-template-columns:390px 1fr;gap:var(--s8);align-items:start}
+  .igp{background:#fff;color:#111;border-radius:44px;overflow:hidden;border:10px solid #111;box-shadow:0 30px 60px rgba(0,0,0,.4)}
+  .igp .h{display:flex;gap:10px;align-items:center;padding:12px 14px;font-size:14px}
+  .igp .h .av{width:34px;height:34px;border-radius:50%;background:conic-gradient(#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5,#FEDA75);padding:2px}
+  .igp .h .av i{display:block;width:100%;height:100%;border-radius:50%;background:#fff;border:2px solid #fff}
+  .igp .h small{color:#737373;display:block;font-size:12px}
+  .igp .img{aspect-ratio:4/5}
+  .igp .img .art-big{width:100%;border-radius:0;padding:20px 16px;gap:10px;color:#fff;box-shadow:none}
+  .igp .img .art-big h3{font-size:19px}
+  .igp .acts{display:flex;gap:14px;padding:12px 14px 4px}
+  .igp .acts svg{width:24px;height:24px}
+  .igp .cap{padding:4px 14px 18px;font-size:14px}
+  .igp .cap .ht{color:#00376B}
+  .cap-box{background:var(--fill3);border-radius:var(--r-md);padding:var(--s4);line-height:1.6;max-height:210px;overflow:auto;font-size:var(--t-sub)}
+  .auto{border-radius:var(--r-xl);padding:var(--s6);background:var(--bg2);box-shadow:0 0 0 1.5px rgba(255,159,10,.55),var(--shadow)}
+  .auto h3{display:flex;gap:var(--s3);align-items:center}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s4);font-size:var(--t-foot)}
+  .flow .n{background:var(--fill3);border-radius:var(--r-md);padding:7px 12px}
+  .flow .n.q{background:rgba(255,214,10,.16);color:var(--yellow)}
+  .flow .ar{color:var(--label3)}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:var(--s3) var(--s4);margin-top:var(--s4);align-items:center;font-size:var(--t-sub)}
+  .kv label{color:var(--label2);font-size:var(--t-foot)}
+  .sched{display:flex;gap:var(--s2);margin-top:var(--s2);align-items:center}
+
+  /* ---------- Calendário ---------- */
+  .cal{border-radius:var(--r-xl);overflow:hidden;background:var(--bg2);box-shadow:var(--shadow)}
+  .cal .wd,.cal .wk{display:grid;grid-template-columns:repeat(7,1fr)}
+  .cal .wd div{padding:var(--s3);text-align:center;font-weight:600;color:var(--label2);font-size:var(--t-cap1);letter-spacing:.04em;border-bottom:.5px solid var(--sep)}
+  .cal .wk div{min-height:124px;border-right:.5px solid var(--sep);border-bottom:.5px solid var(--sep);padding:var(--s2) var(--s3);font-weight:500;font-size:var(--t-sub)}
+  .cal .wk div:nth-child(7n){border-right:0}
+  .cal .wk div.o{color:var(--label3)}
+  .ev{display:block;font-size:var(--t-cap1);font-weight:600;border-radius:6px;padding:4px 8px;margin-top:6px;text-align:left;border-left:3px solid}
+  .ev.ig{background:rgba(255,55,95,.14);color:var(--pink);border-color:var(--pink)}
+  .ev.rl{background:rgba(191,90,242,.14);color:var(--purple);border-color:var(--purple)}
+  .ev.ia{background:var(--tint-bg);color:var(--blue);border-color:var(--blue)}
+  .ai-rec{background:linear-gradient(135deg,var(--blue),var(--indigo));color:#fff;border-radius:var(--r-xl);padding:var(--s6);display:flex;gap:var(--s5);align-items:center;max-width:780px;margin-bottom:var(--s6);box-shadow:var(--shadow)}
+  .ai-rec .i{width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.2);display:grid;place-items:center}
+  .ai-rec .i svg{width:28px;height:28px}
+  .stat{display:flex;gap:var(--s6);margin-bottom:var(--s5);color:var(--label2);font-weight:500;font-size:var(--t-foot)}
+  .stat span{display:flex;align-items:center;gap:var(--s2)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+  /* ---------- KPIs / tabelas ---------- */
+  .kpi{background:var(--bg2);border-radius:var(--r-xl);padding:var(--s5);box-shadow:var(--shadow)}
+  .kpi .k{display:flex;gap:var(--s3);align-items:center}
+  .kpi .k small{color:var(--label2);font-weight:500;font-size:var(--t-foot)}
+  .kpi > small{color:var(--label2);font-weight:500;font-size:var(--t-foot)}
+  .kpi .v{font-size:40px;font-weight:700;letter-spacing:-.03em;margin:var(--s3) 0 var(--s2);font-variant-numeric:tabular-nums}
+  .bar{height:6px;border-radius:var(--r-full);background:var(--fill3);overflow:hidden}.bar i{display:block;height:100%;background:var(--orange);border-radius:var(--r-full)}
+  table{width:100%;border-collapse:collapse;font-size:var(--t-sub)}
+  th{text-align:left;color:var(--label2);font-weight:500;font-size:var(--t-foot);padding:var(--s3) var(--s2);border-bottom:.5px solid var(--sep)}
+  td{padding:var(--s3) var(--s2);border-bottom:.5px solid var(--sep);min-height:44px}
+  tr:last-child td{border-bottom:0}
+  td small{font-size:var(--t-foot)}
+  .chart{height:220px;display:flex;align-items:flex-end;gap:var(--s2);padding:var(--s3) 0}
+  .chart i{flex:1;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--indigo),var(--blue))}
+
+  /* ---------- Conexões ---------- */
+  .conn{display:flex;gap:var(--s4);align-items:center}
+  .conn b{font-size:var(--t-sub)}
+  .cost td:last-child{font-weight:600}
+  .cost .z{color:var(--green)}.cost .p{color:var(--orange)}
+
+  .media{aspect-ratio:1;border-radius:var(--r-lg);position:relative;overflow:hidden;box-shadow:var(--shadow);color:#fff}
+  .media small{position:absolute;left:var(--s2);bottom:var(--s2);background:rgba(0,0,0,.55);padding:2px 8px;border-radius:6px;font-size:var(--t-cap1)}
+  .drop{border:1.5px dashed var(--g3);border-radius:var(--r-xl);padding:var(--s8);text-align:center;color:var(--label2);background:var(--fill3)}
+  .drop svg{color:var(--blue)}
+
+  .float{position:fixed;right:var(--s6);bottom:var(--s6);width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;box-shadow:0 10px 30px rgba(10,132,255,.45);transition:transform var(--d-in) var(--ease-out)}
+  .float:active{transform:scale(.94)}
+  .legend{position:fixed;left:296px;bottom:var(--s4);background:var(--bg2);border-radius:var(--r-md);padding:var(--s2) var(--s4);font-size:var(--t-cap1);color:var(--label2);box-shadow:var(--shadow)}
+
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  @media (max-width:1100px){.g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:1fr}.final,.editor{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<aside aria-label="Menu principal">
+  <div class="acc">
+    <div class="av">WSA</div>
+    <div><b>WSA Sistemas de IA</b><small>@wsasistemas.ia</small></div>
+  </div>
+  <button class="btn-criar" data-go="criar"><i data-lucide="plus"></i>Criar</button>
+
+  <button class="nav on" data-go="explorar"><span class="tile c-blue"><i data-lucide="compass"></i></span><span class="lbl-t">Explorar</span></button>
+  <button class="nav" data-go="biblioteca"><span class="tile c-orange"><i data-lucide="library-big"></i></span><span class="lbl-t">Biblioteca</span></button>
+  <button class="nav" data-go="midias"><span class="tile c-teal"><i data-lucide="images"></i></span><span class="lbl-t">Banco de mídias</span></button>
+  <button class="nav" data-go="calendario"><span class="tile c-red"><i data-lucide="calendar-days"></i></span><span class="lbl-t">Calendário</span></button>
+  <button class="nav" data-go="avatares"><span class="tile c-purple"><i data-lucide="user-round"></i></span><span class="lbl-t">Meus avatares</span><span class="tag">IA</span></button>
+
+  <div class="grp">VENDAS</div>
+  <button class="nav" data-go="automacoes"><span class="tile c-yellow"><i data-lucide="zap"></i></span><span class="lbl-t">Automações</span><span class="tag">Chatfyre</span></button>
+  <button class="nav" data-go="radar"><span class="tile c-green"><i data-lucide="radar"></i></span><span class="lbl-t">Radar de prospecção</span></button>
+
+  <div class="grp">RESULTADOS</div>
+  <button class="nav" data-go="analytics"><span class="tile c-indigo"><i data-lucide="chart-column"></i></span><span class="lbl-t">Analytics</span></button>
+
+  <div class="grp">CONTA</div>
+  <button class="nav" data-go="conexoes"><span class="tile c-gray"><i data-lucide="plug-zap"></i></span><span class="lbl-t">Conexões e custos</span><span class="tag free">R$ 0</span></button>
+
+  <div class="me">
+    <div class="av"></div>
+    <div><b>Wagner Antunes</b><small>WSA Sistemas de IA</small></div>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<main>
+  <div class="topbar">
+    <span class="pill">100% PRÓPRIO</span>
+    <span class="desc"><b>Estúdio imobinsta</b> — criar, publicar e vender no Instagram, sem mensalidade de ferramenta de conteúdo</span>
+    <span class="sp">Mockup v2 · Apple HIG</span><div class="seg" role="group" aria-label="Tema"><button class="on" data-theme-set="dark">Escuro</button><button data-theme-set="light">Claro</button></div>
+  </div>
+
+  <!-- ===== EXPLORAR ===== -->
+  <section class="page on" id="explorar">
+    <div class="hero">
+      <div>
+        <span class="badge bd-blue"><i data-lucide="sparkles" style="width:14px;height:14px"></i>Novo</span>
+        <h1 style="margin-top:18px">Reels a partir<br>das suas fotos</h1>
+        <p class="sub">Escolha imagens do banco de mídias, escreva o roteiro e o vídeo sai montado com legenda, trilha livre e a cara da WSA.</p>
+        <div class="row" style="margin-top:26px">
+          <button class="b p" data-go="criar"><i data-lucide="plus"></i>Criar agora</button>
+          <button class="b o" data-go="biblioteca">Ver biblioteca</button>
+        </div>
+      </div>
+      <div class="phones">
+        <div class="phone a t-choc"><div style="padding:22px;font-weight:900;font-size:20px">VOCÊ FAZ O MELHOR DOCE DA CIDADE.</div></div>
+        <div class="phone b t-blue">
+          <div style="padding:22px;font-weight:900;font-size:22px;line-height:1.05">O TOTVS RM NÃO FOI FEITO PARA SER LENTO</div>
+          <div style="position:absolute;bottom:22px;left:14px;right:14px;background:rgba(0,0,0,.55);border-radius:14px;padding:10px;text-align:center;font-weight:700;font-size:13px">Comente QUERO e receba o ecossistema</div>
+        </div>
+      </div>
+      <div class="htabs" style="grid-column:1/-1">
+        <div class="on">Fotos em Reels</div><div>Carrossel de dicas</div><div>Post de venda + automação</div>
+      </div>
+    </div>
+
+    <h2 style="margin:36px 0 16px">Atalhos</h2>
+    <div class="grid g4">
+      <div class="card short"><span class="tile lg c-purple"><i data-lucide="layers"></i></span><h3>Carrossel</h3><p class="mut">1080×1350, até 10 slides</p></div>
+      <div class="card short"><span class="tile lg c-blue"><i data-lucide="clapperboard"></i></span><h3>Reels</h3><p class="mut">1080×1920, 15 a 60 s</p></div>
+      <div class="card short"><span class="tile lg c-red"><i data-lucide="calendar-plus"></i></span><h3>Pauta da semana</h3><p class="mut">IA sugere 2 posts por semana</p></div>
+      <div class="card short"><span class="tile lg c-orange"><i data-lucide="message-circle-heart"></i></span><h3>Comentou → DM</h3><p class="mut">Vende enquanto você dorme</p></div>
+    </div>
+  </section>
+
+  <!-- ===== CRIAR: TIPO ===== -->
+  <section class="page" id="criar">
+    <div class="center"><h1>O que você quer criar?</h1><p class="sub">Escolha o tipo de conteúdo. Tudo sai pronto para publicar no Instagram.</p></div>
+    <div class="grid g4" style="max-width:1400px;margin:0 auto">
+      <div class="ctype" data-go="avatar" style="border-color:#8b5cf6">
+        <div class="ill"><span class="tile xl c-purple"><i data-lucide="user-round-check"></i></span></div>
+        <div class="bd"><h3>Vídeo narrado com avatar</h3><p>Seu avatar fala o roteiro com a sua voz, com legenda, cenas e CTA. Ideal para Reels de venda.</p>
+          <div class="nets"><i data-lucide="instagram"></i><i data-lucide="youtube"></i><i data-lucide="linkedin"></i></div>
+          <div class="cost"><span class="badge bd-wait">Pago por uso · provedor de IA</span></div></div>
+      </div>
+      <div class="ctype" data-go="formato">
+        <div class="ill"><span class="tile xl c-pink"><i data-lucide="images"></i></span></div>
+        <div class="bd"><h3>Posts de imagem</h3><p>Post único, carrossel e stories a partir de templates da WSA. Texto e fundo editáveis.</p>
+          <div class="nets"><i data-lucide="instagram"></i><i data-lucide="facebook"></i><i data-lucide="linkedin"></i></div>
+          <div class="cost"><span class="badge bd-ok">Grátis · template + IA de texto</span></div></div>
+      </div>
+      <div class="ctype" data-go="formato">
+        <div class="ill"><span class="tile xl c-blue"><i data-lucide="clapperboard"></i></span></div>
+        <div class="bd"><h3>Reels / vídeo</h3><p>Monte Reels com suas fotos e vídeos: cortes, legenda automática, trilha livre e logo.</p>
+          <div class="nets"><i data-lucide="instagram"></i><i data-lucide="youtube"></i></div>
+          <div class="cost"><span class="badge bd-ok">Grátis · render no seu PC</span></div></div>
+      </div>
+      <div class="ctype" data-go="formato">
+        <div class="ill"><span class="tile xl c-indigo"><i data-lucide="sparkles"></i></span></div>
+        <div class="bd"><h3>Imagem gerada por IA</h3><p>A IA (OpenAI GPT Image ou outro modelo) cria a arte inteira do zero, com fotos realistas e a sua marca.</p>
+          <div class="nets"><i data-lucide="instagram"></i></div>
+          <div class="cost"><span class="badge bd-wait">Pago por uso · provedor de IA</span></div></div>
+      </div>
+    </div>
+    <p class="center mut" style="margin-top:22px"><i data-lucide="wand-2" style="width:16px;height:16px;vertical-align:-3px"></i> ou comece do zero no editor</p>
+  </section>
+
+  <!-- ===== CRIAR: FORMATO ===== -->
+  <section class="page" id="formato">
+    <div class="steps"><span class="on">Formato</span><span>Conteúdo</span><span>Prompt</span><span>Editor</span><span>Publicar</span></div>
+    <div class="center"><h1>Escolha o formato</h1><p class="sub">Os tamanhos seguem o padrão do Instagram em 2026.</p></div>
+    <div class="chips"><span class="chip on"><i data-lucide="layout-grid"></i>Todas</span><span class="chip"><i data-lucide="instagram"></i>Instagram</span><span class="chip"><i data-lucide="facebook"></i>Facebook</span><span class="chip"><i data-lucide="linkedin"></i>LinkedIn</span><span class="chip dis">TikTok · depois</span></div>
+    <div class="grid g5">
+      <div class="fmt f1"><div class="top"><i data-lucide="instagram"></i><span class="hot">⚡ TOP</span></div><div class="shape"></div><b>Post Portrait</b><small>1080 × 1350</small></div>
+      <div class="fmt f2 on" data-go="conteudo"><div class="top"><i data-lucide="instagram"></i><span class="hot">⚡ TOP</span></div><div class="shape"></div><b>Carrossel Portrait</b><small>1080 × 1350 · até 10</small></div>
+      <div class="fmt f3"><div class="top"><i data-lucide="instagram"></i><span class="hot">REELS</span></div><div class="shape" style="width:56px"></div><b>Reels</b><small>1080 × 1920 · 15–60 s</small></div>
+      <div class="fmt f4"><div class="top"><i data-lucide="instagram"></i></div><div class="shape" style="width:56px"></div><b>Stories</b><small>1080 × 1920</small></div>
+      <div class="fmt f5"><div class="top"><i data-lucide="linkedin"></i></div><div class="shape"></div><b>Post LinkedIn</b><small>1080 × 1350</small></div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:26px"><button class="b p" data-go="conteudo">Continuar <i data-lucide="arrow-right"></i></button></div>
+  </section>
+
+  <!-- ===== CRIAR: CONTEÚDO ===== -->
+  <section class="page" id="conteudo">
+    <div class="steps"><span class="ok">Formato</span><span class="on">Conteúdo</span><span>Prompt</span><span>Editor</span><span>Publicar</span></div>
+    <div class="center"><h1>Defina o conteúdo</h1><p class="sub">Isso vira um prompt visual e a legenda do post.</p></div>
+
+    <div class="lbl">Qual o objetivo deste post?</div>
+    <div class="grid g3">
+      <div class="opt"><div class="oi"><span class="tile lg c-pink"><i data-lucide="heart"></i></span></div><h3>Engajar</h3><p>Aumentar interação e comunidade</p></div>
+      <div class="opt"><div class="oi"><span class="tile lg c-blue"><i data-lucide="user-plus"></i></span></div><h3>Ganhar seguidores</h3><p>Conteúdo que gera compartilhamento e salvamento</p></div>
+      <div class="opt on"><div class="oi"><span class="tile lg c-green"><i data-lucide="dollar-sign"></i></span></div><h3>Vender</h3><p>Converter quem comenta em cliente, com automação no direct</p></div>
+    </div>
+
+    <div class="lbl">Produto do ecossistema <small>(o que a arte e a automação vão vender)</small></div>
+    <div class="chips">
+      <span class="chip on">Ecossistema completo</span><span class="chip">ERP + TOTVS RM</span><span class="chip">Imobiliárias</span><span class="chip">Portal de compras</span><span class="chip">Helpdesk</span><span class="chip">Cobrança + assinatura</span><span class="chip">Aprovações / RH</span><span class="chip">Confeitarias</span>
+    </div>
+
+    <div class="lbl">Abordagem <small>(opcional)</small></div>
+    <div class="grid g4">
+      <div class="opt" style="padding:18px;text-align:center">🔥 <b>Viral</b></div>
+      <div class="opt on" style="padding:18px;text-align:center">🎯 <b>Dor + solução</b></div>
+      <div class="opt" style="padding:18px;text-align:center">📚 <b>Educativo</b></div>
+      <div class="opt" style="padding:18px;text-align:center">💬 <b>Comunidade</b></div>
+    </div>
+
+    <div class="lbl">Como você quer criar?</div>
+    <div class="grid g3">
+      <div class="opt"><div class="oi"><span class="tile lg c-indigo"><i data-lucide="sparkles"></i></span></div><h3>Do zero</h3><p>Descreva a ideia e a IA escreve tudo</p></div>
+      <div class="opt on"><div class="oi"><span class="tile lg c-teal"><i data-lucide="link"></i></span></div><h3>A partir de link</h3><p>Cole uma página e a IA extrai e adapta</p></div>
+      <div class="opt"><div class="oi"><span class="tile lg c-yellow"><i data-lucide="lightbulb"></i></span></div><h3>Pauta sugerida</h3><p>Ideias prontas a partir dos posts que mais venderam</p></div>
+    </div>
+
+    <div class="card" style="margin-top:22px;max-width:900px">
+      <div class="row"><i data-lucide="globe"></i><b>O que usar do link?</b><span class="mut" style="margin-left:auto">imobsystems.com.br</span></div>
+      <div class="grid g2" style="margin-top:14px">
+        <label class="note" style="border-style:solid;border-color:#1d4ed8"><input type="checkbox" checked style="width:auto"> <span><b>Título</b><br>WSA Sistemas IA — Soluções inteligentes para diferentes negócios</span></label>
+        <label class="note" style="border-style:solid;border-color:#1d4ed8"><input type="checkbox" checked style="width:auto"> <span><b>Descrição</b><br>Tecnologia, automação e IA conectando pessoas, processos e resultados.</span></label>
+      </div>
+      <textarea style="margin-top:14px" placeholder="Instruções extras">Vender o ecossistema do site. Falar de ERP com integração nativa TOTVS RM, imobiliárias, portal de compras, helpdesk, cobrança e assinatura de contratos, aprovações e RH.</textarea>
+    </div>
+    <div class="row" style="justify-content:space-between;margin-top:26px"><button class="b o" data-go="formato"><i data-lucide="arrow-left"></i>Voltar</button><button class="b p" data-go="prompt">Continuar <i data-lucide="arrow-right"></i></button></div>
+  </section>
+
+  <!-- ===== CRIAR: PROMPT ===== -->
+  <section class="page" id="prompt">
+    <div class="steps"><span class="ok">Formato</span><span class="ok">Conteúdo</span><span class="on">Prompt</span><span>Editor</span><span>Publicar</span></div>
+    <div class="src">
+      <b>https://www.imobsystems.com.br</b>
+      <p style="margin-top:6px"><b>Instruções:</b> vender ecossistema do site</p>
+      <div class="ex">Conteúdo extraído do link<br><b style="color:#ddd">WSA Sistemas IA — Soluções inteligentes para diferentes negócios</b><br>Tecnologia, automação e inteligência artificial conectando pessoas, processos e resultados em um único ecossistema.</div>
+      <p class="mut" style="margin-top:12px;font-size:14px">Carrossel Portrait · Vender · Dor + solução · Template WSA Neon</p>
+    </div>
+
+    <div class="row" style="margin:26px 0 12px"><i data-lucide="sparkles" style="color:#60a5fa"></i><h2>Prompt adaptado para WSA Sistemas de IA</h2><button class="b o" style="margin-left:auto"><i data-lucide="wand-2"></i>Refinar com IA</button></div>
+    <div class="prompt">
+      <b>**Objetivo do post:**</b><br>• Mostrar ao gestor que sistemas isolados custam caro e apresentar o ecossistema WSA como solução integrada ao ERP, nativa TOTVS RM.<br><br>
+      <b>**Tom de voz:**</b><br>• Provocativo, direto e confiante.<br><br>
+      <b>**Headline (slide 1):**</b><br>• "Parar de remendar o seu ERP é o primeiro passo para o lucro real."<br><br>
+      <b>**Slides 2 a 5:**</b><br>• Imobiliárias · Portal de compras · Helpdesk · Cobrança + assinatura · Aprovações e RH<br><br>
+      <b>**CTA (último slide):**</b><br>• Comente <b style="color:#fbbf24">QUERO</b> e receba o ecossistema completo no direct.
+    </div>
+    <div class="row" style="margin-top:14px;gap:22px">
+      <button class="row mut"><i data-lucide="image-plus"></i>Adicionar imagem do banco</button>
+      <span class="row"><span class="switch"></span>Mostrar logo</span>
+      <span class="row"><span class="switch"></span>Já criar automação Chatfyre</span>
+      <span class="mut" style="margin-left:auto;font-size:13px">IA de texto: Gemini (cota gratuita)</span>
+    </div>
+    <div class="row" style="justify-content:space-between;margin-top:30px"><button class="b o" data-go="conteudo"><i data-lucide="arrow-left"></i>Voltar</button><button class="b p" data-go="editor"><i data-lucide="sparkles"></i>Gerar conteúdo</button></div>
+  </section>
+
+  <!-- ===== EDITOR ===== -->
+  <section class="page" id="editor">
+    <div class="steps"><span class="ok">Formato</span><span class="ok">Conteúdo</span><span class="ok">Prompt</span><span class="on">Editor</span><span>Publicar</span></div>
+    <div class="ebar">
+      <button class="b o"><i data-lucide="history"></i>Histórico</button>
+      <span class="badge bd-ok"><i data-lucide="infinity" style="width:14px;height:14px"></i>Edições ilimitadas</span>
+      <div class="sp row"><button class="b o"><i data-lucide="download"></i>Baixar PNG</button><button class="b p" data-go="publicar"><i data-lucide="check"></i>Finalizar</button></div>
+    </div>
+    <div class="editor">
+      <div class="slides">
+        <div class="s t-blue on">1</div><div class="s t-dark">2</div><div class="s t-purple">3</div><div class="s t-green">4</div><div class="s t-blue">5</div><div class="add"><i data-lucide="plus"></i></div>
+      </div>
+      <div class="canvas">
+        <div class="save"><i data-lucide="check" style="width:14px;height:14px"></i>Todas as alterações salvas</div>
+        <div class="art-big t-blue" id="artMain">
+          <div class="brand">WSA <span>SISTEMAS IA</span></div>
+          <h3>Parar de remendar o seu ERP é o primeiro passo para o <em>lucro real.</em></h3>
+          <div class="eco">
+            <div><i data-lucide="home"></i>Imobiliárias</div><div><i data-lucide="shopping-cart"></i>Compras</div><div><i data-lucide="headphones"></i>Helpdesk</div><div><i data-lucide="file-signature"></i>Cobrança</div>
+            <div><i data-lucide="check-circle"></i>Aprovações</div><div><i data-lucide="users"></i>RH</div><div><i data-lucide="database"></i>TOTVS RM</div><div><i data-lucide="cake"></i>Docerias</div>
+          </div>
+          <ul><li>O caos de sistemas isolados termina aqui.</li><li>IA que une pessoas, processos e resultados.</li><li>Integração nativa com TOTVS RM.</li></ul>
+          <div class="cta">COMENTE "QUERO" E RECEBA O ECOSSISTEMA NO DIRECT</div>
+        </div>
+      </div>
+      <div class="chat">
+        <div class="ch"><span class="tile lg c-indigo"><i data-lucide="wand-sparkles"></i></span><div><b>Editor IA</b><br><small class="mut">Edita textos, cores e layout do template</small></div></div>
+        <div class="ed">🎨 Editando: Slide 1</div>
+        <div class="msgs">
+          <div class="msg me"><p>Troca o CTA para "comente QUERO" e coloca os produtos em blocos com ícone.</p></div>
+          <div class="msg"><div><span class="who">Editor IA</span><p>🔍 Ajustei a grade com 8 produtos e o CTA. O texto continua editável: clique em qualquer frase no slide.</p><small>00:23</small></div></div>
+        </div>
+        <div class="qa"><button>Trocar texto</button><button>Adicionar elemento</button><button>Melhorar layout</button><button>Trocar cor</button></div>
+        <div class="in"><input placeholder="Peça alterações no design..."><button class="b p" style="padding:10px 14px"><i data-lucide="send"></i></button></div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:14px"><i data-lucide="info"></i><span>Como fica grátis: o slide é um <b>template HTML</b> da WSA; a IA só troca textos, cores e posições (JSON). O PNG final sai por render do navegador. Nenhum crédito de geração de imagem é gasto.</span></div>
+  </section>
+
+  <!-- ===== PUBLICAR + AUTOMAÇÃO ===== -->
+  <section class="page" id="publicar">
+    <div class="steps"><span class="ok">Formato</span><span class="ok">Conteúdo</span><span class="ok">Prompt</span><span class="ok">Editor</span><span class="on">Publicar</span></div>
+    <div class="final">
+      <div>
+        <p class="row" style="margin-bottom:12px"><span class="dot" style="background:var(--blue)"></span>Preview do post</p>
+        <div class="igp">
+          <div class="h"><div class="av"><i></i></div><div><b>wsasistemas.ia</b><small>Carrossel · 1/5</small></div><i data-lucide="more-horizontal" style="margin-left:auto"></i></div>
+          <div class="img"><div class="art-big t-blue" id="artPrev"></div></div>
+          <div class="acts"><i data-lucide="heart"></i><i data-lucide="message-circle"></i><i data-lucide="send"></i><i data-lucide="bookmark" style="margin-left:auto"></i></div>
+          <div class="cap"><b>wsasistemas.ia</b> Quantas "soluções provisórias" sua operação ainda vai sustentar… <span class="ht">#WSASistemas #TOTVSRM #ERP</span></div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:20px">
+        <div class="card">
+          <div class="row"><span class="dot" style="background:var(--blue)"></span><b>Legenda final</b><span class="badge bd-ig" style="margin-left:auto"><i data-lucide="instagram" style="width:14px;height:14px"></i>instagram</span></div>
+          <div class="cap-box" style="margin-top:12px">Quantas "soluções provisórias" sua operação ainda vai sustentar antes de perceber que remendar processos custa caro? 💸<br><br>Sistemas desconectados, retrabalho e dados espalhados drenam a margem e travam o crescimento.<br><br>A WSA reúne num só ecossistema: ERP com integração nativa TOTVS RM, imobiliárias, portal de compras, helpdesk, cobrança com assinatura de contratos e aprovações para o RH.<br><br>👉 Comente <b>QUERO</b> que eu te mando tudo no direct.<br><br>#WSASistemas #TOTVSRM #ERP #GestaoEmpresarial</div>
+          <div class="row" style="margin-top:10px;font-size:13px"><span class="mut">512/2200 caracteres · 4/5 hashtags</span><button class="row" style="margin-left:auto;color:#c084fc"><i data-lucide="sparkles" style="width:16px;height:16px"></i>Refinar com IA</button></div>
+        </div>
+
+        <div class="auto">
+          <h3><i data-lucide="zap" style="color:var(--orange)"></i>Automação de vendas no direct <span class="badge bd-off" style="margin-left:auto">via Chatfyre</span></h3>
+          <p class="mut" style="margin-top:6px;font-size:14px">Criada junto com o post e ligada ao <b>media_id</b> dele assim que publicar. Nasce pausada se você preferir revisar.</p>
+          <div class="kv">
+            <label>Palavra-chave</label><input value="QUERO">
+            <label>Resposta pública</label><input value="Te mandei no direct! 📩 · Olha seu direct! 🚀">
+            <label>DM de boas-vindas</label><textarea style="min-height:84px">Oi! Aqui é a WSA Sistemas de IA 👋 Criamos um ecossistema com IA integrado ao seu ERP, nativo TOTVS RM… Toca no botão abaixo que eu te mostro tudo 👇</textarea>
+            <label>Botão</label><input value="Quero conhecer">
+            <label>Só para quem segue</label><span class="row"><span class="switch"></span><small class="mut">convida a seguir e reconfere (até 3 vezes)</small></span>
+            <label>Link</label><input value="https://www.imobsystems.com.br  · utm_campaign=ecossistema-wsa">
+            <label>Lembrete</label><input value="Após 60 min, para quem não clicou">
+          </div>
+          <div class="flow">
+            <span class="n">💬 Comentou "QUERO"</span><span class="ar">→</span><span class="n q">DM + botão</span><span class="ar">→</span><span class="n">Segue? sim → link</span><span class="ar">·</span><span class="n">não → "Já segui, manda"</span><span class="ar">→</span><span class="n">Lembrete 60 min</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <b>Quando publicar?</b>
+          <div class="sched" style="margin-top:12px">
+            <button class="chip on">Agora</button><button class="chip">Agendar</button><input type="datetime-local" value="2026-10-28T12:00" style="max-width:240px">
+          </div>
+          <div class="row" style="margin-top:12px;gap:18px;font-size:14px">
+            <span class="row"><span class="switch"></span>Instagram</span><span class="row"><span class="switch off"></span>Facebook</span><span class="row"><span class="switch off"></span>LinkedIn</span>
+          </div>
+          <div class="grid g2" style="margin-top:18px">
+            <button class="b p" style="justify-content:center;padding:16px" data-go="biblioteca"><i data-lucide="send"></i>Publicar e ativar automação</button>
+            <button class="b o" style="justify-content:center;padding:16px"><i data-lucide="save"></i>Salvar rascunho</button>
+          </div>
+          <p class="mut" style="font-size:12px;margin-top:10px">Publica pela API oficial do Instagram (grátis) → recebe o media_id → cria a automação no Chatfyre apontando para esse post.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VÍDEO COM AVATAR ===== -->
+  <section class="page" id="avatar">
+    <div class="steps"><span class="on">Roteiro</span><span>Avatar e voz</span><span>Cenas</span><span>Gerar</span><span>Publicar</span></div>
+    <div class="center"><h1>Vídeo narrado com avatar</h1><p class="sub">A IA escreve a narrativa, seu avatar apresenta e o Reels sai pronto com legenda e CTA.</p></div>
+
+    <div class="grid" style="grid-template-columns:1.25fr 1fr;gap:24px;align-items:start">
+      <div class="grid" style="gap:18px">
+        <div class="card">
+          <div class="row"><b>1. Narrativa</b><span class="mut" style="margin-left:auto;font-size:13px">Reels 1080×1920 · alvo 45 s</span></div>
+          <div class="chips" style="margin:14px 0 6px">
+            <span class="chip on">Dor → solução → CTA</span><span class="chip">História de cliente</span><span class="chip">3 erros que…</span><span class="chip">Bastidores</span><span class="chip">Antes e depois</span>
+          </div>
+          <div class="kv" style="grid-template-columns:120px 1fr">
+            <label>Produto</label><input value="Ecossistema completo WSA">
+            <label>Tema</label><input value="Sistemas isolados custam caro para quem usa TOTVS RM">
+          </div>
+          <div class="row" style="margin-top:14px"><b>Roteiro gerado</b><button class="row" style="margin-left:auto;color:#c084fc"><i data-lucide="sparkles" style="width:16px;height:16px"></i>Reescrever</button></div>
+          <table style="margin-top:8px">
+            <tr><th style="width:80px">Tempo</th><th>Fala do avatar</th><th style="width:170px">Cena</th></tr>
+            <tr><td>0–3 s</td><td><b>Gancho:</b> "Seu ERP tem os dados. Por que sua equipe ainda vive de planilha?"</td><td class="mut">Avatar em close</td></tr>
+            <tr><td>3–15 s</td><td><b>Dor:</b> "Compras num sistema, cobrança em outro, aprovação por WhatsApp…"</td><td class="mut">B-roll: prints soltos</td></tr>
+            <tr><td>15–35 s</td><td><b>Solução:</b> "A WSA une tudo num ecossistema com IA, nativo TOTVS RM: imobiliárias, compras, helpdesk, cobrança, assinatura e aprovações de RH."</td><td class="mut">Avatar + tela dos sistemas</td></tr>
+            <tr><td>35–45 s</td><td><b>CTA:</b> "Comenta QUERO que eu te mando o ecossistema no direct."</td><td class="mut">Avatar + texto na tela</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <b>2. Avatar e voz</b>
+          <div class="grid g3" style="margin-top:14px">
+            <div class="opt on" style="padding:16px;text-align:center"><div style="width:84px;height:84px;border-radius:50%;margin:0 auto 10px;background:linear-gradient(135deg,#f59e0b,#ef4444)"></div><b>Wagner</b><br><small class="mut">avatar clonado · voz clonada</small></div>
+            <div class="opt" style="padding:16px;text-align:center"><div style="width:84px;height:84px;border-radius:50%;margin:0 auto 10px;background:linear-gradient(135deg,#60a5fa,#8b5cf6)"></div><b>Apresentadora WSA</b><br><small class="mut">avatar de estoque</small></div>
+            <div class="opt" style="padding:16px;text-align:center;display:grid;place-items:center" data-go="avatares"><i data-lucide="plus" style="width:34px;height:34px"></i><b>Criar avatar</b><br><small class="mut">grave 2 min de vídeo</small></div>
+          </div>
+          <div class="kv" style="grid-template-columns:120px 1fr">
+            <label>Voz</label><input value="Clonada do Wagner · português do Brasil">
+            <label>Cenário</label><input value="Escritório moderno, fundo desfocado">
+            <label>Legenda</label><span class="row"><span class="switch"></span><small class="mut">palavra a palavra, estilo Reels, cores da WSA</small></span>
+            <label>Trilha</label><input value="Lo-fi corporativo (livre de direitos)">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:18px;position:sticky;top:20px">
+        <div class="card" style="text-align:center">
+          <div style="width:260px;height:462px;margin:0 auto;border-radius:26px;position:relative;overflow:hidden;background:linear-gradient(180deg,#1f2937,#0f172a)">
+            <div style="position:absolute;left:50%;top:22%;transform:translateX(-50%);width:150px;height:150px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);opacity:.85"></div>
+            <div style="position:absolute;left:50%;top:50%;transform:translateX(-50%);width:210px;height:200px;border-radius:100px 100px 0 0;background:#1e3a8a"></div>
+            <div style="position:absolute;top:16px;left:14px;right:14px;font-weight:900;font-size:17px;line-height:1.1">SEU ERP TEM OS DADOS.</div>
+            <div style="position:absolute;bottom:70px;left:14px;right:14px;background:rgba(0,0,0,.65);border-radius:10px;padding:8px;font-weight:800;font-size:14px">Por que sua equipe ainda vive de <span style="color:#fbbf24">planilha?</span></div>
+            <div style="position:absolute;bottom:16px;left:14px;right:14px;height:5px;border-radius:5px;background:#374151"><i style="display:block;width:22%;height:100%;background:#fff;border-radius:5px"></i></div>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center"><i data-lucide="play"></i></div>
+          </div>
+          <p class="mut" style="font-size:13px;margin-top:10px">Prévia de baixa resolução · 0:45</p>
+        </div>
+        <div class="card">
+          <div class="row"><b>Provedor</b><select style="margin-left:auto;width:auto"><option>HeyGen · avatar + voz</option><option>fal.ai · vários modelos</option><option>OpenAI Sora · cenas sem avatar</option></select></div>
+          <div class="row" style="margin-top:14px"><span class="mut">Custo estimado deste vídeo</span><b style="margin-left:auto;color:#fbbf24">~ 45 s de créditos</b></div>
+          <div class="row" style="margin-top:6px"><span class="mut">Teto do mês</span><b style="margin-left:auto">usado 30% do limite</b></div>
+          <div class="bar" style="margin-top:8px"><i style="width:30%;background:#8b5cf6"></i></div>
+          <button class="b v" style="width:100%;justify-content:center;margin-top:16px;padding:16px" data-go="publicar"><i data-lucide="clapperboard"></i>Gerar vídeo</button>
+          <p class="mut" style="font-size:12px;margin-top:8px">O vídeo pronto entra no Banco de mídias e segue para a etapa Publicar, com a automação "QUERO" do Chatfyre.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MEUS AVATARES ===== -->
+  <section class="page" id="avatares">
+    <div class="head">
+      <span class="tile lg c-purple"><i data-lucide="user-round"></i></span>
+      <div><h1>Meus avatares</h1><p class="sub">Grave uma vez. Depois é só escrever o roteiro.</p></div>
+      <div class="act"><button class="b v"><i data-lucide="plus"></i>Novo avatar</button></div>
+    </div>
+    <div class="grid g3">
+      <div class="card" style="text-align:center"><div style="width:120px;height:120px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#f59e0b,#ef4444)"></div><h3>Wagner</h3><p class="mut">Avatar e voz clonados · HeyGen</p><span class="badge bd-ok" style="margin-top:10px">Pronto</span></div>
+      <div class="card" style="text-align:center"><div style="width:120px;height:120px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#60a5fa,#8b5cf6)"></div><h3>Apresentadora WSA</h3><p class="mut">Avatar de estoque · voz feminina pt-BR</p><span class="badge bd-ok" style="margin-top:10px">Pronto</span></div>
+      <div class="card">
+        <h3>Como criar o seu</h3>
+        <ol style="margin:12px 0 0 18px;line-height:1.9;color:#d4d4dc">
+          <li>Grave 2 min de vídeo olhando para a câmera, com boa luz e fundo limpo.</li>
+          <li>Leia o texto de consentimento que aparece na tela (exigência dos provedores).</li>
+          <li>Envie aqui. O provedor treina o avatar e a voz.</li>
+          <li>Pronto: o avatar aparece na etapa "Avatar e voz".</li>
+        </ol>
+        <div class="drop" style="margin-top:14px;padding:18px"><i data-lucide="video"></i><p style="margin-top:6px;font-size:13px">Arraste o vídeo de treino</p></div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:18px"><i data-lucide="shield-alert"></i><span>Avatar só da própria pessoa e com consentimento gravado. É regra dos provedores e evita problema de uso de imagem.</span></div>
+  </section>
+
+  <!-- ===== BIBLIOTECA ===== -->
+  <section class="page" id="biblioteca">
+    <div class="head">
+      <span class="tile lg c-orange"><i data-lucide="library-big"></i></span>
+      <div><h1>Biblioteca</h1><p class="sub">8 posts encontrados</p></div>
+      <div class="act"><button class="b o" data-go="midias"><i data-lucide="image"></i>Banco de mídias</button><button class="b p" data-go="criar"><i data-lucide="plus"></i>Novo post</button></div>
+    </div>
+    <div class="tabs"><button class="on">Todos<span class="n">8</span></button><button>Rascunhos<span class="n">1</span></button><button>Agendados<span class="n">1</span></button><button>Publicados<span class="n">7</span></button></div>
+    <div class="row" style="margin-bottom:22px"><input placeholder="Buscar posts..." style="flex:1"><button class="b o"><i data-lucide="filter"></i>Filtros</button></div>
+    <div class="row" style="margin-bottom:16px"><span style="color:#60a5fa">Todas as pastas</span><span class="chip" style="margin-left:14px">TOTVS RM · 3</span><span class="chip">Docerias · 3</span><span class="chip">Imobiliárias · 1</span><button class="b o" style="margin-left:auto"><i data-lucide="folder-plus"></i>Nova pasta</button></div>
+    <div class="grid g4" id="libGrid"></div>
+    <p class="mut" style="font-size:13px;margin-top:14px">Os 7 publicados vieram do Instagram real (listar_posts, 25/10/2026). Métricas aparecem quando a permissão de insights for liberada.</p>
+  </section>
+
+  <!-- ===== BANCO DE MÍDIAS ===== -->
+  <section class="page" id="midias">
+    <div class="head">
+      <span class="tile lg c-teal"><i data-lucide="images"></i></span>
+      <div><h1>Banco de mídias</h1><p class="sub">Fotos, vídeos, logos e trilhas para usar nos posts e Reels</p></div>
+      <div class="act"><button class="b p"><i data-lucide="upload"></i>Enviar arquivos</button></div>
+    </div>
+    <div class="tabs"><button class="on">Tudo</button><button>Imagens</button><button>Vídeos</button><button>Logos e marca</button><button>Trilhas livres</button><button>Prints dos sistemas</button></div>
+    <div class="drop" style="margin-bottom:22px"><i data-lucide="cloud-upload" style="width:34px;height:34px"></i><p style="margin-top:8px">Arraste fotos e vídeos aqui · JPG, PNG, MP4 até 100 MB</p><small>Supabase Storage · 1 GB grátis · usado: 84 MB</small></div>
+    <div class="grid g5" id="mediaGrid"></div>
+  </section>
+
+  <!-- ===== CALENDÁRIO ===== -->
+  <section class="page" id="calendario">
+    <div class="head">
+      <div><h1>Calendário editorial</h1><p class="sub">Planeje, vincule e agende seus conteúdos</p></div>
+      <div class="act"><button class="b o"><i data-lucide="chevron-left"></i>Outubro 2026<i data-lucide="chevron-right"></i></button><button class="b p"><i data-lucide="plus"></i>Nova pauta</button></div>
+    </div>
+    <div class="stat"><span><i data-lucide="sparkles" style="width:16px"></i>4 ideias IA</span><span><span class="dot" style="background:var(--blue)"></span>1 em criação</span><span><span class="dot" style="background:var(--green)"></span>0 prontos</span><span><span class="dot" style="background:var(--orange)"></span>1 agendado</span></div>
+    <div class="ai-rec"><div class="i"><i data-lucide="sparkles"></i></div><div><h2>Recomendações IA</h2><p style="opacity:.9;margin-top:4px">Gere 2 posts por semana para as próximas 4 semanas, alternando Reels e carrossel por produto</p></div></div>
+    <div class="cal">
+      <div class="wd"><div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div></div>
+      <div class="wk"><div class="o">25</div><div>26</div><div>27</div><div>28<span class="ev ig">12:00 · Carrossel ecossistema ⚡QUERO</span></div><div>29</div><div>30<span class="ev ia">💡 Reels Helpdesk</span></div><div>31</div></div>
+      <div class="wk"><div>1</div><div>2</div><div>3<span class="ev ia">💡 Carrossel Cobrança</span></div><div>4</div><div>5</div><div>6<span class="ev ia">💡 Reels Imobiliárias</span></div><div>7</div></div>
+      <div class="wk"><div>8</div><div>9</div><div>10<span class="ev rl">Reels TOTVS RM · em criação</span></div><div>11</div><div>12</div><div>13<span class="ev ia">💡 Aprovações RH</span></div><div>14</div></div>
+    </div>
+  </section>
+
+  <!-- ===== AUTOMAÇÕES ===== -->
+  <section class="page" id="automacoes">
+    <div class="head">
+      <span class="tile lg c-yellow"><i data-lucide="zap"></i></span>
+      <div><h1>Automações de vendas</h1><p class="sub">Comentou → DM → seguiu → link. Dados e ações via Chatfyre.</p></div>
+      <div class="act"><div class="tabs" style="margin:0"><button>24 h</button><button class="on">7 dias</button><button>30 dias</button></div></div>
+    </div>
+    <div class="grid g4">
+      <div class="kpi"><div class="k"><span class="tile lg c-orange"><i data-lucide="message-circle"></i></span><small>RECEBERAM A DM</small></div><div class="v">0</div><div class="bar"><i style="width:0"></i></div></div>
+      <div class="kpi"><div class="k"><span class="tile lg c-orange"><i data-lucide="pointer"></i></span><small>TOCARAM NO BOTÃO</small></div><div class="v">0</div><div class="bar"><i style="width:0"></i></div></div>
+      <div class="kpi"><div class="k"><span class="tile lg c-orange"><i data-lucide="user-plus"></i></span><small>SEGUIRAM</small></div><div class="v">0</div><div class="bar"><i style="width:0"></i></div></div>
+      <div class="kpi"><div class="k"><span class="tile lg c-orange"><i data-lucide="link"></i></span><small>CLICARAM NO LINK</small></div><div class="v">0</div><div class="bar"><i style="width:0"></i></div></div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <div class="row"><h2>Suas automações</h2><button class="b p" style="margin-left:auto" data-go="criar"><i data-lucide="plus"></i>Nova (junto com um post)</button></div>
+      <table style="margin-top:12px">
+        <tr><th>Nome</th><th>Post</th><th>Palavra</th><th>Fluxo</th><th>Status</th><th></th></tr>
+        <tr><td><b>Ecossistema WSA — comente QUERO</b></td><td class="mut">aguardando próximo post</td><td>QUERO</td><td>v3 · segue a conta</td><td><span class="badge bd-off">Pausada</span></td><td><button class="b o" style="padding:8px 12px">Abrir fluxo</button></td></tr>
+      </table>
+    </div>
+    <div class="note" style="margin-top:16px"><i data-lucide="alert-triangle"></i><span>Esta é a única parte <b>paga</b>: o Chatfyre cobra plano Solo/Pro para acesso pela API. Alternativa R$ 0 (fase futura): responder comentário e DM pela API oficial da Meta, mas exige aprovação do app pela Meta.</span></div>
+  </section>
+
+  <!-- ===== RADAR DE PROSPECÇÃO ===== -->
+  <section class="page" id="radar">
+    <div class="head">
+      <span class="tile lg c-green"><i data-lucide="radar"></i></span>
+      <div><h1>Radar de prospecção</h1><p class="sub">Encontre posts do seu nicho, entre na conversa e leve a pessoa para o seu conteúdo</p></div>
+      <div class="act"><button class="b p"><i data-lucide="plus"></i>Nova busca</button></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="row"><b>Hashtags monitoradas</b><span class="mut" style="margin-left:auto;font-size:13px">7 de 30 por semana · API oficial do Instagram · R$ 0</span></div>
+      <div class="chips" style="margin:14px 0 0">
+        <span class="chip on">#imobiliaria</span><span class="chip on">#corretordeimoveis</span><span class="chip on">#totvsrm</span><span class="chip on">#gestaoempresarial</span><span class="chip on">#confeitaria</span><span class="chip on">#departamentopessoal</span><span class="chip on">#compras</span><span class="chip"><i data-lucide="plus" style="width:14px;height:14px"></i>adicionar</span>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1.4fr 1fr;gap:20px;align-items:start">
+      <div class="card">
+        <div class="row"><h2>Oportunidades encontradas</h2><div class="tabs" style="margin:0 0 0 auto;padding:4px"><button class="on">Novas 12</button><button>Em contato 3</button><button>Descartadas</button></div></div>
+        <table style="margin-top:10px">
+          <tr><th>Post</th><th>Sinal de dor (IA)</th><th>Solução WSA</th><th>Ação</th></tr>
+          <tr><td><b>#corretordeimoveis</b><br><small class="mut">"perdi mais um cliente porque esqueci de retornar…"</small></td><td><span class="badge bd-wait">follow-up manual</span></td><td>Imobiliárias / CRM</td><td><button class="b o" style="padding:8px 12px">Abrir</button></td></tr>
+          <tr><td><b>#totvsrm</b><br><small class="mut">"fechamento do mês de novo na planilha"</small></td><td><span class="badge bd-wait">retrabalho ERP</span></td><td>Ecossistema TOTVS RM</td><td><button class="b o" style="padding:8px 12px">Abrir</button></td></tr>
+          <tr><td><b>#departamentopessoal</b><br><small class="mut">"aprovação de férias por e-mail é um caos"</small></td><td><span class="badge bd-wait">aprovação lenta</span></td><td>Aprovações RH</td><td><button class="b o" style="padding:8px 12px">Abrir</button></td></tr>
+          <tr><td><b>#confeitaria</b><br><small class="mut">"não dou conta de responder pedido no direct"</small></td><td><span class="badge bd-wait">atendimento</span></td><td>ImobDocerias</td><td><button class="b o" style="padding:8px 12px">Abrir</button></td></tr>
+        </table>
+        <p class="mut" style="font-size:12px;margin-top:10px">A IA (Gemini) lê só a legenda do post e classifica a dor. A API de hashtag não informa quem postou: o botão "Abrir" leva ao post no Instagram.</p>
+      </div>
+
+      <div class="grid" style="gap:18px">
+        <div class="card">
+          <b>Abordagem sugerida · #totvsrm</b>
+          <div class="lbl" style="margin:14px 0 8px">1. Comentário (você revisa e publica)</div>
+          <textarea style="min-height:80px">Fechamento na planilha com o RM rodando do lado é mais comum do que parece. A gente resolveu isso integrando direto no TOTVS RM, sem exportar nada. Fiz um carrossel explicando, tá no meu perfil 👊</textarea>
+          <div class="lbl" style="margin:14px 0 8px">2. Conteúdo para indicar</div>
+          <div class="row" style="background:#141418;border-radius:12px;padding:10px"><div class="t-blue" style="width:48px;height:60px;border-radius:8px"></div><div><b style="font-size:14px">Parar de remendar o seu ERP</b><br><small class="mut">Carrossel · automação QUERO ativa</small></div></div>
+          <div class="lbl" style="margin:14px 0 8px">3. Se a pessoa responder → DM</div>
+          <p class="mut" style="font-size:13px">Quem responde ou comenta "QUERO" entra na automação do Chatfyre, aí sim com DM, botão e link.</p>
+          <div class="grid g2" style="margin-top:14px">
+            <button class="b g" style="justify-content:center"><i data-lucide="copy"></i>Copiar e abrir post</button>
+            <button class="b o" style="justify-content:center"><i data-lucide="bookmark"></i>Salvar na lista</button>
+          </div>
+        </div>
+        <div class="note"><i data-lucide="shield-alert"></i><span><b>Por que não manda DM sozinho:</b> a Meta só permite DM automático para quem falou com você primeiro (comentou, respondeu story ou mandou mensagem). DM em massa para desconhecidos é proibido e derruba a conta. O radar acha a oportunidade, a IA escreve o comentário e <b>você publica com um clique</b>. Quem responde entra no funil automático.</span></div>
+        <div class="card"><b>Limite de segurança</b><p class="mut" style="font-size:13px;margin-top:6px">Máx. 20 comentários manuais por dia, intervalo mínimo de 3 min. Ritmo de pessoa, não de robô.</p><div class="bar" style="margin-top:10px"><i style="width:35%;background:var(--green)"></i></div><small class="mut">7 de 20 hoje</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ANALYTICS ===== -->
+  <section class="page" id="analytics">
+    <div class="head">
+      <div><h1>Analytics</h1><p class="sub">Estatísticas da @wsasistemas.ia — API oficial do Instagram</p></div>
+      <div class="act"><button class="b o"><i data-lucide="download"></i>Exportar</button><button class="b o"><i data-lucide="mail"></i>Relatório semanal por e-mail</button></div>
+    </div>
+    <div class="grid g4">
+      <div class="kpi"><small class="mut">SEGUIDORES</small><div class="v">—</div><span class="badge bd-wait">aguardando permissão</span></div>
+      <div class="kpi"><small class="mut">ALCANCE 30 DIAS</small><div class="v">—</div><span class="badge bd-wait">aguardando permissão</span></div>
+      <div class="kpi"><small class="mut">POSTS 90 DIAS</small><div class="v">5</div><span class="badge bd-ok">dado real</span></div>
+      <div class="kpi"><small class="mut">DIAS SEM POSTAR</small><div class="v">22</div><span class="badge bd-ok">dado real</span></div>
+    </div>
+    <div class="grid g2" style="margin-top:20px">
+      <div class="card"><b>Seguidores ganhos por semana</b><div class="chart"><i style="height:20%"></i><i style="height:35%"></i><i style="height:28%"></i><i style="height:50%"></i><i style="height:62%"></i><i style="height:80%"></i></div><small class="mut">exemplo ilustrativo</small></div>
+      <div class="card"><b>Ranking de posts</b>
+        <table style="margin-top:8px"><tr><th>Post</th><th>Formato</th><th>Alcance</th><th>Salv.</th></tr>
+        <tr><td>Reel docerias 03/10</td><td>Reels</td><td>—</td><td>—</td></tr>
+        <tr><td>Carrossel ImobDocerias 27/09</td><td>Carrossel</td><td>—</td><td>—</td></tr>
+        <tr><td>TOTVS RM lento 01/08</td><td>Carrossel</td><td>—</td><td>—</td></tr></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONEXÕES E CUSTOS ===== -->
+  <section class="page" id="conexoes">
+    <div class="head"><div><h1>Conexões e custos</h1><p class="sub">O que cada parte usa e quanto custa</p></div></div>
+    <div class="grid g3">
+      <div class="card conn"><div class="tile lg c-ig"><i data-lucide="instagram"></i></div><div><b>Instagram — API oficial</b><br><small class="mut">publicar, agendar, métricas</small><br><span class="badge bd-wait" style="margin-top:6px">a conectar</span></div></div>
+      <div class="card conn"><div class="tile lg c-orange">CF</div><div><b>Chatfyre</b><br><small class="mut">automações comentário → DM</small><br><span class="badge bd-ok" style="margin-top:6px">conectado · token até 24/12</span></div></div>
+      <div class="card conn"><div class="tile lg c-indigo"><i data-lucide="sparkles"></i></div><div><b>Gemini</b><br><small class="mut">legendas, prompts, edição por chat</small><br><span class="badge bd-wait" style="margin-top:6px">a conectar</span></div></div>
+    </div>
+
+    <div class="card" style="margin-top:22px;border-color:#8b5cf6">
+      <div class="row"><i data-lucide="cpu" style="color:#c4b5fd"></i><h2>Provedores de IA para imagem e vídeo</h2><span class="badge bd-wait" style="margin-left:auto">pago por uso · com teto mensal</span></div>
+      <p class="mut" style="margin-top:6px">Cole a chave de API de cada provedor. A chave fica guardada no servidor (Supabase Vault) e nunca aparece no navegador.</p>
+      <div class="grid g3" style="margin-top:16px">
+        <div class="card" style="background:#141418">
+          <div class="conn"><div class="tile lg c-gray">AI</div><div><b>OpenAI</b><br><small class="mut">imagens realistas (GPT Image) e cenas de vídeo (Sora)</small></div></div>
+          <input style="margin-top:14px" placeholder="sk-… (chave de API, não é a assinatura do ChatGPT)">
+          <div class="row" style="margin-top:10px;font-size:13px"><span class="mut">Usar para</span><span class="chip on" style="padding:4px 10px;margin-left:auto">Imagens</span><span class="chip" style="padding:4px 10px">Cenas</span></div>
+        </div>
+        <div class="card" style="background:#141418">
+          <div class="conn"><div class="tile lg c-purple">HG</div><div><b>HeyGen</b><br><small class="mut">avatar clonado + voz clonada + lip-sync</small></div></div>
+          <input style="margin-top:14px" placeholder="Chave de API HeyGen">
+          <div class="row" style="margin-top:10px;font-size:13px"><span class="mut">Usar para</span><span class="chip on" style="padding:4px 10px;margin-left:auto">Vídeo com avatar</span></div>
+        </div>
+        <div class="card" style="background:#141418">
+          <div class="conn"><div class="tile lg c-gray">fal</div><div><b>fal.ai</b> <small class="mut">(alternativa "tudo em um")</small><br><small class="mut">vários modelos de imagem, vídeo e avatar numa só chave</small></div></div>
+          <input style="margin-top:14px" placeholder="Chave de API fal.ai">
+          <div class="row" style="margin-top:10px;font-size:13px"><span class="mut">Usar para</span><span class="chip" style="padding:4px 10px;margin-left:auto">Imagens</span><span class="chip" style="padding:4px 10px">Avatar</span></div>
+        </div>
+      </div>
+      <div class="kv" style="grid-template-columns:220px 1fr;max-width:700px">
+        <label>Teto de gasto mensal</label><input value="US$ 30 — ao atingir, bloqueia novas gerações">
+        <label>Pedir confirmação acima de</label><input value="US$ 2 por geração">
+      </div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <h2>Custo mensal estimado</h2>
+      <table class="cost" style="margin-top:12px">
+        <tr><th>Parte</th><th>Tecnologia</th><th>Custo</th></tr>
+        <tr><td>Telas (frontend)</td><td>React + Vite + Tailwind + shadcn na Vercel (Hobby)</td><td class="z">R$ 0</td></tr>
+        <tr><td>Banco, login, arquivos</td><td>Supabase Free (500 MB banco, 1 GB arquivos)</td><td class="z">R$ 0</td></tr>
+        <tr><td>Carrossel e posts</td><td>Templates HTML → PNG</td><td class="z">R$ 0</td></tr>
+        <tr><td>Reels</td><td>Remotion/FFmpeg rodando no seu PC</td><td class="z">R$ 0</td></tr>
+        <tr><td>Textos e edição por chat</td><td>Gemini API (cota gratuita diária)</td><td class="z">R$ 0</td></tr>
+        <tr><td>Publicar, agendar, métricas</td><td>Instagram Graph API (app próprio na Meta)</td><td class="z">R$ 0</td></tr>
+        <tr><td>Imagem criada 100% por IA</td><td>OpenAI GPT Image (ou fal.ai)</td><td class="p">por uso · teto mensal</td></tr>
+        <tr><td>Vídeo narrado com avatar</td><td>HeyGen (ou fal.ai)</td><td class="p">por uso · teto mensal</td></tr>
+        <tr><td>Automação comentário → DM</td><td>Chatfyre (plano com acesso por API)</td><td class="p">plano Chatfyre</td></tr>
+      </table>
+    </div>
+  </section>
+</main>
+
+<button class="float" title="Assistente"><i data-lucide="bot"></i></button>
+<div class="legend">Mockup navegável — clique no menu e nos botões</div>
+
+<script>
+  const posts = [
+    {t:"Você coloca a mão na massa…", c:"t-choc", f:"Reels", d:"03/10", s:"Publicado", tag:"Docerias"},
+    {t:"O único sistema para seu negócio", c:"t-pink", f:"Carrossel", d:"27/09", s:"Publicado", tag:"Docerias"},
+    {t:"Você dedica paixão aos doces", c:"t-choc", f:"Imagem", d:"07/09", s:"Publicado", tag:"Docerias"},
+    {t:"Seu ERP já tem os dados", c:"t-dark", f:"Imagem", d:"21/08", s:"Publicado", tag:"TOTVS"},
+    {t:"O TOTVS RM não foi feito para ser lento", c:"t-blue", f:"Carrossel", d:"01/08", s:"Publicado", tag:"TOTVS"},
+    {t:"Relacionamento pós-contrato", c:"t-green", f:"Imagem", d:"26/07", s:"Publicado", tag:"Imob"},
+    {t:"Gestor, qual o maior desafio?", c:"t-purple", f:"Imagem", d:"25/07", s:"Publicado", tag:"TOTVS"},
+    {t:"Parar de remendar o seu ERP", c:"t-blue", f:"Carrossel", d:"28/10 12:00", s:"Agendado", tag:"Eco", auto:true},
+  ].reverse();
+  const badge = s => s==="Agendado" ? '<span class="badge bd-wait">Agendado</span>' : '<span class="badge bd-ok">Publicado</span>';
+  document.getElementById('libGrid').innerHTML = posts.map(p => `
+    <div class="post ${p.c}" data-go="publicar">
+      <div class="art"><div class="logo">WSA SISTEMAS IA</div><h4>${p.t}</h4></div>
+      <span class="net badge bd-ig"><i data-lucide="instagram" style="width:14px;height:14px"></i>instagram</span>
+      <div class="ov"><b>${p.t}</b><small>${p.d} · ${p.f}</small><div class="row" style="margin-top:8px;gap:6px">${badge(p.s)}${p.auto?'<span class="badge" style="background:rgba(249,115,22,.2);color:#fdba74">⚡ QUERO</span>':''}</div></div>
+      <span class="ratio">4:5</span>
+    </div>`).join('');
+
+  const media = [["t-blue","logo-wsa.png"],["t-dark","print-totvs.png"],["t-choc","bolo-01.jpg"],["t-green","imob-app.png"],["t-purple","reel-bruto.mp4"],["t-pink","doce-02.jpg"],["t-blue","helpdesk.png"],["t-dark","trilha-lofi.mp3"],["t-green","assinatura.png"],["t-purple","aprovacoes.png"]];
+  document.getElementById('mediaGrid').innerHTML = media.map(m=>`<div class="media ${m[0]}"><small>${m[1]}</small></div>`).join('');
+
+  document.getElementById('artPrev').innerHTML = document.getElementById('artMain').innerHTML;
+
+  const navMap = {formato:"criar",conteudo:"criar",prompt:"criar",editor:"criar",publicar:"criar",avatar:"criar",midias:"midias"};
+  function go(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id===id));
+    const n = navMap[id] || id;
+    document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.go===n));
+    window.scrollTo(0,0);
+  }
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-go]'); if(t) go(t.dataset.go);});
+  document.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{[...o.parentElement.children].forEach(c=>c.classList.remove('on'));o.classList.add('on')}));
+  lucide.createIcons({attrs:{'stroke-width':1.75}});
+  document.querySelectorAll('[data-theme-set]').forEach(b=>b.addEventListener('click',()=>{
+    document.documentElement.dataset.theme=b.dataset.themeSet;
+    document.querySelectorAll('[data-theme-set]').forEach(x=>x.classList.toggle('on',x===b));
+  }));
+</script>
+</body>
+</html>
