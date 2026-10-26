@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "chatfyre": {
+      "type": "http",
+      "url": "https://chatfyre.com/api/mcp"
+    }
+  }
+}
