@@ -1,9 +1,13 @@
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { Bookmark, Eye, Heart, Image as ImageIcon, Instagram, LibraryBig, Plus, Search } from "lucide-react";
+import { Bookmark, Eye, Folder, Heart, Image as ImageIcon, Instagram, LibraryBig, Plus, Search } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { botao } from "@/components/ui/button";
 import { Badge, Card, Segmentado } from "@/components/ui/hig";
+import { Pastas } from "@/components/ui/pastas";
+import { contarPastas } from "@/lib/pastas";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { dataCurta, FORMATO_ROTULO, numero, tituloDoPost, usePosts, type Post, type StatusPost } from "./dados";
 
@@ -18,7 +22,7 @@ const STATUS_BADGE: Record<StatusPost, { texto: string; tom: "ok" | "aviso" | "n
 };
 
 /** Card 4:5 do post: capa do Instagram com a legenda e as métricas por cima. */
-function CardPost({ post }: { post: Post }) {
+function CardPost({ post, pastas, onPasta }: { post: Post; pastas: string[]; onPasta: (pasta: string | null) => void }) {
   const [semCapa, setSemCapa] = useState(!post.capa_url);
   const titulo = tituloDoPost(post);
   const s = STATUS_BADGE[post.status];
@@ -60,12 +64,28 @@ function CardPost({ post }: { post: Post }) {
   );
   const classe =
     "relative block aspect-[4/5] overflow-hidden rounded-hig-xl bg-bg3 text-white shadow-hig transition-transform duration-200 ease-apple hover:-translate-y-0.5";
-  return post.permalink ? (
-    <a href={post.permalink} target="_blank" rel="noreferrer" className={classe} aria-label={`${titulo} — abrir no Instagram`}>
-      {conteudo}
-    </a>
-  ) : (
-    <div className={classe}>{conteudo}</div>
+  return (
+    <div>
+      {post.permalink ? (
+        <a href={post.permalink} target="_blank" rel="noreferrer" className={classe} aria-label={`${titulo} — abrir no Instagram`}>
+          {conteudo}
+        </a>
+      ) : (
+        <div className={classe}>{conteudo}</div>
+      )}
+      <label className="mt-2 flex items-center gap-1.5 text-cap1 text-label2">
+        <Folder className="size-3.5 flex-none" aria-hidden />
+        <select
+          value={post.pasta ?? ""}
+          onChange={(e) => onPasta(e.target.value || null)}
+          aria-label={`Pasta de ${titulo}`}
+          className="min-h-8 min-w-0 flex-1 rounded-hig-sm bg-fill3 px-2 text-cap1 text-label"
+        >
+          <option value="">Sem pasta</option>
+          {pastas.map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+      </label>
+    </div>
   );
 }
 
@@ -73,6 +93,17 @@ export function Biblioteca() {
   const { data: posts = [], isLoading, error } = usePosts();
   const [aba, setAba] = useState<Aba>("todos");
   const [busca, setBusca] = useState("");
+  const [pasta, setPasta] = useState<string | null>(null);
+  const [pastasNovas, setPastasNovas] = useState<string[]>([]);
+  const cliente = useQueryClient();
+  const mudarPasta = useMutation({
+    mutationFn: async ({ id, pasta }: { id: string; pasta: string | null }) => {
+      const { error } = await supabase.from("posts").update({ pasta }).eq("id", id);
+      if (error) throw error;
+    },
+    onSettled: () => cliente.invalidateQueries({ queryKey: ["posts"] }),
+  });
+  const pastas = contarPastas(posts, pastasNovas);
 
   const contagem = useMemo(() => {
     const c = { todos: posts.length, rascunho: 0, agendado: 0, publicado: 0 };
@@ -82,7 +113,10 @@ export function Biblioteca() {
 
   const termo = busca.trim().toLowerCase();
   const lista = posts.filter(
-    (p) => (aba === "todos" || p.status === aba) && (!termo || (p.legenda ?? "").toLowerCase().includes(termo)),
+    (p) =>
+      (aba === "todos" || p.status === aba) &&
+      (pasta === null || p.pasta === pasta) &&
+      (!termo || (p.legenda ?? "").toLowerCase().includes(termo)),
   );
 
   const rotulo = (texto: string, n: number) => (
@@ -132,12 +166,28 @@ export function Biblioteca() {
         />
       </label>
 
-      {error && <Card className="mb-6 text-red">Não foi possível carregar os posts. Atualize a página.</Card>}
+      <Pastas
+        pastas={pastas}
+        valor={pasta}
+        onChange={setPasta}
+        onNova={(n) => setPastasNovas((l) => (l.includes(n) ? l : [...l, n]))}
+      />
+
+      {(error || mudarPasta.error) && (
+        <Card className="mb-6 text-red">Não foi possível {error ? "carregar os posts" : "mudar a pasta"}. Atualize a página.</Card>
+      )}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4" aria-busy={isLoading}>
         {isLoading
           ? Array.from({ length: 8 }, (_, i) => <div key={i} className="aspect-[4/5] animate-pulse rounded-hig-xl bg-bg2" />)
-          : lista.map((p) => <CardPost key={p.id} post={p} />)}
+          : lista.map((p) => (
+              <CardPost
+                key={p.id}
+                post={p}
+                pastas={pastas.map((x) => x.nome)}
+                onPasta={(nova) => mudarPasta.mutate({ id: p.id, pasta: nova })}
+              />
+            ))}
       </div>
 
       {!isLoading && !error && lista.length === 0 && (

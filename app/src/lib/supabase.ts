@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const chave = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+export const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+/** Chave pública (anon). Pode ir no front; quem protege os dados é a RLS. */
+export const chave = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 /** true quando o .env.local ainda não tem as variáveis do Supabase. */
 export const supabaseSemConfig = !url || !chave || chave.startsWith("<");

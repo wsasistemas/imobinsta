@@ -14,6 +14,7 @@ export type Post = {
   capa_url: string | null;
   publicado_em: string | null;
   agendado_para: string | null;
+  pasta: string | null;
   curtidas: number | null;
   comentarios: number | null;
   /** Retrato mais recente das métricas (ig-sync). */
@@ -44,7 +45,7 @@ export function usePosts() {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, formato, legenda, status, permalink, capa_url, publicado_em, agendado_para, curtidas, comentarios, metricas_post(data, alcance, views, salvamentos, compartilhamentos)",
+          "id, formato, legenda, status, permalink, capa_url, publicado_em, agendado_para, pasta, curtidas, comentarios, metricas_post(data, alcance, views, salvamentos, compartilhamentos)",
         )
         .eq("conta_id", conta!.conta_id)
         .order("publicado_em", { ascending: false, nullsFirst: true });

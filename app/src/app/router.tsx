@@ -7,6 +7,7 @@ import { Conexoes } from "@/features/conexoes/conexoes";
 import { ConfigurarInstagram } from "@/features/conexoes/configurar-instagram";
 import { Analytics } from "@/features/instagram/analytics";
 import { Biblioteca } from "@/features/instagram/biblioteca";
+import { BancoDeMidias } from "@/features/midias/midias";
 import { Explorar } from "@/pages/explorar";
 import { EmConstrucao } from "@/pages/em-construcao";
 
@@ -16,6 +17,7 @@ const PRONTAS: Record<string, React.ReactNode> = {
   "conectar-instagram": <ConfigurarInstagram />,
   biblioteca: <Biblioteca />,
   analytics: <Analytics />,
+  midias: <BancoDeMidias />,
 };
 
 export const router = createBrowserRouter([

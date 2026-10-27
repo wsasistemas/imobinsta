@@ -72,7 +72,7 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 
 - [x] App criado no developers.facebook.com (tipo decidido: Instagram Login ou Facebook Login, ver PRD pergunta 2)
 - [x] Edge Function `ig-oauth`: troca o código, gera o token de longa duração e salva no Vault
-- [ ] Rotina de renovação do token antes de vencer (pg_cron)
+- [x] Token: pg_cron marca vencido + aviso 10 dias antes com "Conectar de novo" (a Meta não renova o token de usuário sem nova autorização; aprovado em 27/10/2026)
 - [x] Migration `metricas_post`, `metricas_conta` e `posts` (campos de publicação)
 - [x] Edge Function `ig-sync`: importa posts, insights por post e seguidores, com snapshot diário
 - [x] Os 7 posts reais aparecem com alcance, curtidas e salvamentos. O 403 do Chatfyre fica resolvido.
@@ -90,12 +90,12 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 
 ## Fase 3: Banco de mídias e Biblioteca
 
-- [ ] Bucket `imobinsta-midias` com políticas por `conta_id`, separando privado e publicado
-- [ ] Migration `midias` (pasta, tipo, dimensões, origem)
-- [ ] Upload com arrastar e soltar, até 100 MB, com barra de progresso
-- [ ] Abas Tudo / Imagens / Vídeos / Logos / Trilhas / Prints
-- [ ] Biblioteca com abas Rascunhos / Agendados / Publicados, pastas e busca
-- [ ] Conferência visual igual ao mockup
+- [x] Bucket `imobinsta-midias` com políticas por `conta_id`, separando privado e publicado
+- [x] Migration `midias` (pasta, tipo, dimensões, origem)
+- [x] Upload com arrastar e soltar, até 100 MB, com barra de progresso
+- [x] Abas Tudo / Imagens / Vídeos / Logos / Trilhas / Prints
+- [x] Biblioteca com abas Rascunhos / Agendados / Publicados, pastas e busca
+- [x] Conferência visual igual ao mockup
 
 **Prompt da fase:**
 > Fase 3 do `docs/PLANO-fases.md`: bucket, migration `midias`, telas Banco de mídias e Biblioteca
