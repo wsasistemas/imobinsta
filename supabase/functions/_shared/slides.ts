@@ -13,6 +13,7 @@ export const DadosSlide = z.object({
   cor_destaque: hex.optional(),
   cor_fundo: hex.optional(),
   posicao: z.enum(["topo", "centro", "base"]).optional(),
+  fundo_midia: z.string().max(300).optional(), // caminho no bucket da imagem de fundo (Fase 7); a IA de texto não mexe
 });
 export type DadosSlide = z.infer<typeof DadosSlide>;
 

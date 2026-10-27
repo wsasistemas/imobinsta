@@ -172,13 +172,18 @@ que só aparecem com o token de escrita (`automacoes:escrever`).
 
 ## Fase 7: IA paga (imagem, avatar, teto)
 
-- [ ] Tela Conexões: campos de chave OpenAI, HeyGen e fal.ai (gravam no Vault pela Edge Function)
-- [ ] `uso-ia`: soma o gasto do mês, bloqueia ao atingir o teto e pede confirmação acima do valor por geração
-- [ ] `ia-imagem` (OpenAI GPT Image ou fal.ai) no fluxo "Imagem gerada por IA"
+- [x] Tela Conexões: campos de chave OpenAI, HeyGen e fal.ai (gravam no Vault pela Edge Function `ia-imagem`, ação `chave`)
+- [x] Teto de gasto: `config_ia` + `gasto_ia_mes()` (migration 20261027060000, PGlite 11/11); a `ia-imagem` bloqueia no teto e pede confirmação acima do valor por geração (padrão US$ 30 / US$ 2)
+- [x] `ia-imagem` (OpenAI GPT Image ou fal.ai) no fluxo "Imagem gerada por IA" (`/criar/ia-imagem`): a foto vira fundo do template (`fundo_midia`), título e logo por cima
 - [ ] Migration `avatares` e `roteiros`
 - [ ] Tela Meus avatares: cadastro do avatar treinado no provedor + registro do consentimento
 - [ ] Wizard Vídeo com avatar: roteiro (Gemini) → avatar/voz → `ia-avatar` → vídeo no banco de mídias → Publicar como Reels
 - [ ] Publicação de Reels em `ig-publicar` (container de vídeo + espera do processamento)
+
+**Etapas da Fase 7:** 7.1 chaves, teto e imagem por IA · 7.2 avatar (HeyGen), roteiro e Reels.
+
+**Para ligar em produção (Wagner):** SQL Editor do ikvj: rodar `supabase/migrations/20261027060000_fase7_ia_paga.sql`;
+em Conexões, colar a chave da OpenAI (ou fal.ai) e conferir o teto.
 
 ---
 

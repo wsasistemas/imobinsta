@@ -119,13 +119,24 @@ export async function criarRascunho(
   return data.id as string;
 }
 
+/** Erro de Edge Function com o status HTTP e o corpo devolvido (ex.: { precisa_confirmar } da ia-imagem). */
+export class ErroFuncao extends Error {
+  status: number;
+  dados: Record<string, unknown> | null;
+  constructor(mensagem: string, status: number, dados: Record<string, unknown> | null) {
+    super(mensagem);
+    this.status = status;
+    this.dados = dados;
+  }
+}
+
 /** Chama uma Edge Function do estúdio e devolve o JSON. Em erro, usa a mensagem que a função mandou. */
 export async function chamarFuncao<T>(nome: string, corpo: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke<T>(nome, { body: corpo });
   if (error) {
     const resp = "context" in error ? (error.context as Response) : null;
     const json = resp ? await resp.json().catch(() => null) : null;
-    throw new Error(json?.erro ?? `Falha ao chamar ${nome}.`);
+    throw new ErroFuncao(json?.erro ?? `Falha ao chamar ${nome}.`, resp?.status ?? 0, json);
   }
   return data as T;
 }

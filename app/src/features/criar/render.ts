@@ -12,6 +12,8 @@ export async function imagemDoSlide(no: HTMLElement, tipo: "png" | "jpeg" = "png
     width: LARGURA, height: ALTURA, pixelRatio: 1, cacheBust: true, skipFonts: true, style: { transform: "none" },
     type: `image/${tipo}`, quality: 0.92, backgroundColor: "#000000",
   };
+  // Espera as imagens do slide (logo e fundo da IA) decodificarem antes de copiar o HTML.
+  await Promise.all([...no.querySelectorAll("img")].map((img) => img.decode().catch(() => undefined)));
   // A primeira passada às vezes sai sem as imagens (ainda carregando no clone); a segunda é a que vale.
   await toBlob(no, opcoes).catch(() => null);
   const blob = await toBlob(no, opcoes);

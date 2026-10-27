@@ -13,7 +13,7 @@ const TIPOS: Tipo[] = [
   { titulo: "Vídeo narrado com avatar", texto: "Seu avatar fala o roteiro com a sua voz, com legenda, cenas e CTA. Ideal para Reels de venda.", icone: UserRoundCheck, cor: "purple", redes: [Instagram, Youtube, Linkedin], custo: "Pago por uso · provedor de IA", gratis: false, fase: 7 },
   { titulo: "Posts de imagem", texto: "Post único, carrossel e stories a partir de templates da WSA. Texto e fundo editáveis.", icone: Images, cor: "pink", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · template + IA de texto", gratis: true, para: "/criar/imagem" },
   { titulo: "Reels / vídeo", texto: "Monte Reels com suas fotos e vídeos: cortes, legenda automática, trilha livre e logo.", icone: Clapperboard, cor: "blue", redes: [Instagram, Youtube], custo: "Grátis · render no seu PC", gratis: true, fase: 8 },
-  { titulo: "Imagem gerada por IA", texto: "A IA (OpenAI GPT Image ou outro modelo) cria a arte inteira do zero, com fotos realistas e a sua marca.", icone: Sparkles, cor: "indigo", redes: [Instagram], custo: "Pago por uso · provedor de IA", gratis: false, fase: 7 },
+  { titulo: "Imagem gerada por IA", texto: "A IA (OpenAI GPT Image ou outro modelo) cria a arte inteira do zero, com fotos realistas e a sua marca.", icone: Sparkles, cor: "indigo", redes: [Instagram], custo: "Pago por uso · provedor de IA", gratis: false, para: "/criar/ia-imagem" },
 ];
 
 function Conteudo({ t }: { t: Tipo }) {

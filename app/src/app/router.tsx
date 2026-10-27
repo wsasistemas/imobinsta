@@ -13,6 +13,7 @@ import { BancoDeMidias } from "@/features/midias/midias";
 import { Criar } from "@/features/criar/criar";
 import { Editor } from "@/features/criar/editor";
 import { Publicar } from "@/features/criar/publicar";
+import { IaImagem } from "@/features/criar/ia-imagem";
 import { WizardImagem } from "@/features/criar/wizard";
 import { Explorar } from "@/pages/explorar";
 import { EmConstrucao } from "@/pages/em-construcao";
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       ),
       { path: "criar/editor/:id", element: <Editor /> },
       { path: "criar/publicar/:id", element: <Publicar /> },
+      { path: "criar/ia-imagem", element: <IaImagem /> },
       { path: "*", element: <EmConstrucao /> },
     ],
   },

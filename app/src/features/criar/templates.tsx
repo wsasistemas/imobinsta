@@ -3,7 +3,9 @@ import {
   BadgeCheck, Cake, ChartColumn, CircleCheck, Database, FileSignature, Headphones, House, type LucideIcon, MessageCircle,
   ShoppingCart, Sparkles, Users, Zap,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import logo from "@/assets/wsa-logo.png";
+import { supabase } from "@/lib/supabase";
 import { ALTURA, LARGURA, type DadosSlide, type TemplateId } from "./esquema";
 
 /**
@@ -137,6 +139,29 @@ function Texto({
   );
 }
 
+/**
+ * Imagem do bucket privado como data URL. Data URL (e não a URL assinada) para o html-to-image
+ * embutir no JPEG sem depender de CORS; o cache do React Query evita baixar de novo a cada render.
+ */
+function useImagemMidia(caminho: string | undefined) {
+  return useQuery({
+    queryKey: ["midia-dataurl", caminho],
+    enabled: !!caminho,
+    staleTime: Infinity,
+    gcTime: 30 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("imobinsta-midias").download(caminho!);
+      if (error || !data) throw error ?? new Error("Imagem não encontrada");
+      return await new Promise<string>((ok, falha) => {
+        const leitor = new FileReader();
+        leitor.onload = () => ok(String(leitor.result));
+        leitor.onerror = () => falha(leitor.error);
+        leitor.readAsDataURL(data);
+      });
+    },
+  }).data;
+}
+
 type PropsSlide = Edicao & {
   template: TemplateId;
   dados: DadosSlide;
@@ -149,6 +174,7 @@ type PropsSlide = Edicao & {
 export const Slide = forwardRef<HTMLDivElement, PropsSlide>(function Slide({ template, dados, n, total, logo: comLogo, editavel, onCampo }, ref) {
   const t = TEMPLATES[template] ?? TEMPLATES["wsa-neon"];
   const destaque = dados.cor_destaque ?? t.destaque;
+  const fundo = useImagemMidia(dados.fundo_midia);
   const titulo = (tamanho: number): CSSProperties => ({
     fontFamily: t.fonteTitulo, fontSize: tamanho, lineHeight: 1.04, fontWeight: t.caixaAlta ? 900 : 800,
     textTransform: t.caixaAlta ? "uppercase" : "none", letterSpacing: t.caixaAlta ? "-0.01em" : "-0.02em",
@@ -164,8 +190,16 @@ export const Slide = forwardRef<HTMLDivElement, PropsSlide>(function Slide({ tem
         padding: "84px 88px", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", boxSizing: "border-box",
       }}
     >
+      {/* Imagem de fundo (gerada por IA ou do banco de mídias), com véu para o texto ficar legível */}
+      {fundo && (
+        <>
+          <img src={fundo} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 35%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.8) 100%)" }} />
+        </>
+      )}
+
       {/* Marca */}
-      <div style={{ display: "flex", alignItems: "center", gap: 20, minHeight: 64 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 20, minHeight: 64, position: "relative" }}>
         {comLogo && (
           <>
             <img src={logo} alt="" style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 14 }} />
@@ -180,7 +214,7 @@ export const Slide = forwardRef<HTMLDivElement, PropsSlide>(function Slide({ tem
       {/* Conteúdo */}
       <div
         style={{
-          flex: 1, display: "flex", flexDirection: "column", gap: 40, paddingTop: 40, paddingBottom: 40,
+          flex: 1, display: "flex", flexDirection: "column", gap: 40, paddingTop: 40, paddingBottom: 40, position: "relative",
           justifyContent: dados.posicao === "topo" ? "flex-start" : dados.posicao === "base" ? "flex-end" : "center",
           textAlign: dados.layout === "capa" || dados.layout === "cta" ? "center" : "left",
           alignItems: dados.layout === "capa" || dados.layout === "cta" ? "center" : "stretch",

@@ -146,6 +146,9 @@ export function Conexoes() {
                     )}
                     {c.provedor === "gemini" && conta?.papel === "dono" && !demo && <ChaveGemini contaId={conta.conta_id} conectado={c.status === "conectado"} />}
                     {c.provedor === "chatfyre" && !demo && conta && <PacoteChatfyre contaId={conta.conta_id} dono={conta.papel === "dono"} />}
+                    {(c.provedor === "openai" || c.provedor === "heygen" || c.provedor === "fal") && conta?.papel === "dono" && !demo && (
+                      <ChaveProvedor contaId={conta.conta_id} provedor={c.provedor} conectado={c.status === "conectado"} />
+                    )}
                     {c.provedor === "instagram" && (sync.data || sync.error) && (
                       <p role="status" className={cn("mt-2 text-cap1", sync.error ? "text-red" : "text-green")}>
                         {sync.error ? sync.error.message : `${sync.data!.posts} posts · ${sync.data!.seguidores ?? "?"} seguidores`}
@@ -160,6 +163,8 @@ export function Conexoes() {
       <p className="mt-4 text-foot text-label2">
         Chaves e tokens ficam no Vault do Supabase e só as Edge Functions os usam. Esta tela mostra apenas o status.
       </p>
+
+      {!demo && conta && <TetoIa contaId={conta.conta_id} dono={conta.papel === "dono"} />}
 
       <Card className="mt-8 overflow-x-auto">
         <h2>Custo mensal estimado</h2>
@@ -227,6 +232,123 @@ function ChaveGemini({ contaId, conectado }: { contaId: string; conectado: boole
         Gere em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-blue underline">aistudio.google.com/apikey</a>. A chave não fica no navegador.
       </p>
     </form>
+  );
+}
+
+const AJUDA_CHAVE: Record<"openai" | "heygen" | "fal", { placeholder: string; url: string; site: string }> = {
+  openai: { placeholder: "sk-… (chave de API, não a assinatura do ChatGPT)", url: "https://platform.openai.com/api-keys", site: "platform.openai.com/api-keys" },
+  heygen: { placeholder: "Chave de API da HeyGen", url: "https://app.heygen.com/settings?nav=API", site: "app.heygen.com → Settings → API" },
+  fal: { placeholder: "Chave de API da fal.ai", url: "https://fal.ai/dashboard/keys", site: "fal.ai/dashboard/keys" },
+};
+
+/** Chave de provedor pago (OpenAI, HeyGen, fal.ai). A Edge Function ia-imagem testa quando dá e guarda no Vault. */
+function ChaveProvedor({ contaId, provedor, conectado }: { contaId: string; provedor: "openai" | "heygen" | "fal"; conectado: boolean }) {
+  const cliente = useQueryClient();
+  const [aberto, setAberto] = useState(false);
+  const [chave, setChave] = useState("");
+  const ajuda = AJUDA_CHAVE[provedor];
+  const salvar = useMutation({
+    mutationFn: () => chamarFuncao<{ testada: boolean }>("ia-imagem", { acao: "chave", conta_id: contaId, provedor, chave: chave.trim() }),
+    onSuccess: () => {
+      setChave("");
+      setAberto(false);
+      cliente.invalidateQueries({ queryKey: ["conexoes"] });
+    },
+  });
+  if (!aberto) {
+    return (
+      <Button tamanho="sm" variante="secundario" className="mt-3" onClick={() => setAberto(true)}>
+        {conectado ? "Trocar chave" : "Colar chave"}
+      </Button>
+    );
+  }
+  return (
+    <form className="mt-3" onSubmit={(e) => { e.preventDefault(); salvar.mutate(); }}>
+      <div className="flex gap-2">
+        <input className="campo min-h-9 py-1.5 text-foot" type="password" autoComplete="off" placeholder={ajuda.placeholder}
+          aria-label={`Chave ${provedor}`} value={chave} onChange={(e) => setChave(e.target.value)} />
+        <Button type="submit" tamanho="sm" disabled={chave.trim().length < 16 || salvar.isPending}>{salvar.isPending ? "Testando…" : "Salvar"}</Button>
+      </div>
+      {salvar.error && <p role="alert" className="mt-2 text-cap1 text-red">{salvar.error.message}</p>}
+      <p className="mt-2 text-cap1 text-label2">
+        Gere em <a href={ajuda.url} target="_blank" rel="noreferrer" className="text-blue underline">{ajuda.site}</a>. A chave não fica no navegador.
+      </p>
+    </form>
+  );
+}
+
+type ConfigIa = { teto_mensal_usd: number; confirmar_acima_usd: number; provedor_imagem: "openai" | "fal" };
+
+/** Teto mensal da IA paga (PRD R12): bloqueia ao atingir e pede confirmação acima de um valor por geração. */
+function TetoIa({ contaId, dono }: { contaId: string; dono: boolean }) {
+  const cliente = useQueryClient();
+  const atual = useQuery({
+    queryKey: ["config-ia", contaId],
+    queryFn: async () => {
+      const [{ data, error }, gasto] = await Promise.all([
+        supabase.from("config_ia").select("teto_mensal_usd, confirmar_acima_usd, provedor_imagem").eq("conta_id", contaId).maybeSingle(),
+        supabase.rpc("gasto_ia_mes", { p_conta: contaId }),
+      ]);
+      if (error) throw error;
+      if (gasto.error) throw gasto.error;
+      const cfg: ConfigIa = data
+        ? { teto_mensal_usd: Number(data.teto_mensal_usd), confirmar_acima_usd: Number(data.confirmar_acima_usd), provedor_imagem: data.provedor_imagem }
+        : { teto_mensal_usd: 30, confirmar_acima_usd: 2, provedor_imagem: "openai" };
+      return { cfg, gasto: Number(gasto.data ?? 0) };
+    },
+  });
+  if (atual.isLoading) return <div className="mt-8 h-40 animate-pulse rounded-hig-xl bg-bg2" />;
+  if (atual.error) return <Card className="mt-8 text-red">Não foi possível ler o teto de gasto: {atual.error.message}</Card>;
+  return <FormTeto key={JSON.stringify(atual.data!.cfg)} contaId={contaId} dono={dono} inicial={atual.data!.cfg} gasto={atual.data!.gasto}
+    aoSalvar={() => cliente.invalidateQueries({ queryKey: ["config-ia"] })} />;
+}
+
+function FormTeto({ contaId, dono, inicial, gasto, aoSalvar }: { contaId: string; dono: boolean; inicial: ConfigIa; gasto: number; aoSalvar: () => void }) {
+  const [cfg, setCfg] = useState(inicial);
+  const salvar = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("config_ia").upsert({ conta_id: contaId, ...cfg, atualizado_em: new Date().toISOString() });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: aoSalvar,
+  });
+  const pct = Math.min(100, (gasto / Math.max(cfg.teto_mensal_usd, 0.01)) * 100);
+  const mudou = JSON.stringify(cfg) !== JSON.stringify(inicial);
+  return (
+    <Card className="mt-8">
+      <div className="flex flex-wrap items-center gap-3">
+        <h2>IA paga: teto de gasto</h2>
+        <Badge tom="aviso" className="ml-auto">pago por uso · com teto mensal</Badge>
+      </div>
+      <p className="mt-2 text-foot text-label2">
+        Gasto neste mês: <b className="text-label">US$ {gasto.toFixed(2)}</b> de US$ {cfg.teto_mensal_usd.toFixed(2)}. Ao atingir o teto, novas gerações são bloqueadas.
+      </p>
+      <div className="mt-3 h-2 max-w-xl overflow-hidden rounded-full bg-fill3">
+        <div className={cn("h-full rounded-full", pct >= 90 ? "bg-red" : pct >= 70 ? "bg-orange" : "bg-green")} style={{ width: `${pct}%` }} />
+      </div>
+      <fieldset disabled={!dono} className="mt-5 grid max-w-xl gap-3 sm:grid-cols-[220px_1fr] sm:items-center">
+        <label htmlFor="teto" className="text-foot text-label2">Teto de gasto mensal (US$)</label>
+        <input id="teto" type="number" min={0} max={10000} step={1} className="campo max-w-40" value={cfg.teto_mensal_usd}
+          onChange={(e) => setCfg({ ...cfg, teto_mensal_usd: Math.max(0, Number(e.target.value) || 0) })} />
+        <label htmlFor="confirmar" className="text-foot text-label2">Pedir confirmação acima de (US$ por geração)</label>
+        <input id="confirmar" type="number" min={0} max={1000} step={0.5} className="campo max-w-40" value={cfg.confirmar_acima_usd}
+          onChange={(e) => setCfg({ ...cfg, confirmar_acima_usd: Math.max(0, Number(e.target.value) || 0) })} />
+        <label htmlFor="prov-img" className="text-foot text-label2">Provedor de imagem</label>
+        <select id="prov-img" className="campo max-w-60" value={cfg.provedor_imagem} onChange={(e) => setCfg({ ...cfg, provedor_imagem: e.target.value as ConfigIa["provedor_imagem"] })}>
+          <option value="openai">OpenAI (GPT Image)</option>
+          <option value="fal">fal.ai (FLUX)</option>
+        </select>
+      </fieldset>
+      {dono ? (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button tamanho="sm" onClick={() => salvar.mutate()} disabled={!mudou || salvar.isPending}>{salvar.isPending ? "Salvando…" : "Salvar"}</Button>
+          {salvar.error && <span role="alert" className="text-cap1 text-red">{salvar.error.message}</span>}
+          {salvar.isSuccess && !mudou && <span role="status" className="text-cap1 text-green">Salvo.</span>}
+        </div>
+      ) : (
+        <p className="mt-3 text-cap1 text-label2">Só o dono da conta muda o teto.</p>
+      )}
+    </Card>
   );
 }
 
