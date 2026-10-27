@@ -9,6 +9,8 @@ import { Analytics } from "@/features/instagram/analytics";
 import { Automacoes } from "@/features/automacoes/automacoes";
 import { Calendario } from "@/features/calendario/calendario";
 import { MeusAvatares } from "@/features/avatares/avatares";
+import { MarcaDna } from "@/features/marca/marca";
+import { Campanhas } from "@/features/marca/campanhas";
 import { VideoAvatar } from "@/features/criar/avatar";
 import { Biblioteca } from "@/features/instagram/biblioteca";
 import { BancoDeMidias } from "@/features/midias/midias";
@@ -32,6 +34,8 @@ const PRONTAS: Record<string, React.ReactNode> = {
   automacoes: <Automacoes />,
   calendario: <Calendario />,
   avatares: <MeusAvatares />,
+  marca: <MarcaDna />,
+  campanhas: <Campanhas />,
   "criar-avatar": <VideoAvatar />,
 };
 

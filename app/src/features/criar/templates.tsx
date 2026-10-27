@@ -6,6 +6,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import logo from "@/assets/wsa-logo.png";
 import { supabase } from "@/lib/supabase";
+import { coresDaMarca, useDna } from "@/features/marca/dados";
 import { ALTURA, LARGURA, type DadosSlide, type TemplateId } from "./esquema";
 
 /**
@@ -64,9 +65,26 @@ export const TEMPLATES: Record<TemplateId, Estilo> = {
     cartao: "rgba(255,244,236,0.1)",
     amostra: "linear-gradient(160deg,#FF8FB1,#6B2F3A 55%,#2A140D)",
   },
+  // Cores vêm do DNA da marca (Fase 10) na hora de desenhar; estes são os valores sem DNA.
+  marca: estiloMarca("#0A4FD6", "#0A4FD6"),
 };
 
-export const ORDEM_TEMPLATES: TemplateId[] = ["wsa-neon", "wsa-escuro", "wsa-docerias"];
+/** Template "Marca": fundo na cor principal do DNA, destaque na segunda cor. */
+function estiloMarca(principal: string, destaque: string): Estilo {
+  return {
+    nome: "Marca (DNA)",
+    fundo: (c) => `linear-gradient(160deg, ${c ?? principal} 0%, #0B1220 78%)`,
+    texto: "#FFFFFF",
+    suave: "rgba(255,255,255,0.8)",
+    destaque,
+    fonteTitulo: SANS,
+    caixaAlta: false,
+    cartao: "rgba(255,255,255,0.08)",
+    amostra: `linear-gradient(160deg, ${principal}, #0B1220 70%)`,
+  };
+}
+
+export const ORDEM_TEMPLATES: TemplateId[] = ["wsa-neon", "wsa-escuro", "wsa-docerias", "marca"];
 
 /** Ícone da grade escolhido pelo texto do item (o JSON da IA só traz o texto). */
 const ICONES: [RegExp, LucideIcon][] = [
@@ -172,7 +190,9 @@ type PropsSlide = Edicao & {
 
 /** O slide em tamanho real (1080×1350). */
 export const Slide = forwardRef<HTMLDivElement, PropsSlide>(function Slide({ template, dados, n, total, logo: comLogo, editavel, onCampo }, ref) {
-  const t = TEMPLATES[template] ?? TEMPLATES["wsa-neon"];
+  const dna = useDna();
+  const cm = coresDaMarca(dna.data);
+  const t = template === "marca" ? estiloMarca(cm.principal, cm.destaque) : TEMPLATES[template] ?? TEMPLATES["wsa-neon"];
   const destaque = dados.cor_destaque ?? t.destaque;
   const fundo = useImagemMidia(dados.fundo_midia);
   const titulo = (tamanho: number): CSSProperties => ({

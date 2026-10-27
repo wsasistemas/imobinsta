@@ -7,6 +7,10 @@
 //   editar  { post_id?, slide, pedido, n, total }    → { alteracoes, resposta }
 //   pautas  { inicio }  (segunda-feira AAAA-MM-DD)   → { criadas }  8 pautas origem 'ia' (2/semana, ter e sex)
 //   roteiro { tema, produto, segundos }              → { titulo, texto, legenda, hashtags }  fala do vídeo com avatar
+//   dna     { url }  (só o dono)                     → DNA da marca: cores, fontes, imagens (banco de mídias) e tom (Gemini)
+//   campanhas {}                                     → 3 campanhas sugeridas (status "sugerida")
+//   aprovar_campanha { campanha_id, inicio }         → as sugestões viram pautas no Calendário
+// Toda geração recebe o DNA da marca da conta (textoDna), se existir.
 //   chave   { chave }  (só o dono)                   → { ok }  grava a chave do Gemini no Vault
 //
 // Toda chamada ao Gemini fica em geracoes_ia (custo 0 na cota gratuita).
@@ -77,6 +81,8 @@ async function gerarJson<T>(
   pedido: string,
 ): Promise<T> {
   const chave = await chaveGemini(ctx.db, ctx.contaId);
+  // DNA da marca (Fase 10) vai junto em toda geração, menos na própria leitura do DNA.
+  if (ctx.acao !== "dna") instrucao += await textoDna(ctx.db, ctx.contaId);
   const registro = { conta_id: ctx.contaId, post_id: ctx.postId ?? null, provedor: "gemini", tipo: "texto", acao: ctx.acao, modelo: MODELO, criado_por: ctx.userId, custo_usd: 0 };
   let erro = "";
   for (let tentativa = 0; tentativa < 2; tentativa++) {
@@ -106,6 +112,25 @@ async function gerarJson<T>(
     }
   }
   throw new ErroUsuario(`A IA devolveu um formato inválido duas vezes (${erro}). Tente de novo.`, 502);
+}
+
+/** Resumo do DNA da marca para anexar às instruções da IA. Vazio se a conta ainda não tem DNA. */
+async function textoDna(db: Db, contaId: string) {
+  const { data: d } = await db.from("marca_dna").select("tom, publico, proposta, pilares, usar, evitar").eq("conta_id", contaId).maybeSingle();
+  if (!d) return "";
+  const lista = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).join(", ") : "");
+  const tom = (d.tom ?? {}) as { adjetivos?: string[]; descricao?: string; exemplos?: string[] };
+  const linhas = [
+    lista(tom.adjetivos) && `Tom de voz: ${lista(tom.adjetivos)}.`,
+    tom.descricao && `Como a marca fala: ${tom.descricao}`,
+    lista(tom.exemplos) && `Frases no estilo da marca: ${lista(tom.exemplos)}`,
+    d.publico && `Público: ${d.publico}`,
+    d.proposta && `Proposta de valor: ${d.proposta}`,
+    lista(d.pilares) && `Pilares de conteúdo: ${lista(d.pilares)}.`,
+    lista(d.usar) && `Palavras para usar: ${lista(d.usar)}.`,
+    lista(d.evitar) && `NUNCA use: ${lista(d.evitar)}.`,
+  ].filter(Boolean);
+  return linhas.length ? `\n\nDNA DA MARCA (siga o tom e o vocabulário):\n${linhas.join("\n")}` : "";
 }
 
 // ---------- Leitura de link ------------------------------------------------------------------
@@ -170,6 +195,168 @@ async function lerLink(endereco: string) {
       .replace(/<[^>]+>/g, " "),
   ).replace(/(\.\s*){2,}/g, ". ").slice(0, 4000);
   return { url: url.toString(), titulo: titulo.slice(0, 200), descricao: descricao.slice(0, 400), corpo };
+}
+
+// ---------- DNA da marca: ler o site (Fase 10) ---------------------------------------------------
+
+/** GET com os mesmos cuidados do lerLink: só host público, redirecionamento conferido, limite de tamanho. */
+async function buscar(endereco: string, accept: string, limite: number) {
+  let url = new URL(endereco);
+  if (!/^https?:$/.test(url.protocol) || hostBloqueado(url.hostname)) return null;
+  for (let salto = 0; salto < 4; salto++) {
+    const resp = await fetch(url, {
+      redirect: "manual",
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; EstudioImobinsta/1.0)", Accept: accept },
+      signal: AbortSignal.timeout(10_000),
+    }).catch(() => null);
+    if (!resp) return null;
+    const destino = resp.headers.get("location");
+    if (resp.status >= 300 && resp.status < 400 && destino) {
+      url = new URL(destino, url);
+      if (!/^https?:$/.test(url.protocol) || hostBloqueado(url.hostname)) return null;
+      continue;
+    }
+    if (!resp.ok) return null;
+    const tamanho = Number(resp.headers.get("content-length") ?? 0);
+    if (tamanho > limite) return null;
+    const bytes = new Uint8Array(await resp.arrayBuffer());
+    if (bytes.length > limite) return null;
+    return { url: url.toString(), tipo: resp.headers.get("content-type") ?? "", bytes };
+  }
+  return null;
+}
+
+const texto = (b: Uint8Array) => new TextDecoder().decode(b);
+
+/** Cores mais usadas no HTML/CSS, sem brancos, pretos e cinzas (são neutros, não identidade). */
+function coresDo(css: string, temaCor: string | null) {
+  const conta = new Map<string, number>();
+  const somar = (hex: string, peso = 1) => {
+    let h = hex.toLowerCase();
+    if (h.length === 4) h = `#${h[1]}${h[1]}${h[2]}${h[2]}${h[3]}${h[3]}`;
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    if (max - min < 24) return; // cinza, branco ou preto
+    conta.set(h, (conta.get(h) ?? 0) + peso);
+  };
+  for (const m of css.matchAll(/#[0-9a-f]{6}\b|#[0-9a-f]{3}\b/gi)) somar(m[0]);
+  for (const m of css.matchAll(/rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/gi)) {
+    somar("#" + [m[1], m[2], m[3]].map((n) => Math.min(255, Number(n)).toString(16).padStart(2, "0")).join(""));
+  }
+  if (temaCor && /^#[0-9a-f]{3,6}$/i.test(temaCor)) somar(temaCor, 1000);
+  return [...conta.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([h]) => h.toUpperCase());
+}
+
+/** Fontes: famílias do Google Fonts primeiro, depois as font-family mais comuns (sem as genéricas). */
+function fontesDo(html: string, css: string) {
+  const google = [...html.matchAll(/fonts\.googleapis\.com\/css2?\?([^"'>]+)/gi)]
+    .flatMap((m) => [...decodeURIComponent(m[1]).matchAll(/family=([^:&;]+)/g)].map((f) => f[1].replace(/\+/g, " ").trim()));
+  const genericas = /^(inherit|initial|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|segoe ui|arial|helvetica|roboto|ui-sans-serif|var\(.*)$/i;
+  const conta = new Map<string, number>();
+  for (const m of css.matchAll(/font-family\s*:\s*([^;}]+)/gi)) {
+    const primeira = m[1].split(",")[0].replace(/["']/g, "").trim();
+    if (primeira && !genericas.test(primeira)) conta.set(primeira, (conta.get(primeira) ?? 0) + 1);
+  }
+  const todas = [...new Set([...google, ...[...conta.entries()].sort((a, b) => b[1] - a[1]).map(([f]) => f)])];
+  return { titulo: todas[0] ?? "", texto: todas[1] ?? todas[0] ?? "" };
+}
+
+/** Imagens candidatas: logo (ícones e <img> com "logo"), og:image e as primeiras imagens da página. */
+function imagensDo(html: string, base: URL) {
+  const abs = (s: string) => { try { return new URL(decodificar(s), base).toString(); } catch { return null; } };
+  const lista: { url: string; origem: string }[] = [];
+  const add = (s: string | null | undefined, origem: string) => {
+    const u = s ? abs(s) : null;
+    if (u && /^https?:/.test(u) && !/\.svg(\?|$)/i.test(u) && !lista.some((x) => x.url === u)) lista.push({ url: u, origem });
+  };
+  for (const m of html.matchAll(/<img[^>]+>/gi)) {
+    const tag = m[0];
+    if (/logo/i.test(tag)) add(/\ssrc=["']([^"']+)["']/i.exec(tag)?.[1], "logo");
+  }
+  add(meta(html, "og:image"), "og:image");
+  for (const m of html.matchAll(/<link[^>]+rel=["'](?:apple-touch-icon|icon)["'][^>]*>/gi)) add(/href=["']([^"']+)["']/i.exec(m[0])?.[1], "ícone");
+  for (const m of html.matchAll(/<img[^>]+\ssrc=["']([^"']+)["']/gi)) add(m[1], "página");
+  return lista.slice(0, 10);
+}
+
+const DnaIa = z.object({
+  tom: z.object({
+    adjetivos: z.array(z.string().trim().min(1).max(40)).max(5),
+    descricao: z.string().trim().max(400),
+    exemplos: z.array(z.string().trim().min(1).max(200)).max(3),
+  }),
+  publico: z.string().trim().max(400),
+  proposta: z.string().trim().max(400),
+  pilares: z.array(z.string().trim().min(1).max(120)).max(5),
+  usar: z.array(z.string().trim().min(1).max(40)).max(10),
+  evitar: z.array(z.string().trim().min(1).max(40)).max(10),
+});
+
+async function acaoDna(ctx: Parameters<typeof gerarJson>[0], corpo: Record<string, unknown>) {
+  if ((await papelNaConta(ctx.db, ctx.contaId, ctx.userId)) !== "dono") throw new ErroUsuario("Só o dono da conta lê o DNA da marca.", 403);
+  const bruto = z.string().trim().min(4).max(500).parse(corpo.url);
+  const inicio = /^https?:\/\//.test(bruto) ? bruto : `https://${bruto}`;
+  const pagina = await buscar(inicio, "text/html", 2_000_000);
+  if (!pagina || !/html/i.test(pagina.tipo)) throw new ErroUsuario("Não consegui abrir o site. Confira o endereço (precisa ser público).");
+  const base = new URL(pagina.url);
+  const html = texto(pagina.bytes);
+
+  // CSS: <style> da página + até 4 folhas de estilo do próprio site.
+  let css = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]).join("\n");
+  css += [...html.matchAll(/style=["']([^"']+)["']/gi)].map((m) => m[1]).join(";");
+  const folhas = [...html.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi)]
+    .map((m) => /href=["']([^"']+)["']/i.exec(m[0])?.[1]).filter(Boolean)
+    .map((h) => { try { return new URL(decodificar(h!), base); } catch { return null; } })
+    .filter((u): u is URL => !!u && !/fonts\.googleapis/.test(u.hostname)).slice(0, 4);
+  for (const f of folhas) {
+    const r = await buscar(f.toString(), "text/css", 600_000);
+    if (r) css += "\n" + texto(r.bytes);
+  }
+  const temaCor = meta(html, "theme-color") || null;
+
+  // Textos: página inicial + até 3 páginas internas do menu.
+  const internas = [...new Set([...html.matchAll(/<a[^>]+href=["']([^"'#?]+)["']/gi)]
+    .map((m) => { try { return new URL(decodificar(m[1]), base); } catch { return null; } })
+    .filter((u): u is URL => !!u && u.hostname === base.hostname && u.pathname.split("/").filter(Boolean).length === 1)
+    .map((u) => u.toString()))].slice(0, 3);
+  const textos = [await lerLink(pagina.url).catch(() => null), ...(await Promise.all(internas.map((u) => lerLink(u).catch(() => null))))]
+    .filter(Boolean) as Awaited<ReturnType<typeof lerLink>>[];
+  if (!textos.length) throw new ErroUsuario("O site não tem texto legível (talvez seja todo montado por JavaScript).", 422);
+
+  const instrucao = `Você analisa o site de uma empresa e descreve o DNA da marca para quem vai criar posts no Instagram.
+Use SOMENTE o que está nos textos. O que o site não disser fica vazio ("" ou []): não invente público, números, nem promessas.
+tom.adjetivos: até 5 adjetivos do jeito de escrever. tom.exemplos: até 3 frases curtas no estilo do site (podem ser trechos reais).
+pilares: os temas que a empresa repete. usar: termos e expressões característicos. evitar: só o que o tom claramente rejeita.
+Responda em JSON: {"tom": {"adjetivos": [], "descricao": "", "exemplos": []}, "publico": "", "proposta": "", "pilares": [], "usar": [], "evitar": []}.`;
+  const pedido = textos.map((t) => `Página ${t.url}\nTítulo: ${t.titulo}\nDescrição: ${t.descricao}\nTexto: ${t.corpo.slice(0, 2500)}`).join("\n\n---\n\n");
+  const ia = await gerarJson(ctx, DnaIa, instrucao, pedido);
+
+  // Imagens: baixa até 8 e guarda no banco de mídias (pasta "Marca").
+  const imagens: { midia_id: string; storage_path: string; origem: string }[] = [];
+  for (const c of imagensDo(html, base)) {
+    if (imagens.length >= 8) break;
+    const r = await buscar(c.url, "image/*", 5_000_000);
+    const mime = r?.tipo.split(";")[0].trim() ?? "";
+    if (!r || !/^image\/(jpeg|png|webp|gif)$/.test(mime) || r.bytes.length < 2000) continue;
+    const ext = mime.split("/")[1].replace("jpeg", "jpg");
+    const caminho = `${ctx.contaId}/Marca/${crypto.randomUUID()}.${ext}`;
+    const { error: eUp } = await ctx.db.storage.from("imobinsta-midias").upload(caminho, r.bytes, { contentType: mime });
+    if (eUp) continue;
+    const { data: m } = await ctx.db.from("midias").insert({
+      conta_id: ctx.contaId, pasta: "Marca", tipo: c.origem === "logo" ? "logo" : "imagem", nome: (c.origem + " · " + base.hostname).slice(0, 80),
+      storage_path: caminho, mime, tamanho_bytes: r.bytes.length, origem: "upload", criado_por: ctx.userId,
+    }).select("id").single();
+    if (m) imagens.push({ midia_id: m.id, storage_path: caminho, origem: c.origem });
+  }
+
+  const dna = {
+    conta_id: ctx.contaId, site_url: pagina.url, cores: coresDo(css + html.slice(0, 200_000), temaCor), fontes: fontesDo(html, css),
+    imagens, tom: ia.tom, publico: ia.publico || null, proposta: ia.proposta || null, pilares: ia.pilares, usar: ia.usar, evitar: ia.evitar,
+    lido_em: new Date().toISOString(), editado_em: new Date().toISOString(),
+  };
+  const { error } = await ctx.db.from("marca_dna").upsert(dna);
+  if (error) throw error;
+  return { ...dna, paginas_lidas: textos.length };
 }
 
 // ---------- Ações ----------------------------------------------------------------------------
@@ -275,6 +462,94 @@ function somarDias(data: string, n: number) {
   return d.toISOString().slice(0, 10);
 }
 
+/** Ranking real da Fase 2: alcance do retrato mais recente de cada post publicado (top 10). */
+async function rankingAlcance(db: Db, contaId: string) {
+  const { data: posts, error } = await db.from("posts")
+    .select("formato, legenda, publicado_em, metricas_post(data, alcance)")
+    .eq("conta_id", contaId).eq("status", "publicado");
+  if (error) throw error;
+  type Linha = { formato: string; legenda: string | null; publicado_em: string | null; metricas_post: { data: string; alcance: number | null }[] };
+  return ((posts ?? []) as Linha[])
+    .map((p) => ({
+      formato: p.formato,
+      titulo: (p.legenda ?? "").split("\n").find((l) => l.trim() && !l.trim().startsWith("#"))?.trim().slice(0, 120) ?? "",
+      alcance: [...(p.metricas_post ?? [])].sort((a, b) => b.data.localeCompare(a.data))[0]?.alcance ?? null,
+    }))
+    .filter((p) => p.alcance != null)
+    .sort((a, b) => b.alcance! - a.alcance!)
+    .slice(0, 10);
+}
+
+function textoRanking(ranking: Awaited<ReturnType<typeof rankingAlcance>>) {
+  return ranking.length
+    ? `Ranking dos posts por alcance (dado real do Instagram):\n${ranking.map((p, i) => `${i + 1}. [${p.formato}] alcance ${p.alcance} · "${p.titulo}"`).join("\n")}`
+    : "Ranking vazio: a conta ainda não tem métricas de alcance.";
+}
+
+// ---------- Campanhas sugeridas (Fase 10) ---------------------------------------------------------
+
+const PostCampanha = z.object({
+  titulo: z.string().trim().min(3).max(140),
+  formato: z.enum(["post", "carrossel", "reels"]),
+  produto: z.enum(PRODUTOS),
+  notas: z.string().trim().max(500),
+});
+const Campanhas = z.object({
+  campanhas: z.array(z.object({
+    nome: z.string().trim().min(3).max(120),
+    objetivo: z.enum(["engajar", "seguidores", "vender"]),
+    publico: z.string().trim().max(300),
+    descricao: z.string().trim().max(1000),
+    semanas: z.number().int().min(2).max(4),
+    posts: z.array(PostCampanha).min(4).max(8),
+  })).min(3).max(3),
+});
+
+async function acaoCampanhas(ctx: Parameters<typeof gerarJson>[0]) {
+  const ranking = await rankingAlcance(ctx.db, ctx.contaId);
+  const instrucao = `${MARCA}
+Você é estrategista de marketing no Instagram. Proponha EXATAMENTE 3 campanhas diferentes entre si (uma de cada objetivo:
+engajar, seguidores, vender). Cada campanha dura de 2 a 4 semanas e tem de 4 a 8 posts (2 por semana), alternando formato.
+Use o DNA da marca e o ranking de alcance. Em "notas" de cada post, 1 frase do porquê, citando SOMENTE números do ranking.
+Produtos permitidos (texto exato): ${PRODUTOS.join(" | ")}.
+Responda em JSON: {"campanhas": [{"nome": "", "objetivo": "engajar|seguidores|vender", "publico": "", "descricao": "", "semanas": 2,
+"posts": [{"titulo": "", "formato": "carrossel|reels|post", "produto": "", "notas": ""}]}]}.`;
+  const r = await gerarJson(ctx, Campanhas, instrucao, textoRanking(ranking));
+  const linhas = r.campanhas.map((c) => ({
+    conta_id: ctx.contaId, nome: c.nome, objetivo: c.objetivo, publico: c.publico || null, descricao: c.descricao || null,
+    semanas: c.semanas, posts_json: c.posts.slice(0, c.semanas * POR_SEMANA), status: "sugerida", origem: "ia",
+  }));
+  const { data, error } = await ctx.db.from("campanhas").insert(linhas).select("id");
+  if (error) throw error;
+  return { criadas: data?.length ?? 0, com_ranking: ranking.length };
+}
+
+/** Aprova: as sugestões viram pautas (terça e sexta) a partir da segunda-feira escolhida. */
+async function acaoAprovarCampanha(ctx: Parameters<typeof gerarJson>[0], corpo: Record<string, unknown>) {
+  const id = z.string().uuid().parse(corpo.campanha_id);
+  const inicio = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(corpo.inicio);
+  if (new Date(`${inicio}T12:00:00Z`).getUTCDay() !== 1) throw new ErroUsuario("O início precisa ser uma segunda-feira.");
+  // Reserva atômica: dois cliques não criam as pautas duas vezes.
+  const { data: c, error } = await ctx.db.from("campanhas").update({ status: "aprovada", inicio })
+    .eq("id", id).eq("conta_id", ctx.contaId).eq("status", "sugerida").select("posts_json, semanas").maybeSingle();
+  if (error) throw error;
+  if (!c) throw new ErroUsuario("Campanha não encontrada ou já aprovada.", 409);
+  const posts = z.array(PostCampanha).parse(c.posts_json);
+  const pautas = posts.map((p, i) => ({
+    conta_id: ctx.contaId, campanha_id: id, origem: "ia",
+    data: somarDias(inicio, Math.floor(i / POR_SEMANA) * 7 + DIAS[i % POR_SEMANA] - 1),
+    titulo: p.titulo, produto: p.produto, formato: p.formato, notas: p.notas || null,
+  }));
+  const { error: eIns } = await ctx.db.from("pautas").insert(pautas);
+  if (eIns) {
+    await ctx.db.from("campanhas").update({ status: "sugerida", inicio: null }).eq("id", id);
+    throw eIns;
+  }
+  const fim = pautas.at(-1)?.data ?? inicio;
+  await ctx.db.from("campanhas").update({ fim }).eq("id", id);
+  return { pautas: pautas.length, inicio, fim };
+}
+
 async function acaoPautas(ctx: Parameters<typeof gerarJson>[0], corpo: Record<string, unknown>) {
   // inicio = segunda-feira da primeira semana (o front manda a próxima segunda no fuso do usuário)
   const inicio = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(corpo.inicio);
@@ -285,22 +560,7 @@ async function acaoPautas(ctx: Parameters<typeof gerarJson>[0], corpo: Record<st
     .eq("conta_id", ctx.contaId).eq("origem", "ia").gte("data", inicio).lte("data", fim);
   if ((count ?? 0) > 0) throw new ErroUsuario("Já existem sugestões da IA nessas 4 semanas. Apague-as no calendário para gerar de novo.", 409);
 
-  // Ranking real da Fase 2: alcance do retrato mais recente de cada post publicado.
-  const { data: posts, error } = await ctx.db.from("posts")
-    .select("formato, legenda, publicado_em, metricas_post(data, alcance)")
-    .eq("conta_id", ctx.contaId).eq("status", "publicado");
-  if (error) throw error;
-  type Linha = { formato: string; legenda: string | null; publicado_em: string | null; metricas_post: { data: string; alcance: number | null }[] };
-  const ranking = ((posts ?? []) as Linha[])
-    .map((p) => ({
-      formato: p.formato,
-      titulo: (p.legenda ?? "").split("\n").find((l) => l.trim() && !l.trim().startsWith("#"))?.trim().slice(0, 120) ?? "",
-      alcance: [...(p.metricas_post ?? [])].sort((a, b) => b.data.localeCompare(a.data))[0]?.alcance ?? null,
-    }))
-    .filter((p) => p.alcance != null)
-    .sort((a, b) => b.alcance! - a.alcance!)
-    .slice(0, 10);
-
+  const ranking = await rankingAlcance(ctx.db, ctx.contaId);
   const n = SEMANAS * POR_SEMANA;
   const instrucao = `${MARCA}
 Você é estrategista de conteúdo para Instagram e monta o calendário das próximas ${SEMANAS} semanas: ${n} pautas, ${POR_SEMANA} por semana, na ordem em que vão ao ar.
@@ -309,10 +569,7 @@ Use o ranking de alcance para decidir temas e formatos que repetir. Em "notas", 
 citando SOMENTE os posts e números do ranking fornecido. Se o ranking estiver vazio, diga que é uma aposta inicial, sem inventar números.
 Produtos permitidos (use o texto exato): ${PRODUTOS.join(" | ")}.
 Responda em JSON: {"pautas": [{"titulo": "...", "produto": "...", "formato": "carrossel|reels|post", "notas": "..."}]}.`;
-  const pedido = ranking.length
-    ? `Ranking dos posts por alcance (dado real do Instagram):\n${ranking.map((p, i) => `${i + 1}. [${p.formato}] alcance ${p.alcance} · "${p.titulo}"`).join("\n")}`
-    : "Ranking vazio: a conta ainda não tem métricas de alcance.";
-  const r = await gerarJson(ctx, Sugestoes, instrucao, pedido);
+  const r = await gerarJson(ctx, Sugestoes, instrucao, textoRanking(ranking));
 
   const linhas = r.pautas.slice(0, n).map((p, i) => ({
     conta_id: ctx.contaId,
@@ -401,6 +658,12 @@ Deno.serve(async (req) => {
         return json(await acaoPautas(ctx, corpo));
       case "roteiro":
         return json(await acaoRoteiro(ctx, corpo));
+      case "dna":
+        return json(await acaoDna(ctx, corpo));
+      case "campanhas":
+        return json(await acaoCampanhas(ctx));
+      case "aprovar_campanha":
+        return json(await acaoAprovarCampanha(ctx, corpo));
       case "chave":
         return json(await acaoChave(db, contaId, user.id, corpo));
       default:

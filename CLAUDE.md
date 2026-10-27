@@ -15,6 +15,8 @@ no SQL Editor e crédito no AI Studio (Gemini), que libera os testes reais da au
 Recomendações IA (Fase 6). Fase 7 (IA paga) no código e no preview, sem push: 7.1 (chaves, teto,
 imagem por IA) e 7.2 (Meus avatares, vídeo com avatar HeyGen, Reels). Pendente do Wagner: migrations
 20261027060000 e 20261027070000. Depois delas: publicar o `ig-publicar` novo e fazer o push (ver PLANO-fases.md).
+Fases 10 (DNA da marca, campanhas) e 11 (Google Vids pelo Drive + Veo 3.1) aprovadas em 27/10; a 10 está no
+código (migration 20261027080000 pendente); a 11 começa depois do app OAuth do Google (conta pessoal do Wagner).
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

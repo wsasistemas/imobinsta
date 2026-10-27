@@ -4,7 +4,8 @@ import { Link } from "react-router";
 import { RefreshCw } from "lucide-react";
 import { Button, botao } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Cpu, Instagram, PlugZap, Sparkles, Zap, type LucideIcon } from "lucide-react";
+import { Cpu, Dna, Instagram, PlugZap, Sparkles, Zap, type LucideIcon } from "lucide-react";
+import { useDna } from "@/features/marca/dados";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge, Card } from "@/components/ui/hig";
 import { Tile, type CorTile } from "@/components/ui/tile";
@@ -164,6 +165,7 @@ export function Conexoes() {
         Chaves e tokens ficam no Vault do Supabase e só as Edge Functions os usam. Esta tela mostra apenas o status.
       </p>
 
+      {!demo && conta && <GoogleGratis />}
       {!demo && conta && <TetoIa contaId={conta.conta_id} dono={conta.papel === "dono"} />}
 
       <Card className="mt-8 overflow-x-auto">
@@ -232,6 +234,51 @@ function ChaveGemini({ contaId, conectado }: { contaId: string; conectado: boole
         Gere em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-blue underline">aistudio.google.com/apikey</a>. A chave não fica no navegador.
       </p>
     </form>
+  );
+}
+
+/** Seção "Google · grátis" (Fases 10 e 11): DNA da marca pelo Gemini; Drive + Vids e Veo entram na Fase 11. */
+function GoogleGratis() {
+  const dna = useDna();
+  return (
+    <Card className="mt-8 ring-1 ring-blue/40">
+      <div className="flex flex-wrap items-center gap-3">
+        <h2>Google · grátis</h2>
+        <Badge tom="ok" className="ml-auto">R$ 0 · cota gratuita</Badge>
+      </div>
+      <p className="mt-2 text-foot text-label2">
+        O Pomelli e o Google Vids não têm API: o estúdio faz o DNA da marca por dentro, com o Gemini, e conversa com o Vids pelo seu Google Drive.
+      </p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="flex items-start gap-4 rounded-hig-xl bg-fill3 p-4">
+          <Tile icone={Dna} cor="pink" tamanho="lg" />
+          <div className="min-w-0">
+            <b className="text-sub font-semibold">DNA da marca</b>
+            <p className="mt-1 text-foot text-label2">Lê o site e guarda cores, fontes, imagens e tom de voz. Guia legendas, posts, roteiros e campanhas.</p>
+            <div className="mt-2">
+              {dna.data ? <Badge tom="ok">Pronto · {dna.data.site_url?.replace(/^https?:\/\//, "").replace(/\/$/, "")}</Badge> : <Badge>A ler</Badge>}
+            </div>
+            <Link to="/marca" className={cn(botao({ tamanho: "sm", variante: "secundario" }), "mt-3")}>Abrir DNA da marca</Link>
+          </div>
+        </div>
+        <div className="flex items-start gap-4 rounded-hig-xl bg-fill3 p-4 opacity-70">
+          <Tile icone={Cpu} cor="blue" tamanho="lg" />
+          <div className="min-w-0">
+            <b className="text-sub font-semibold">Google Drive + Vids</b>
+            <p className="mt-1 text-foot text-label2">Manda o roteiro para o Google Vids e traz o MP4 pronto para virar Reels.</p>
+            <Badge className="mt-2">Fase 11 · em seguida</Badge>
+          </div>
+        </div>
+        <div className="flex items-start gap-4 rounded-hig-xl bg-fill3 p-4 opacity-70">
+          <Tile icone={Cpu} cor="indigo" tamanho="lg" />
+          <div className="min-w-0">
+            <b className="text-sub font-semibold">Veo 3.1</b>
+            <p className="mt-1 text-foot text-label2">Clipes de 8 s do Google, com a chave do Gemini. Pago por segundo, dentro do teto.</p>
+            <Badge tom="aviso" className="mt-2">Fase 11 · pago por uso</Badge>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
 

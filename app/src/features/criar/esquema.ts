@@ -34,7 +34,7 @@ export type Link = z.infer<typeof Link>;
 
 export const PromptAdaptado = z.object({ prompt: z.string().min(1) });
 
-export type TemplateId = "wsa-neon" | "wsa-escuro" | "wsa-docerias";
+export type TemplateId = "wsa-neon" | "wsa-escuro" | "wsa-docerias" | "marca";
 export type Objetivo = "engajar" | "seguidores" | "vender";
 export type Origem = "zero" | "link" | "pauta";
 

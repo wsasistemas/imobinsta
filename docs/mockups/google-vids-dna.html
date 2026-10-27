@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DNA da marca e Google Vids · Estúdio imobinsta</title>
+<style>
+/* Mockup para aprovação: Fases 10 (DNA da marca) e 11 (Google Vids pelo Drive).
+ * Mesmo visual do estúdio (escuro, cartões HIG de 20 px). Dados de exemplo, marcados como tal. */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
+  --bg: #000; --bg2: #1c1c1e; --bg3: #2c2c2e; --fill: rgba(118,118,128,.24); --sep: rgba(84,84,88,.6);
+  --label: #fff; --label2: rgba(235,235,245,.6); --label3: rgba(235,235,245,.3);
+  --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --pink: #ff375f; --purple: #bf5af2; --indigo: #5e5ce6; --yellow: #ffd60a; --red: #ff453a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--label); -webkit-font-smoothing: antialiased; font-size: 15px; }
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+nav.lado { background: #1c1c1e; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; }
+nav.lado .marca { display: flex; gap: 10px; align-items: center; padding: 6px 8px 16px; font-weight: 700; font-size: 14px; }
+nav.lado .marca i { width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #0a4fd6; display: grid; place-items: center; font: 800 10px var(--font); font-style: normal; }
+nav.lado small { padding: 14px 10px 6px; font-size: 11px; color: var(--label2); letter-spacing: .04em; }
+nav.lado button { all: unset; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+nav.lado button[aria-current="page"] { background: rgba(10,132,255,.18); color: var(--blue); }
+nav.lado .t { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 13px; }
+nav.lado .novo { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: rgba(48,209,88,.2); color: var(--green); }
+main { padding: 28px 36px 60px; max-width: 1180px; }
+.pag { display: none; } .pag.on { display: block; }
+.cab { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.cab .t { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; }
+.cab h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.cab p { margin: 2px 0 0; color: var(--label2); font-size: 15px; }
+.cab .acoes { margin-left: auto; display: flex; gap: 10px; }
+.card { background: var(--bg2); border-radius: 20px; padding: 20px; }
+.grid { display: grid; gap: 16px; } .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+h2 { margin: 0 0 4px; font-size: 20px; font-weight: 600; } h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.mut { color: var(--label2); } .peq { font-size: 13px; }
+.b { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; flex: none; min-height: 36px; padding: 0 16px; border-radius: 9999px; border: 0; font: 600 14px var(--font); cursor: pointer; }
+.b.p { background: var(--blue); color: #fff; } .b.s { background: rgba(10,132,255,.16); color: var(--blue); } .b.v { background: var(--purple); color: #fff; }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+.ok { background: rgba(48,209,88,.16); color: var(--green); } .wait { background: rgba(255,159,10,.16); color: var(--orange); } .neu { background: var(--fill); color: var(--label2); } .no { background: rgba(255,69,58,.16); color: var(--red); }
+.conn { display: flex; gap: 14px; align-items: flex-start; }
+.tile { width: 48px; height: 48px; flex: none; border-radius: 12px; display: grid; place-items: center; font: 700 15px var(--font); color: #fff; }
+.campo { width: 100%; min-height: 44px; border-radius: 12px; border: 0; background: var(--fill); color: var(--label); padding: 0 14px; font: 16px var(--font); }
+.nota { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--bg3); color: var(--label2); font-size: 13px; line-height: 1.5; }
+.nota b { color: var(--label); }
+.ex { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: .04em; text-transform: uppercase; }
+.paleta { display: flex; gap: 10px; flex-wrap: wrap; }
+.cor { width: 74px; } .cor i { display: block; height: 56px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); } .cor small { display: block; margin-top: 6px; font: 12px ui-monospace, Menlo, monospace; color: var(--label2); }
+.fontes div { padding: 12px 14px; border-radius: 12px; background: var(--bg3); margin-top: 8px; }
+.imgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .imgs i { aspect-ratio: 1; border-radius: 12px; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; } .chip { padding: 5px 11px; border-radius: 9999px; background: var(--fill); font-size: 13px; } .chip.ev { background: rgba(255,69,58,.14); color: var(--red); }
+.tom { font-size: 15px; line-height: 1.5; } .tom q { color: var(--label2); font-style: italic; }
+.camp { border: 1px solid var(--sep); border-radius: 16px; padding: 16px; }
+.camp ol { margin: 10px 0 0; padding-left: 18px; color: var(--label2); font-size: 13px; line-height: 1.8; }
+.camp ol b { color: var(--label); font-weight: 600; }
+.passos { counter-reset: p; display: grid; gap: 12px; }
+.passo { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 16px; background: var(--bg2); }
+.passo::before { counter-increment: p; content: counter(p); flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; font-weight: 700; }
+.passo.manual::before { background: var(--orange); }
+.arq { font: 13px ui-monospace, Menlo, monospace; background: var(--bg3); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.7; color: var(--label2); }
+.lista td, .lista th { padding: 10px 8px; border-bottom: .5px solid var(--sep); text-align: left; font-size: 14px; } .lista th { color: var(--label2); font-weight: 500; font-size: 12px; }
+.lista { width: 100%; border-collapse: collapse; }
+@media (max-width: 900px) { .app { grid-template-columns: 1fr; } nav.lado { flex-direction: row; overflow-x: auto; } nav.lado small, nav.lado .marca { display: none; } .g2, .g3, .g4 { grid-template-columns: 1fr; } main { padding: 20px 16px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="lado" aria-label="Telas do mockup">
+    <div class="marca"><i>WSA</i>Estúdio imobinsta</div>
+    <small>MOCKUP · FASES 10 E 11</small>
+    <button data-p="conexoes" aria-current="page"><span class="t" style="background:#636366">⚙︎</span>Conexões e custos</button>
+    <button data-p="dna"><span class="t" style="background:var(--pink)">🧬</span>DNA da marca<span class="novo">NOVO</span></button>
+    <button data-p="campanhas"><span class="t" style="background:var(--orange)">📣</span>Campanhas<span class="novo">NOVO</span></button>
+    <button data-p="vids"><span class="t" style="background:var(--purple)">🎬</span>Google Vids<span class="novo">NOVO</span></button>
+    <small>RESUMO</small>
+    <button data-p="viabilidade"><span class="t" style="background:var(--indigo)">✓</span>O que é possível</button>
+  </nav>
+
+  <main>
+    <!-- ================= CONEXÕES ================= -->
+    <section class="pag on" id="conexoes">
+      <div class="cab"><span class="t" style="background:#636366">⚙︎</span><div><h1>Conexões e custos</h1><p>O que cada parte usa e quanto custa</p></div></div>
+      <p class="mut peq" style="margin:-8px 0 14px">Os cards de hoje (Instagram, Chatfyre, Gemini, OpenAI, HeyGen, fal.ai) continuam. Entra a seção abaixo:</p>
+      <div class="card" style="border:1px solid rgba(10,132,255,.4)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2>Google · grátis</h2><span class="badge ok" style="margin-left:auto">R$ 0 · cota gratuita</span></div>
+        <p class="mut peq">Recursos do Google que não cobram por uso. O Pomelli e o Google Vids não têm API: o estúdio faz o mesmo recurso por dentro (DNA da marca) ou conversa pelo seu Google Drive (Vids).</p>
+        <div class="grid g3" style="margin-top:14px">
+          <div class="card" style="background:var(--bg3)">
+            <div class="conn"><div class="tile" style="background:linear-gradient(135deg,#ff375f,#bf5af2)">DNA</div>
+              <div><h3>DNA da marca</h3><p class="mut peq" style="margin:4px 0 8px">Lê o site e guarda cores, fontes, imagens e tom de voz. Guia legendas, posts, roteiros e campanhas.</p>
+                <span class="badge ok">Pronto · wsasistemas.com.br</span></div></div>
+            <button class="b s" style="margin-top:12px" data-ir="dna">Abrir DNA da marca</button>
+          </div>
+          <div class="card" style="background:var(--bg3)">
+            <div class="conn"><div class="tile" style="background:linear-gradient(135deg,#4285f4,#34a853 50%,#fbbc05)">G</div>
+              <div><h3>Google Drive + Vids</h3><p class="mut peq" style="margin:4px 0 8px">Login Google (só as pastas do estúdio). Manda o roteiro para o Vids e traz o MP4 pronto para virar Reels.</p>
+                <span class="badge neu">A conectar</span></div></div>
+            <button class="b p" style="margin-top:12px">Conectar conta Google</button>
+            <p class="mut" style="font-size:12px;margin:8px 0 0">Permissão pedida: <b style="color:var(--label)">drive.file</b> (o estúdio não vê o resto do seu Drive).</p>
+          </div>
+          <div class="card" style="background:var(--bg3)">
+            <div class="conn"><div class="tile" style="background:var(--indigo)">Veo</div>
+              <div><h3>Veo 3.1 <small class="mut">(opcional)</small></h3><p class="mut peq" style="margin:4px 0 8px">Clipes de 8 s gerados pelo Google, usando a mesma chave do Gemini.</p>
+                <span class="badge wait">Pago por segundo · dentro do teto</span></div></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:12px"><span class="peq mut">Usar no estúdio</span><span style="margin-left:auto;width:51px;height:31px;border-radius:99px;background:var(--fill);position:relative"><i style="position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff"></i></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>Custo mensal estimado (linhas novas)</h2>
+        <table class="lista" style="margin-top:8px">
+          <tr><th>Parte</th><th>Tecnologia</th><th>Custo</th></tr>
+          <tr><td>DNA da marca e campanhas</td><td class="mut">Gemini API (cota gratuita)</td><td style="color:var(--green);font-weight:600">R$ 0</td></tr>
+          <tr><td>Vídeo montado no Google Vids</td><td class="mut">Google Drive API + Vids (seu plano Google)</td><td style="color:var(--green);font-weight:600">R$ 0 no estúdio</td></tr>
+          <tr><td>Clipes gerados por IA</td><td class="mut">Veo 3.1 (Gemini API)</td><td style="color:var(--orange);font-weight:600">por uso · teto mensal</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= DNA ================= -->
+    <section class="pag" id="dna">
+      <div class="cab"><span class="t" style="background:var(--pink)">🧬</span><div><h1>DNA da marca</h1><p>O estúdio lê o seu site e aprende cores, fontes, imagens e jeito de falar</p></div>
+        <div class="acoes"><button class="b s">↻ Ler o site de novo</button><button class="b p">Salvar</button></div></div>
+      <div class="card" style="margin-bottom:16px">
+        <label class="peq mut" for="site">Endereço do site</label>
+        <div style="display:flex;gap:10px;margin-top:6px"><input id="site" class="campo" value="https://wsasistemas.com.br" /><button class="b p">Ler site</button></div>
+        <p class="mut" style="font-size:12px;margin:8px 0 0">Lê a página inicial e até 3 páginas internas. Lido em 27/10/2026 às 17:40 · <span class="ex">exemplo</span></p>
+      </div>
+      <div class="grid g2">
+        <div class="card"><h3>Cores</h3><p class="mut peq">Do site (theme-color e folhas de estilo). Clique para trocar.</p>
+          <div class="paleta" style="margin-top:12px">
+            <div class="cor"><i style="background:#0a4fd6"></i><small>#0A4FD6</small></div><div class="cor"><i style="background:#05b4ff"></i><small>#05B4FF</small></div>
+            <div class="cor"><i style="background:#0b1220"></i><small>#0B1220</small></div><div class="cor"><i style="background:#ff9f0a"></i><small>#FF9F0A</small></div>
+            <div class="cor"><i style="background:#f5f7fb"></i><small>#F5F7FB</small></div>
+          </div><p class="ex" style="margin:10px 0 0">exemplo</p></div>
+        <div class="card fontes"><h3>Fontes</h3><p class="mut peq">Encontradas no site (Google Fonts).</p>
+          <div><span class="mut" style="font-size:12px">Títulos</span><br><b style="font:800 22px Montserrat, var(--font)">Montserrat ExtraBold</b></div>
+          <div><span class="mut" style="font-size:12px">Texto</span><br><span style="font:400 16px Inter, var(--font)">Inter Regular, para o corpo dos posts</span></div>
+          <p class="ex" style="margin:10px 0 0">exemplo</p></div>
+        <div class="card"><h3>Imagens</h3><p class="mut peq">Logo e imagens do site. Vão para o Banco de mídias, pasta "Marca".</p>
+          <div class="imgs" style="margin-top:12px">
+            <i style="background:#fff url() center/60% no-repeat;display:grid;place-items:center;color:#0a4fd6;font-weight:900">WSA</i>
+            <i style="background:linear-gradient(135deg,#0b2a6b,#05b4ff)"></i><i style="background:linear-gradient(135deg,#1f2937,#4b5563)"></i><i style="background:linear-gradient(135deg,#7c2d12,#f59e0b)"></i>
+          </div><p class="ex" style="margin:10px 0 0">exemplo</p></div>
+        <div class="card"><h3>Tom de voz</h3><p class="mut peq">Resumo do Gemini a partir dos textos do site. Edite à vontade.</p>
+          <div class="chips" style="margin:12px 0"><span class="chip">Direto</span><span class="chip">Técnico sem jargão</span><span class="chip">Confiante</span></div>
+          <p class="tom">Fala com <b>gestores e donos de empresa</b>. Exemplo de frase: <q>Seu ERP já tem os dados. Falta o sistema que trabalha com eles.</q></p>
+          <p class="peq mut" style="margin:10px 0 6px">Usar</p><div class="chips"><span class="chip">integração</span><span class="chip">TOTVS RM</span><span class="chip">IA no dia a dia</span></div>
+          <p class="peq mut" style="margin:10px 0 6px">Evitar</p><div class="chips"><span class="chip ev">revolucionário</span><span class="chip ev">garantimos</span></div>
+          <p class="ex" style="margin:10px 0 0">exemplo</p></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h3>Pilares e público</h3>
+        <div class="grid g3" style="margin-top:10px">
+          <div class="nota"><span><b>Pilar 1</b><br>Integração com o ERP sem planilha</span></div>
+          <div class="nota"><span><b>Pilar 2</b><br>Automação de rotina (aprovações, cobrança)</span></div>
+          <div class="nota"><span><b>Pilar 3</b><br>Sistemas por segmento (imobiliária, doceria)</span></div>
+        </div><p class="ex" style="margin:10px 0 0">exemplo</p></div>
+      <div class="nota" style="margin-top:16px"><span>O DNA passa a ir junto em <b>toda</b> geração de texto (legenda, carrossel, roteiro, pautas) e cria o template <b>"Marca"</b> com essas cores e fontes. O que o site não diz fica em branco: a IA não inventa.</span></div>
+    </section>
+
+    <!-- ================= CAMPANHAS ================= -->
+    <section class="pag" id="campanhas">
+      <div class="cab"><span class="t" style="background:var(--orange)">📣</span><div><h1>Campanhas sugeridas</h1><p>A partir do DNA da marca e dos posts que mais alcançaram</p></div>
+        <div class="acoes"><button class="b p">✦ Sugerir campanhas</button></div></div>
+      <div class="grid g3">
+        <div class="camp"><span class="badge wait">Vender</span><h3 style="margin-top:8px">ERP sem planilha</h3><p class="mut peq">4 semanas · 8 posts · gestores financeiros</p>
+          <ol><li><b>Carrossel</b> · "5 sinais de que seu ERP virou planilha"</li><li><b>Reels</b> · bastidor de uma integração</li><li><b>Post</b> · antes e depois do fechamento</li><li class="mut">+ 5 posts</li></ol>
+          <div style="display:flex;gap:8px;margin-top:12px"><button class="b p">Aprovar → Calendário</button><button class="b s">Editar</button></div></div>
+        <div class="camp"><span class="badge ok">Seguidores</span><h3 style="margin-top:8px">IA no dia a dia da empresa</h3><p class="mut peq">3 semanas · 6 posts · donos de PME</p>
+          <ol><li><b>Reels</b> · "uma tarefa que a IA faz por você hoje"</li><li><b>Carrossel</b> · mitos sobre IA no ERP</li><li class="mut">+ 4 posts</li></ol>
+          <div style="display:flex;gap:8px;margin-top:12px"><button class="b p">Aprovar → Calendário</button><button class="b s">Editar</button></div></div>
+        <div class="camp"><span class="badge neu">Engajar</span><h3 style="margin-top:8px">Sistema por segmento</h3><p class="mut peq">2 semanas · 4 posts · imobiliárias e docerias</p>
+          <ol><li><b>Carrossel</b> · rotina de uma imobiliária com o estúdio</li><li><b>Post</b> · enquete "qual tarefa mais toma seu tempo?"</li><li class="mut">+ 2 posts</li></ol>
+          <div style="display:flex;gap:8px;margin-top:12px"><button class="b p">Aprovar → Calendário</button><button class="b s">Editar</button></div></div>
+      </div>
+      <p class="ex" style="margin:10px 0 0">campanhas de exemplo</p>
+      <div class="passos" style="margin-top:18px">
+        <div class="passo"><span><b>Aprovar</b> cria as pautas no Calendário (Fase 6), ligadas à campanha, em dias alternados.</span></div>
+        <div class="passo"><span>Cada pauta abre o <b>wizard já preenchido</b> (com o DNA) e gera o post.</span></div>
+        <div class="passo"><span>O post é <b>editável</b> no editor (texto, cores, imagem) e segue para Publicar, com a automação "QUERO".</span></div>
+      </div>
+    </section>
+
+    <!-- ================= VIDS ================= -->
+    <section class="pag" id="vids">
+      <div class="cab"><span class="t" style="background:var(--purple)">🎬</span><div><h1>Criar vídeo no Google Vids</h1><p>Sem custo no estúdio: o roteiro vai para o Drive, você monta no Vids e o MP4 volta como Reels</p></div></div>
+      <div class="grid g2" style="align-items:start">
+        <div class="passos">
+          <div class="passo"><span><b>Roteiro</b> · o Gemini escreve cena a cena, com o DNA da marca (o mesmo passo do vídeo com avatar).</span></div>
+          <div class="passo"><span><b>Mandar para o Drive</b> · o estúdio cria a pasta com tudo que o Vids precisa:
+            <div class="arq">📁 Estúdio imobinsta/Vids/ERP sem planilha<br>&nbsp;&nbsp;📄 roteiro.txt · 📄 legenda.txt<br>&nbsp;&nbsp;🖼 logo.png · 4 imagens do Banco de mídias<br>&nbsp;&nbsp;📁 prontos/ &nbsp;<span style="color:var(--orange)">← exporte o MP4 aqui</span></div></span></div>
+          <div class="passo manual"><span><b>Montar no Google Vids</b> (você) · abre o Vids em outra aba; use "ajuda para criar" com o roteiro e as imagens da pasta. <span class="badge wait">manual</span></span></div>
+          <div class="passo manual"><span><b>Exportar</b> (você) · no Vids, baixe/salve o MP4 na pasta <b>prontos/</b>. <span class="badge wait">manual</span></span></div>
+          <div class="passo"><span><b>Voltar para o estúdio</b> · o estúdio encontra o MP4 (botão ou a cada hora), guarda no Banco de mídias e abre <b>Publicar</b> como Reels.</span></div>
+        </div>
+        <div class="grid">
+          <div class="card"><h3>ERP sem planilha</h3><p class="mut peq">Pasta criada no Drive · 27/10 17:52 <span class="ex">exemplo</span></p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="b v">Abrir no Google Vids ↗</button><button class="b s">Abrir pasta no Drive ↗</button></div>
+            <hr style="border:0;border-top:.5px solid var(--sep);margin:16px 0">
+            <div style="display:flex;align-items:center;gap:10px"><span class="badge wait">Aguardando o MP4 em prontos/</span><button class="b s" style="margin-left:auto">↻ Buscar vídeos prontos</button></div>
+          </div>
+          <div class="card"><h3>Vídeos prontos</h3>
+            <table class="lista"><tr><th>Arquivo</th><th>Duração</th><th></th></tr>
+              <tr><td>erp-sem-planilha.mp4</td><td class="mut">0:42</td><td><button class="b p">Criar Reels</button></td></tr></table>
+            <p class="ex" style="margin:10px 0 0">exemplo</p></div>
+          <div class="nota"><span>O Google Vids <b>não tem API</b>: montar e exportar o vídeo é feito por você, no Vids. O estúdio cuida do antes (roteiro, imagens) e do depois (Banco de mídias, Reels, automação).</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VIABILIDADE ================= -->
+    <section class="pag" id="viabilidade">
+      <div class="cab"><span class="t" style="background:var(--indigo)">✓</span><div><h1>O que é possível</h1><p>Pesquisa de 27/10/2026</p></div></div>
+      <div class="card"><table class="lista">
+        <tr><th>Ferramenta</th><th>API pública</th><th>Grátis</th><th>Brasil</th><th>Como entra</th></tr>
+        <tr><td><b>Google Vids</b></td><td><span class="badge no">Não</span></td><td class="mut">no seu plano Google</td><td><span class="badge ok">Sim</span></td><td>Ponte pelo Google Drive (Fase 11)</td></tr>
+        <tr><td><b>Veo 3.1</b> (motor do Vids)</td><td><span class="badge ok">Sim</span></td><td><span class="badge wait">Pago</span></td><td><span class="badge ok">Sim</span></td><td>Opcional, dentro do teto (Fase 11)</td></tr>
+        <tr><td><b>Pomelli</b> (Business DNA)</td><td><span class="badge no">Não</span></td><td class="mut">grátis</td><td><span class="badge no">Não</span></td><td>Recurso refeito no estúdio com o Gemini (Fase 10)</td></tr>
+        <tr><td><b>Gemini</b></td><td><span class="badge ok">Sim</span></td><td><span class="badge ok">Cota grátis</span></td><td><span class="badge ok">Sim</span></td><td>Já conectado: lê o site e monta o DNA</td></tr>
+        <tr><td><b>Google Drive</b></td><td><span class="badge ok">Sim</span></td><td><span class="badge ok">Grátis</span></td><td><span class="badge ok">Sim</span></td><td>Login Google com acesso só às pastas do estúdio</td></tr>
+      </table></div>
+    </section>
+  </main>
+</div>
+<script>
+  const ir = (p) => {
+    document.querySelectorAll(".pag").forEach((s) => s.classList.toggle("on", s.id === p));
+    document.querySelectorAll("nav.lado button").forEach((b) => b.setAttribute("aria-current", b.dataset.p === p ? "page" : "false"));
+    scrollTo(0, 0);
+  };
+  document.querySelectorAll("[data-p]").forEach((b) => b.addEventListener("click", () => ir(b.dataset.p)));
+  document.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => ir(b.dataset.ir)));
+</script>
+</body>
+</html>

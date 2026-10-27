@@ -1,5 +1,5 @@
 import {
-  CalendarDays, ChartColumn, Clapperboard, Compass, Images, Instagram, LibraryBig, Plus, PlugZap, Radar, Send,
+  CalendarDays, ChartColumn, Clapperboard, Compass, Dna, Images, Instagram, LibraryBig, Megaphone, Plus, PlugZap, Radar, Send,
   Sparkles, UserRound, Zap, type LucideIcon,
 } from "lucide-react";
 import type { CorTile } from "@/components/ui/tile";
@@ -24,8 +24,10 @@ export const MENU: ItemMenu[] = [
   { id: "biblioteca", rotulo: "Biblioteca", caminho: "/biblioteca", icone: LibraryBig, cor: "orange", fase: 3 },
   { id: "midias", rotulo: "Banco de mídias", caminho: "/midias", icone: Images, cor: "teal", fase: 3 },
   { id: "calendario", rotulo: "Calendário", caminho: "/calendario", icone: CalendarDays, cor: "red", fase: 6 },
+  { id: "marca", rotulo: "DNA da marca", caminho: "/marca", icone: Dna, cor: "pink", fase: 10, etiqueta: { texto: "IA" } },
   { id: "avatares", rotulo: "Meus avatares", caminho: "/avatares", icone: UserRound, cor: "purple", fase: 7, etiqueta: { texto: "IA" } },
   { id: "automacoes", rotulo: "Automações", caminho: "/automacoes", icone: Zap, cor: "yellow", fase: 5, grupo: "VENDAS", etiqueta: { texto: "Chatfyre" } },
+  { id: "campanhas", rotulo: "Campanhas", caminho: "/campanhas", icone: Megaphone, cor: "orange", fase: 10, grupo: "VENDAS" },
   { id: "radar", rotulo: "Radar de prospecção", caminho: "/radar", icone: Radar, cor: "green", fase: 9, grupo: "VENDAS" },
   { id: "analytics", rotulo: "Analytics", caminho: "/analytics", icone: ChartColumn, cor: "indigo", fase: 2, grupo: "RESULTADOS" },
   { id: "conexoes", rotulo: "Conexões e custos", caminho: "/conexoes", icone: PlugZap, cor: "gray", fase: 1, grupo: "CONTA", etiqueta: { texto: "R$ 0", gratis: true } },

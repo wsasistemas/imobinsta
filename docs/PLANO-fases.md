@@ -207,3 +207,25 @@ e quebraria a publicação num banco sem essas colunas. Em 27/10 a produção fi
 - [ ] `ia-texto`: classifica a dor, o produto WSA e sugere um comentário
 - [ ] Tela Radar igual ao mockup, com "Copiar e abrir post" e limite de 20 por dia
 - [ ] **Nenhum envio automático** de comentário ou DM
+
+---
+
+## Fase 10: DNA da marca (o "Pomelli" do estúdio) · aprovada em 27/10/2026
+
+Detalhes em `docs/PLANO-google-vids-dna.md` e mockup `docs/mockups/google-vids-dna.html`.
+- [x] Migration `marca_dna`, `campanhas`, `pautas.campanha_id` e template `marca` (20261027080000, PGlite 14/14)
+- [x] `ia-texto` ação `dna`: lê o site (cores, fontes, imagens → Banco de mídias, textos de até 4 páginas) e o Gemini resume tom, público e pilares
+- [x] DNA anexado a toda geração de texto (legenda, carrossel, roteiro, pautas, campanhas)
+- [x] Tela DNA da marca (editável, só o dono) e card "Google · grátis" em Conexões
+- [x] Template "Marca" com as cores do DNA
+- [x] Campanhas sugeridas (`campanhas`) → aprovar cria pautas no Calendário (`aprovar_campanha`) → post editável pelo wizard
+- [ ] Teste real (espera o crédito do AI Studio e a migration)
+
+**Para ligar (Wagner):** SQL Editor: `20261027080000_fase10_marca_dna.sql`. Depois: DNA da marca → informar o site → Ler site.
+
+## Fase 11: Google Vids pelo Drive e Veo 3.1 · aprovada em 27/10/2026 (conta Google pessoal)
+
+- [ ] Conexão Google (OAuth `drive.file`, token no Vault) — app OAuth do Google Cloud em modo de teste
+- [ ] "Abrir no Google Vids": pasta com roteiro, imagens e legenda no Drive
+- [ ] Importar MP4 da pasta `prontos/` (botão + pg_cron) → Banco de mídias → Reels
+- [ ] Veo 3.1 pela chave do Gemini, dentro do teto de gasto (pago por segundo)
