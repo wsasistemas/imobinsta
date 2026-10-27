@@ -71,6 +71,17 @@ export async function graph<T = Record<string, unknown>>(caminho: string, params
   return corpo as T;
 }
 
+/** POST na Graph API (form-urlencoded). O token vai no corpo, nunca em log. */
+export async function graphPost<T = Record<string, unknown>>(caminho: string, params: Record<string, string>): Promise<T> {
+  const resp = await fetch(`${GRAPH}/${caminho.replace(/^\//, "")}`, { method: "POST", body: new URLSearchParams(params) });
+  const corpo = await resp.json().catch(() => ({}));
+  if (!resp.ok || corpo.error) {
+    const e = corpo.error ?? {};
+    throw new ErroGraph(e.code, e.error_user_msg ?? e.message ?? `Graph API respondeu ${resp.status}`);
+  }
+  return corpo as T;
+}
+
 /** Linha de conexão do Instagram da conta (criada na migration da Fase 1). */
 export async function conexaoInstagram(db: Db, contaId: string) {
   const { data, error } = await db

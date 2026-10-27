@@ -10,6 +10,7 @@ import { Biblioteca } from "@/features/instagram/biblioteca";
 import { BancoDeMidias } from "@/features/midias/midias";
 import { Criar } from "@/features/criar/criar";
 import { Editor } from "@/features/criar/editor";
+import { Publicar } from "@/features/criar/publicar";
 import { WizardImagem } from "@/features/criar/wizard";
 import { Explorar } from "@/pages/explorar";
 import { EmConstrucao } from "@/pages/em-construcao";
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
           : { path: item.caminho.slice(1), element: PRONTAS[item.id] ?? <EmConstrucao /> },
       ),
       { path: "criar/editor/:id", element: <Editor /> },
+      { path: "criar/publicar/:id", element: <Publicar /> },
       { path: "*", element: <EmConstrucao /> },
     ],
   },

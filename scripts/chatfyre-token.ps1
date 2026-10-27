@@ -13,15 +13,18 @@
 # Nunca cole o token ou a URL de retorno no chat.
 
 #   .\scripts\chatfyre-token.ps1 -Escrita   # login com permissão de criar/editar automações
+#   .\scripts\chatfyre-token.ps1 -Exportar  # login SEPARADO para o estúdio (Edge Functions):
+#        não mexe no .env; copia um pacote para a área de transferência. Cole em
+#        Conexões e custos → Chatfyre. O pacote não aparece na tela e não vai para o chat.
 
-param([switch]$Renovar, [switch]$Escrita)
+param([switch]$Renovar, [switch]$Escrita, [switch]$Exportar)
 
 $ErrorActionPreference = "Stop"
 
 $Servidor    = "https://chatfyre.com"
 $Recurso     = "https://chatfyre.com/api/mcp"
 $Redirect    = "https://claude.ai/api/mcp/auth_callback"
-$Escopo      = if ($Escrita) { "automacoes:ler automacoes:escrever" } else { "automacoes:ler" }
+$Escopo      = if ($Escrita -or $Exportar) { "automacoes:ler automacoes:escrever" } else { "automacoes:ler" }
 $ArquivoEnv  = Join-Path (Split-Path $PSScriptRoot -Parent) ".env"
 
 function ConvertTo-Base64Url([byte[]]$bytes) {
@@ -110,7 +113,7 @@ if ($Renovar) {
 
 # --- 1. Registro do cliente (Dynamic Client Registration) ------------------------------
 $registro = @{
-    client_name                = "imobinsta (Claude Code)"
+    client_name                = $(if ($Exportar) { "imobinsta (Estúdio)" } else { "imobinsta (Claude Code)" })
     redirect_uris              = @($Redirect)
     grant_types                = @("authorization_code", "refresh_token")
     response_types             = @("code")
@@ -178,4 +181,20 @@ $resposta = Invoke-Token @{
     code_verifier = $verificador
     resource      = $Recurso
 } $clientSecret
+
+if ($Exportar) {
+    if (-not $resposta.access_token -or -not $resposta.refresh_token) { throw "O Chatfyre não devolveu refresh_token: o estúdio não conseguiria renovar o acesso." }
+    $pacote = [ordered]@{
+        client_id     = $clientId
+        client_secret = $clientSecret
+        refresh_token = $resposta.refresh_token
+        access_token  = $resposta.access_token
+        expira_em     = (Get-Date).ToUniversalTime().AddSeconds([int]($(if ($resposta.expires_in) { $resposta.expires_in } else { 3600 }))).ToString("o")
+    } | ConvertTo-Json -Compress
+    [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($pacote)) | Set-Clipboard
+    Write-Host ""
+    Write-Host "Pacote do estúdio copiado para a área de transferência." -ForegroundColor Green
+    Write-Host "Abra o estúdio > Conexões e custos > Chatfyre > cole e clique em Salvar. Não cole no chat."
+    exit 0
+}
 Save-Token $resposta $clientId $clientSecret

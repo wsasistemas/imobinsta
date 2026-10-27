@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { Check, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -77,3 +77,17 @@ export function Nota({ children, className }: { children: ReactNode; className?:
     </div>
   );
 }
+
+/** Largura disponível de um elemento (o canvas encolhe no celular). */
+export function useLargura<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [largura, setLargura] = useState(0);
+  useLayoutEffect(() => {
+    if (!ref.current) return;
+    const obs = new ResizeObserver(([e]) => setLargura(e.contentRect.width));
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, largura] as const;
+}
+

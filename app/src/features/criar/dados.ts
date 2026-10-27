@@ -17,6 +17,25 @@ export type Rascunho = {
   template_id: TemplateId | null;
   mostrar_logo: boolean;
   criar_automacao: boolean;
+  automacao_json: AutomacaoConfig | null;
+  agendado_para: string | null;
+  permalink: string | null;
+  erro: string | null;
+};
+
+/** Configuração da automação "comente a palavra → DM" escolhida na tela Publicar (vai para o Chatfyre na Etapa 5.3). */
+export type AutomacaoConfig = {
+  palavra: string; resposta_publica: string; dm: string; botao: string; so_seguidores: boolean; link: string; lembrete_min: number;
+};
+
+export const AUTOMACAO_PADRAO: AutomacaoConfig = {
+  palavra: "QUERO",
+  resposta_publica: "Te mandei no direct! 📩",
+  dm: "Oi! Aqui é a WSA Sistemas de IA 👋 Toca no botão abaixo que eu te mostro tudo 👇",
+  botao: "Quero conhecer",
+  so_seguidores: true,
+  link: "",
+  lembrete_min: 60,
 };
 
 export type SlideSalvo = { id: string; ordem: number; template_id: TemplateId; dados: DadosSlide; midia_id: string | null };
@@ -27,6 +46,7 @@ const DEMO: { post: Rascunho; slides: SlideSalvo[] } = {
   post: {
     id: ID_DEMO, formato: "carrossel", objetivo: "vender", produto: "Ecossistema completo", abordagem: "Dor + solução",
     origem: "zero", link_url: null, prompt: null, status: "rascunho", template_id: "wsa-neon", mostrar_logo: true, criar_automacao: true,
+    automacao_json: null, agendado_para: null, permalink: null, erro: null,
     legenda: "Exemplo de legenda do modo demonstração.\n\nComente QUERO para receber o material no direct.\n\n#erp #totvs #gestao",
   },
   slides: [
@@ -46,7 +66,7 @@ export function useRascunho(id: string | undefined) {
       if (id === ID_DEMO) return structuredClone(DEMO);
       const { data: post, error } = await supabase
         .from("posts")
-        .select("id, formato, objetivo, produto, abordagem, origem, link_url, prompt, legenda, status, template_id, mostrar_logo, criar_automacao")
+        .select("id, formato, objetivo, produto, abordagem, origem, link_url, prompt, legenda, status, template_id, mostrar_logo, criar_automacao, automacao_json, agendado_para, permalink, erro")
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -73,7 +93,7 @@ export function useRascunho(id: string | undefined) {
 /** Cria o rascunho com os slides gerados. Se os slides falharem, apaga o post (não deixa órfão). */
 export async function criarRascunho(
   contaId: string,
-  post: Omit<Rascunho, "id" | "status">,
+  post: Omit<Rascunho, "id" | "status" | "automacao_json" | "agendado_para" | "permalink" | "erro">,
   slides: DadosSlide[],
 ): Promise<string> {
   const { data, error } = await supabase
@@ -90,4 +110,15 @@ export async function criarRascunho(
     throw eSl;
   }
   return data.id as string;
+}
+
+/** Chama uma Edge Function do estúdio e devolve o JSON. Em erro, usa a mensagem que a função mandou. */
+export async function chamarFuncao<T>(nome: string, corpo: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke<T>(nome, { body: corpo });
+  if (error) {
+    const resp = "context" in error ? (error.context as Response) : null;
+    const json = resp ? await resp.json().catch(() => null) : null;
+    throw new Error(json?.erro ?? `Falha ao chamar ${nome}.`);
+  }
+  return data as T;
 }

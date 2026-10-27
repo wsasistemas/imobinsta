@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge, Card } from "@/components/ui/hig";
 import { Tile, type CorTile } from "@/components/ui/tile";
 import { supabase } from "@/lib/supabase";
+import { chamarFuncao } from "@/features/criar/dados";
 import { useAcesso } from "@/features/auth/acesso";
 
 type Provedor = "instagram" | "chatfyre" | "gemini" | "openai" | "heygen" | "fal";
@@ -144,6 +145,7 @@ export function Conexoes() {
                       </Button>
                     )}
                     {c.provedor === "gemini" && conta?.papel === "dono" && !demo && <ChaveGemini contaId={conta.conta_id} conectado={c.status === "conectado"} />}
+                    {c.provedor === "chatfyre" && !demo && conta && <PacoteChatfyre contaId={conta.conta_id} dono={conta.papel === "dono"} />}
                     {c.provedor === "instagram" && (sync.data || sync.error) && (
                       <p role="status" className={cn("mt-2 text-cap1", sync.error ? "text-red" : "text-green")}>
                         {sync.error ? sync.error.message : `${sync.data!.posts} posts · ${sync.data!.seguidores ?? "?"} seguidores`}
@@ -225,5 +227,81 @@ function ChaveGemini({ contaId, conectado }: { contaId: string; conectado: boole
         Gere em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-blue underline">aistudio.google.com/apikey</a>. A chave não fica no navegador.
       </p>
     </form>
+  );
+}
+
+type FerramentaChatfyre = { nome: string; descricao: string; parametros: unknown };
+type RespostaChatfyre = { ferramentas: FerramentaChatfyre[]; escrita?: string[] };
+
+/**
+ * Liga o Chatfyre ao estúdio. O pacote vem do script local (o OAuth do Chatfyre só aceita o redirect do claude.ai):
+ * a Edge Function testa, guarda no Vault e devolve as ferramentas liberadas.
+ */
+function PacoteChatfyre({ contaId, dono }: { contaId: string; dono: boolean }) {
+  const cliente = useQueryClient();
+  const [aberto, setAberto] = useState(false);
+  const [pacote, setPacote] = useState("");
+  const [copiado, setCopiado] = useState(false);
+  const salvar = useMutation({
+    mutationFn: () => chamarFuncao<RespostaChatfyre>("chatfyre", { acao: "credenciais", conta_id: contaId, pacote: pacote.trim() }),
+    onSuccess: () => {
+      setPacote("");
+      setAberto(false);
+    },
+    onSettled: () => cliente.invalidateQueries({ queryKey: ["conexoes"] }),
+  });
+  const testar = useMutation({
+    mutationFn: () => chamarFuncao<RespostaChatfyre>("chatfyre", { acao: "diagnostico", conta_id: contaId }),
+    onSettled: () => cliente.invalidateQueries({ queryKey: ["conexoes"] }),
+  });
+  const resultado = salvar.data ?? testar.data;
+  const erro = salvar.error ?? testar.error;
+
+  async function copiar() {
+    await navigator.clipboard.writeText(JSON.stringify(resultado?.ferramentas ?? [], null, 2));
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  }
+
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap gap-2">
+        <Button tamanho="sm" variante="secundario" onClick={() => testar.mutate()} disabled={testar.isPending}>
+          <RefreshCw className={cn(testar.isPending && "animate-spin")} /> {testar.isPending ? "Testando…" : "Testar pelo estúdio"}
+        </Button>
+        {dono && !aberto && <Button tamanho="sm" variante="secundario" onClick={() => setAberto(true)}>Colar pacote</Button>}
+      </div>
+      {dono && aberto && (
+        <form className="mt-3" onSubmit={(e) => { e.preventDefault(); salvar.mutate(); }}>
+          <div className="flex gap-2">
+            <input
+              className="campo min-h-9 py-1.5 text-foot"
+              type="password"
+              autoComplete="off"
+              placeholder="Pacote copiado pelo script"
+              aria-label="Pacote do Chatfyre"
+              value={pacote}
+              onChange={(e) => setPacote(e.target.value)}
+            />
+            <Button type="submit" tamanho="sm" disabled={pacote.trim().length < 20 || salvar.isPending}>{salvar.isPending ? "Testando…" : "Salvar"}</Button>
+          </div>
+          <p className="mt-2 text-cap1 text-label2">
+            No PowerShell, na pasta do projeto: <code className="rounded bg-fill3 px-1">.\scripts\chatfyre-token.ps1 -Exportar</code>. Faça o login,
+            e o pacote vai direto para a área de transferência. Não cole no chat.
+          </p>
+        </form>
+      )}
+      {erro && <p role="alert" className="mt-2 text-cap1 text-red">{erro.message}</p>}
+      {resultado && (
+        <div role="status" className="mt-2 text-cap1 text-label2">
+          <p className="text-green">
+            Estúdio falou com o Chatfyre: {resultado.ferramentas.length} ferramentas
+            {resultado.escrita ? ` · escrita: ${resultado.escrita.length ? resultado.escrita.join(", ") : "nenhuma"}` : ""}.
+          </p>
+          <p className="mt-1 break-words">{resultado.ferramentas.map((f) => f.nome).join(", ")}</p>
+          <Button tamanho="sm" variante="simples" className="mt-1 -ml-3" onClick={copiar}>{copiado ? "Copiado" : "Copiar lista técnica"}</Button>
+        </div>
+      )}
+    </div>
   );
 }

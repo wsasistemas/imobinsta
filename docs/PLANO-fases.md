@@ -129,14 +129,23 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 
 ## Fase 5: Publicar, agendar e Chatfyre
 
-- [ ] Tela Publicar: preview do Instagram, legenda editável, painel da automação
-- [ ] Edge Function `ig-publicar`: post único e carrossel (containers → publish), salvando `ig_media_id` e permalink
-- [ ] Agendamento: `status = agendado` + pg_cron a cada 5 min chamando `ig-publicar`
-- [ ] Edge Function `chatfyre`: cliente JSON-RPC (MCP por HTTP) com Bearer e renovação de token
+- [x] Tela Publicar: preview do Instagram, legenda editável, painel da automação (`/criar/publicar/:id`)
+- [x] Edge Function `ig-publicar`: post único e carrossel (containers → publish), salvando `ig_media_id` e permalink (JPEG gerado no navegador; a Meta não aceita PNG)
+- [x] Agendamento: `status = agendado` + pg_cron a cada 5 min chamando `ig-publicar` (migration 20261027040000, testada no PGlite 20/20)
+- [x] Edge Function `chatfyre`: cliente JSON-RPC (MCP por HTTP) com Bearer e renovação de token (falta o teste real com o pacote do script)
 - [ ] Depois de publicar, a automação é criada com `media_id` do post, **pausada**, e fica em `automacoes`
 - [ ] Botão "Ativar automação" (`definir_status_automacao`), com confirmação
 - [ ] Tela Automações com o funil (`metricas_do_fluxo`) e a lista
 - [ ] Teste real: 1 post publicado + automação ativa + 1 comentário "QUERO" de teste recebendo a DM
+
+**Etapas da Fase 5:** 5.1 Chatfyre pelo backend · 5.2 publicar e agendar · 5.3 automação ligada ao post e tela Automações.
+A 5.3 depende de ver os parâmetros reais de `criar_automacao`/`montar_fluxo`/`definir_status_automacao`,
+que só aparecem com o token de escrita (`automacoes:escrever`).
+
+**Para ligar em produção (Wagner):**
+1. SQL Editor do ikvj: rodar `supabase/migrations/20261027040000_fase5_publicar.sql`.
+2. Numa rede sem o Fortinet do escritório (ex.: 4G do celular): `.\scripts\chatfyre-token.ps1 -Exportar`.
+3. Conexões e custos → Chatfyre → Colar pacote → Salvar. Depois "Copiar lista técnica" e mandar no chat.
 
 **Prompt da fase:**
 > Fase 5 do `docs/PLANO-fases.md`. Primeiro confirme se o servidor MCP do Chatfyre aceita chamada

@@ -7,6 +7,8 @@ Rodam no Supabase ikvj (`ikvjaowvpvxojvcfwnct`). São o **único** lugar que fal
 | `ig-oauth` | POST: devolve o link do login da Meta. GET: recebe o retorno, guarda o token no Vault e marca a conexão como conectada | **desligado** (a Meta volta sem JWT; o POST valida o JWT no código) |
 | `ig-sync` | Importa posts, métricas por post e seguidores. Só lê, não altera nada na conta. Roda todo dia às 06:00 (pg_cron) | **desligado** (o pg_cron chama com o cabeçalho `x-cron-segredo`, conferido no Vault; o botão manda o JWT, conferido no código) |
 | `ia-texto` | IA de texto (Gemini): lê link, escreve o prompt adaptado, gera os slides em JSON + legenda, edita por chat e grava a chave do Gemini no Vault. Toda chamada vai para `geracoes_ia` | **ligado** (sempre chamado pelo app com sessão) |
+| `chatfyre` | Ponte com o Chatfyre (MCP por HTTP, JSON-RPC). Guarda o pacote do script no Vault, renova o token e lê automações/métricas. Criar e ativar automação entra na Etapa 5.3 (sempre pausada) | **ligado** |
+| `ig-publicar` | Publica post único e carrossel (containers → `media_publish`), agenda, cancela e processa a fila (pg_cron a cada 5 min) | **desligado** (o pg_cron chama com `x-cron-segredo`; o app manda o JWT, conferido no código) |
 
 ## Secrets necessários (painel → Edge Functions → Secrets)
 
@@ -23,6 +25,8 @@ npx supabase login                       # abre o navegador uma vez
 npx supabase functions deploy ig-oauth --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt
 npx supabase functions deploy ig-sync  --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt
 npx supabase functions deploy ia-texto --project-ref ikvjaowvpvxojvcfwnct
+npx supabase functions deploy chatfyre --project-ref ikvjaowvpvxojvcfwnct
+npx supabase functions deploy ig-publicar --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt
 ```
 
 Antes de publicar, as migrations `20261026030000_fase2_instagram.sql` e `20261027010000_fase2_sync_diario.sql`
@@ -34,5 +38,5 @@ e `select status_code, content from net._http_response order by created desc lim
 ## Checar tipos
 
 ```powershell
-cd supabase/functions; npx deno@2.9.6 check ig-oauth/index.ts ig-sync/index.ts ia-texto/index.ts
+cd supabase/functions; npx deno@2.9.6 check ig-oauth/index.ts ig-sync/index.ts ia-texto/index.ts chatfyre/index.ts ig-publicar/index.ts
 ```

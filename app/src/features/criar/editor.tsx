@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,11 +10,11 @@ import { Tile } from "@/components/ui/tile";
 import { useAcesso } from "@/features/auth/acesso";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Etapas, Nota } from "./comum";
+import { Etapas, Nota, useLargura } from "./comum";
 import { ID_DEMO, type Rascunho, type SlideSalvo, useRascunho } from "./dados";
 import { DadosSlide, Edicao, hashtagsDa, MAX_HASHTAGS, MAX_LEGENDA, MAX_SLIDES, slideVazio, type TemplateId } from "./esquema";
 import { iaTexto } from "./ia";
-import { baixar, pngDoSlide, salvarPngDoSlide } from "./render";
+import { baixar, imagemDoSlide, prepararImagens } from "./render";
 import { ORDEM_TEMPLATES, Slide, SlideEscala, TEMPLATES } from "./templates";
 
 type SlideEd = Omit<SlideSalvo, "id"> & { id: string; novo?: boolean };
@@ -31,19 +31,6 @@ const POSICOES: { valor: NonNullable<DadosSlide["posicao"]>; rotulo: string }[] 
 
 const agora = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 const assinatura = (s: SlideEd, ordem: number) => JSON.stringify([ordem, s.template_id, s.dados]);
-
-/** Largura disponível de um elemento (o canvas encolhe no celular). */
-function useLargura<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  const [largura, setLargura] = useState(0);
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    const obs = new ResizeObserver(([e]) => setLargura(e.contentRect.width));
-    obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return [ref, largura] as const;
-}
 
 export function Editor() {
   const { id } = useParams();
@@ -236,21 +223,16 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
       if (modo === "baixar") {
         const no = refsPng.current[atual];
         if (!no) throw new Error("Slide não encontrado.");
-        baixar(await pngDoSlide(no), `wsa-slide-${atual + 1}.png`);
+        baixar(await imagemDoSlide(no, "png"), `wsa-slide-${atual + 1}.png`);
       } else {
         if (ehDemo) throw new Error("Modo demonstração: o PNG não é salvo no banco de mídias.");
         if (salvamento !== "salvo" || slides.some((s) => s.novo)) throw new Error("Aguarde o salvamento terminar e clique de novo.");
-        for (const [i, s] of slides.entries()) {
-          const no = refsPng.current[i];
-          if (!no) throw new Error(`Slide ${i + 1} não encontrado.`);
-          const blob = await pngDoSlide(no);
-          const midiaId = await salvarPngDoSlide({
-            contaId: conta!.conta_id, postId: post.id, slideId: s.id, ordem: i + 1, pasta: post.produto ?? "Posts", blob, midiaAnterior: s.midia_id,
-          });
-          setSlides((l) => l.map((x) => (x.id === s.id ? { ...x, midia_id: midiaId } : x)));
-        }
+        const ids = await prepararImagens({
+          contaId: conta!.conta_id, postId: post.id, pasta: post.produto ?? "Posts", slides, nos: refsPng.current,
+        });
+        setSlides((l) => l.map((x, i) => ({ ...x, midia_id: ids[i] ?? x.midia_id })));
         await Promise.all(["midias", "posts", "rascunho"].map((k) => cliente.invalidateQueries({ queryKey: [k] })));
-        setAviso(`${slides.length} PNG${slides.length > 1 ? "s" : ""} de 1080×1350 salvo${slides.length > 1 ? "s" : ""} no banco de mídias. A publicação chega na Fase 5.`);
+        navegar(`/criar/publicar/${post.id}`);
       }
     } catch (e) {
       setAviso(`⚠️ ${(e as Error).message}`);
@@ -279,17 +261,20 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
           <Button variante="secundario" onClick={() => exportar("baixar")} disabled={!!exportando}>
             {exportando === "baixar" ? <LoaderCircle className="animate-spin" /> : <Download />} Baixar PNG
           </Button>
-          <Button onClick={() => exportar("finalizar")} disabled={!!exportando || somenteLeitura}>
-            {exportando === "finalizar" ? <LoaderCircle className="animate-spin" /> : <Check />} Finalizar
-          </Button>
+          {somenteLeitura ? (
+            <Link to={`/criar/publicar/${post.id}`} className={botao()}><Send /> Ver publicação</Link>
+          ) : (
+            <Button onClick={() => exportar("finalizar")} disabled={!!exportando}>
+              {exportando === "finalizar" ? <LoaderCircle className="animate-spin" /> : <Check />} Finalizar
+            </Button>
+          )}
         </div>
       </div>
       {somenteLeitura && <Nota className="mb-4">Este post já saiu do rascunho ({post.status}). Só dá para ver e baixar.</Nota>}
       {aviso && (
         <div role="status" className="mb-4 flex flex-wrap items-center gap-3 rounded-hig-lg bg-fill3 px-4 py-3 text-foot">
           <span className="flex-1">{aviso}</span>
-          {!aviso.startsWith("⚠️") && <Button tamanho="sm" variante="secundario" onClick={() => navegar("/biblioteca")}>Ir para a Biblioteca</Button>}
-        </div>
+                  </div>
       )}
 
       <div className="grid overflow-hidden rounded-hig-2xl bg-bg2 shadow-hig lg:min-h-[720px] lg:grid-cols-[104px_1fr_380px]">
@@ -429,10 +414,10 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
       </div>
 
       <Nota className="mt-4">
-        Como fica grátis: o slide é um <b>template HTML</b> da WSA; a IA só troca textos, cores e posições (JSON). O PNG final sai por render do navegador. Nenhum crédito de geração de imagem é gasto.
+        Como fica grátis: o slide é um <b>template HTML</b> da WSA; a IA só troca textos, cores e posições (JSON). A imagem final sai por render do navegador. Nenhum crédito de geração de imagem é gasto.
       </Nota>
 
-      {/* Slides em tamanho real, fora da tela, só durante a exportação do PNG */}
+      {/* Slides em tamanho real, fora da tela, só durante a exportação */}
       {exportando && (
         <div aria-hidden style={{ position: "fixed", left: -20000, top: 0, pointerEvents: "none" }}>
           {slides.map((s, i) => (

@@ -74,3 +74,15 @@ Confirmado com retorno real em 25/10/2026:
   renovado com `-Renovar` quando expirar.
 - O foco do produto é automação de DM; as métricas de conta do PRD (seguidores, visitas,
   cliques) provavelmente terão de vir de outra fonte (Graph API direta ou export do app).
+
+## Acesso pelo backend (Fase 5, 27/10/2026)
+
+- A Edge Function `chatfyre` fala com `https://chatfyre.com/api/mcp` por JSON-RPC (initialize →
+  notifications/initialized → tools/call), aceitando resposta JSON ou SSE e o cabeçalho `Mcp-Session-Id`.
+- Credenciais: um login **separado** do Claude Code, feito com `scripts/chatfyre-token.ps1 -Exportar`
+  (escopo `automacoes:ler automacoes:escrever`). O pacote vai para o Vault pela tela Conexões; a função
+  renova o access token com o refresh token e grava o novo no Vault.
+- Na rede do escritório o firewall Fortinet intercepta o TLS do chatfyre.com (certificado emitido pela
+  CA do FortiGate), então nada local consegue falar com o Chatfyre por lá: nem o MCP do Claude Code
+  nem o script. Rodar o script em outra rede. As Edge Functions não passam por esse firewall.
+- Pergunta 7 do PRD (backend aceita o token?): **a confirmar** quando o pacote for colado.

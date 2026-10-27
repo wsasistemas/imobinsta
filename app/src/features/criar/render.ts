@@ -3,13 +3,19 @@ import { supabase } from "@/lib/supabase";
 import { BUCKET, enviarComProgresso } from "@/features/midias/envio";
 import { ALTURA, LARGURA } from "./esquema";
 
-/** PNG 1080×1350 do slide, renderizado no navegador a partir do próprio HTML do template. Custo zero. */
-export async function pngDoSlide(no: HTMLElement): Promise<Blob> {
-  const opcoes = { width: LARGURA, height: ALTURA, pixelRatio: 1, cacheBust: true, skipFonts: true, style: { transform: "none" } };
+/**
+ * Imagem 1080×1350 do slide, renderizada no navegador a partir do próprio HTML do template. Custo zero.
+ * PNG para baixar; JPEG para publicar (a API do Instagram só aceita JPEG).
+ */
+export async function imagemDoSlide(no: HTMLElement, tipo: "png" | "jpeg" = "png"): Promise<Blob> {
+  const opcoes = {
+    width: LARGURA, height: ALTURA, pixelRatio: 1, cacheBust: true, skipFonts: true, style: { transform: "none" },
+    type: `image/${tipo}`, quality: 0.92, backgroundColor: "#000000",
+  };
   // A primeira passada às vezes sai sem as imagens (ainda carregando no clone); a segunda é a que vale.
   await toBlob(no, opcoes).catch(() => null);
   const blob = await toBlob(no, opcoes);
-  if (!blob) throw new Error("Não foi possível gerar o PNG do slide.");
+  if (!blob) throw new Error("Não foi possível gerar a imagem do slide.");
   return blob;
 }
 
@@ -22,21 +28,22 @@ export function baixar(blob: Blob, nome: string) {
 }
 
 /**
- * Guarda o PNG no banco de mídias (origem "render") e liga ao slide.
- * Se o slide já tinha PNG, o antigo é apagado para não acumular arquivos.
+ * Guarda a imagem no banco de mídias (origem "render") e liga ao slide.
+ * Se o slide já tinha imagem, a antiga é apagada para não acumular arquivos.
  */
-export async function salvarPngDoSlide(p: {
+export async function salvarImagemDoSlide(p: {
   contaId: string; postId: string; slideId: string; ordem: number; pasta: string; blob: Blob; midiaAnterior: string | null;
 }) {
   const id = crypto.randomUUID();
-  const caminho = `${p.contaId}/render-${p.postId.slice(0, 8)}-${p.ordem}-${id.slice(0, 8)}.png`;
-  const arquivo = new File([p.blob], `slide-${p.ordem}.png`, { type: "image/png" });
+  const ext = p.blob.type === "image/jpeg" ? "jpg" : "png";
+  const caminho = `${p.contaId}/render-${p.postId.slice(0, 8)}-${p.ordem}-${id.slice(0, 8)}.${ext}`;
+  const arquivo = new File([p.blob], `slide-${p.ordem}.${ext}`, { type: p.blob.type });
   await enviarComProgresso(caminho, arquivo, () => {});
   const { data: midia, error } = await supabase
     .from("midias")
     .insert({
-      conta_id: p.contaId, pasta: p.pasta, tipo: "imagem", nome: `Post ${p.postId.slice(0, 8)} · slide ${p.ordem}.png`,
-      storage_path: caminho, mime: "image/png", tamanho_bytes: p.blob.size, largura: LARGURA, altura: ALTURA, origem: "render",
+      conta_id: p.contaId, pasta: p.pasta, tipo: "imagem", nome: `Post ${p.postId.slice(0, 8)} · slide ${p.ordem}.${ext}`,
+      storage_path: caminho, mime: p.blob.type, tamanho_bytes: p.blob.size, largura: LARGURA, altura: ALTURA, origem: "render",
     })
     .select("id")
     .single();
@@ -55,4 +62,23 @@ export async function salvarPngDoSlide(p: {
     }
   }
   return midia.id as string;
+}
+
+/** Gera o JPEG de cada slide (nós em tamanho real, fora da tela) e liga ao slide. Devolve os ids das mídias. */
+export async function prepararImagens(p: {
+  contaId: string; postId: string; pasta: string;
+  slides: { id: string; midia_id: string | null }[]; nos: (HTMLElement | null)[];
+  aoAvancar?: (feitos: number) => void;
+}) {
+  const ids: string[] = [];
+  for (const [i, s] of p.slides.entries()) {
+    const no = p.nos[i];
+    if (!no) throw new Error(`Slide ${i + 1} não encontrado.`);
+    const blob = await imagemDoSlide(no, "jpeg");
+    ids.push(await salvarImagemDoSlide({
+      contaId: p.contaId, postId: p.postId, slideId: s.id, ordem: i + 1, pasta: p.pasta, blob, midiaAnterior: s.midia_id,
+    }));
+    p.aoAvancar?.(i + 1);
+  }
+  return ids;
 }

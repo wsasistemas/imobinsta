@@ -75,7 +75,9 @@ function CardPost({ post, pastas, onPasta }: { post: Post; pastas: string[]; onP
           {conteudo}
         </Link>
       ) : (
-        <div className={classe}>{conteudo}</div>
+        <Link to={`/criar/publicar/${post.id}`} className={classe} aria-label={`${titulo} — ver publicação`}>
+          {conteudo}
+        </Link>
       )}
       <label className="mt-2 flex items-center gap-1.5 text-cap1 text-label2">
         <Folder className="size-3.5 flex-none" aria-hidden />

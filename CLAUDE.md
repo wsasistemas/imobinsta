@@ -10,8 +10,10 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 - O `docs/PRD.md` (v0.1) registra só a Fase 0.
 
 ## Fase atual
-Fases 0 a 4 entregues. Fase 4 testada pelo Wagner no preview da Vercel com o Gemini em 27/10/2026; produção ainda sem o push.
-A próxima é a Fase 5 (Publicar, agendar e Chatfyre), que só começa com o OK do Wagner.
+Fases 0 a 4 entregues e em produção. Fase 5 (Publicar, agendar e Chatfyre) em andamento:
+etapas 5.1 (Edge Function `chatfyre`) e 5.2 (`ig-publicar`, tela Publicar, fila no pg_cron) no código.
+Pendente do Wagner: migration 20261027040000, pacote do Chatfyre (`-Exportar`, fora da rede do escritório).
+Etapa 5.3 (automação ligada ao post) espera os esquemas reais das ferramentas de escrita.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 
