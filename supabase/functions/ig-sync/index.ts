@@ -1,9 +1,12 @@
 // ig-sync — importa posts publicados, métricas por post e números da conta.
 //
 // POST { conta_id } com JWT de um membro (botão "Sincronizar"), ou
-// POST {}          com a service_role (pg_cron diário): sincroniza todas as contas conectadas.
+// POST {}          com o cabeçalho x-cron-segredo (pg_cron diário): sincroniza todas as contas conectadas.
+//
+// Publicar com:  supabase functions deploy ig-sync --no-verify-jwt
+// (o pg_cron chama sem JWT; as duas portas são conferidas aqui dentro).
 // Somente leitura na Meta: não publica, não comenta, não altera nada na conta.
-import { admin, conexaoInstagram, CORS, type Db, ehServico, ErroGraph, graph, json, papelNaConta, usuario } from "../_shared/comum.ts";
+import { admin, conexaoInstagram, CORS, type Db, ErroGraph, graph, json, papelNaConta, usuario } from "../_shared/comum.ts";
 
 const MAX_POSTS = 100;
 
@@ -54,7 +57,8 @@ async function sincronizarConta(db: Db, contaId: string) {
   const igId = conta?.ig_user_id as string | undefined;
   if (!igId) return { conta_id: contaId, erro: "Conta sem ig_user_id." };
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  // Dia do retrato no fuso do Brasil (em UTC, um sync depois das 21h cairia no dia seguinte).
+  const hoje = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
   try {
     // 1. Perfil e alcance do dia.
     const perfil = await graph<{ followers_count?: number; follows_count?: number; media_count?: number; username?: string }>(
@@ -134,7 +138,10 @@ Deno.serve(async (req) => {
     const db = admin();
     const { conta_id } = await req.json().catch(() => ({}));
 
-    if (ehServico(req)) {
+    const segredo = req.headers.get("x-cron-segredo") ?? "";
+    if (segredo) {
+      const { data: ok } = await db.rpc("sync_cron_confere", { p_segredo: segredo });
+      if (ok !== true) return json({ erro: "Agendador não autorizado." }, 401);
       const { data } = await db.from("conexoes").select("conta_id").eq("provedor", "instagram").eq("status", "conectado");
       const ids = conta_id ? [conta_id as string] : (data ?? []).map((c) => c.conta_id as string);
       const resultados = [];

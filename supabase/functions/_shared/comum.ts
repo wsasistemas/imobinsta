@@ -38,12 +38,6 @@ export async function usuario(req: Request, db: Db) {
   return data.user ?? null;
 }
 
-/** true se a requisição veio com a service_role (pg_cron). */
-export function ehServico(req: Request) {
-  const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  return !!token && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-}
-
 export async function papelNaConta(db: Db, contaId: string, userId: string) {
   const { data } = await db
     .from("membros")

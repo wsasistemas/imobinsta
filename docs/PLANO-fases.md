@@ -70,14 +70,14 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 
 **Entrega:** a conta conectada pela API da Meta, com posts e métricas reais no Analytics e na Biblioteca.
 
-- [ ] App criado no developers.facebook.com (tipo decidido: Instagram Login ou Facebook Login, ver PRD pergunta 2)
-- [ ] Edge Function `ig-oauth`: troca o código, gera o token de longa duração e salva no Vault
+- [x] App criado no developers.facebook.com (tipo decidido: Instagram Login ou Facebook Login, ver PRD pergunta 2)
+- [x] Edge Function `ig-oauth`: troca o código, gera o token de longa duração e salva no Vault
 - [ ] Rotina de renovação do token antes de vencer (pg_cron)
-- [ ] Migration `metricas_post`, `metricas_conta` e `posts` (campos de publicação)
-- [ ] Edge Function `ig-sync`: importa posts, insights por post e seguidores, com snapshot diário
-- [ ] Os 7 posts reais aparecem com alcance, curtidas e salvamentos. O 403 do Chatfyre fica resolvido.
-- [ ] Tela Analytics com KPIs, gráfico de seguidores e ranking (dados reais, sem mock)
-- [ ] Biblioteca listando os posts publicados vindos do Instagram
+- [x] Migration `metricas_post`, `metricas_conta` e `posts` (campos de publicação)
+- [x] Edge Function `ig-sync`: importa posts, insights por post e seguidores, com snapshot diário
+- [x] Os 7 posts reais aparecem com alcance, curtidas e salvamentos. O 403 do Chatfyre fica resolvido.
+- [x] Tela Analytics com KPIs, gráfico de seguidores e ranking (dados reais, sem mock)
+- [x] Biblioteca listando os posts publicados vindos do Instagram
 - [ ] Conferência: 5 posts batem com o app do Instagram (100%)
 
 **Prompt da fase:**

@@ -58,6 +58,10 @@ function dataCurta(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+function diasAte(iso: string) {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (24 * 3600 * 1000));
+}
+
 export function Conexoes() {
   const { demo, conta } = useAcesso();
   const { data, isLoading, error } = useQuery({
@@ -87,7 +91,9 @@ export function Conexoes() {
       }
       return data!;
     },
-    onSettled: () => cliente.invalidateQueries({ queryKey: ["conexoes"] }),
+    onSettled: () => {
+      for (const chave of ["conexoes", "posts", "metricas_conta"]) cliente.invalidateQueries({ queryKey: [chave] });
+    },
   });
 
   const lista = [...(data ?? [])].sort((a, b) => ORDEM.indexOf(a.provedor) - ORDEM.indexOf(b.provedor));
@@ -123,6 +129,12 @@ export function Conexoes() {
                       <Link to="/conexoes/instagram" className={cn(botao({ tamanho: "sm" }), "mt-3")}>
                         {c.status === "expirado" ? "Conectar de novo" : "Configurar"}
                       </Link>
+                    )}
+                    {c.provedor === "instagram" && c.status === "conectado" && c.expira_em && diasAte(c.expira_em) <= 10 && (
+                      <p className="mt-2 text-cap1 text-orange">
+                        O token vence em {Math.max(diasAte(c.expira_em), 0)} dias.{" "}
+                        <Link to="/conexoes/instagram" className="font-semibold underline">Conectar de novo</Link> para renovar por mais 60.
+                      </p>
                     )}
                     {c.provedor === "instagram" && c.status === "conectado" && (
                       <Button tamanho="sm" variante="secundario" className="mt-3" onClick={() => sync.mutate()} disabled={sync.isPending || demo}>
