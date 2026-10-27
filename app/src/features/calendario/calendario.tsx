@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/hig";
 import { useAcesso } from "@/features/auth/acesso";
+import { chamarFuncao } from "@/features/criar/dados";
 import { PRODUTOS } from "@/features/criar/esquema";
 import { tituloDoPost, usePosts, type Post } from "@/features/instagram/dados";
 import { supabase } from "@/lib/supabase";
@@ -79,6 +80,7 @@ export function Calendario() {
   const [mes, setMes] = useState(() => { const h = new Date(); return new Date(h.getFullYear(), h.getMonth(), 1); });
   const [form, setForm] = useState<Form | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ tom: "ok" | "erro"; texto: string } | null>(null);
 
   const semanas = semanasDo(mes);
   const inicio = chaveDia(semanas[0][0]);
@@ -102,6 +104,27 @@ export function Calendario() {
     onMutate: () => setErro(null),
     onSuccess: () => setForm(null),
     onError: (e) => setErro(e.message),
+    onSettled: () => cliente.invalidateQueries({ queryKey: ["pautas"] }),
+  });
+
+  // Recomendações IA: 8 pautas a partir da próxima segunda-feira (ia-texto, acao "pautas").
+  const recomendar = useMutation({
+    mutationFn: () => {
+      const d = new Date();
+      d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+      return chamarFuncao<{ criadas: number; inicio: string; com_ranking: number }>("ia-texto", {
+        acao: "pautas", conta_id: conta!.conta_id, inicio: chaveDia(d),
+      });
+    },
+    onMutate: () => setAviso(null),
+    onSuccess: (r) => {
+      setMes(new Date(diaLocal(r.inicio).getFullYear(), diaLocal(r.inicio).getMonth(), 1));
+      setAviso({
+        tom: "ok",
+        texto: `${r.criadas} pautas sugeridas a partir de ${diaLocal(r.inicio).toLocaleDateString("pt-BR")}${r.com_ranking ? `, com base nos ${r.com_ranking} posts de maior alcance` : " (ainda sem métricas de alcance: é uma aposta inicial)"}. Edite ou apague à vontade.`,
+      });
+    },
+    onError: (e) => setAviso({ tom: "erro", texto: e.message }),
     onSettled: () => cliente.invalidateQueries({ queryKey: ["pautas"] }),
   });
 
@@ -163,8 +186,16 @@ export function Calendario() {
           <h2 className="text-t3 font-semibold">Recomendações IA</h2>
           <p className="mt-1 text-foot opacity-90">2 posts por semana nas próximas 4 semanas, alternando produto e formato, a partir dos posts que mais alcançaram.</p>
         </div>
-        <span className="rounded-full bg-white/20 px-3 py-1.5 text-foot font-semibold" title="Etapa 6.2: usa o Gemini">Em breve</span>
+        <Button variante="secundario" className="bg-white/90 text-black hover:bg-white" disabled={demo || recomendar.isPending} onClick={() => recomendar.mutate()}>
+          {recomendar.isPending ? <LoaderCircle className="animate-spin" /> : <Sparkles />} {recomendar.isPending ? "Gerando…" : "Gerar 8 pautas"}
+        </Button>
       </div>
+      {aviso && (
+        <div role={aviso.tom === "erro" ? "alert" : "status"}
+          className={cn("mb-5 rounded-hig-lg px-4 py-3 text-foot", aviso.tom === "erro" ? "bg-red/10 text-red" : "bg-green/10 text-green")}>
+          {aviso.texto}
+        </div>
+      )}
 
       {demo && <Card className="mb-5 text-label2">Modo demonstração: pautas e posts reais não aparecem aqui.</Card>}
       {(pautas.error || posts.error) && <Card role="alert" className="mb-5 text-red">Não foi possível carregar o calendário: {(pautas.error ?? posts.error)!.message}</Card>}

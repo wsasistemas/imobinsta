@@ -5,6 +5,7 @@
 //   prompt  { briefing, base? }                      → { prompt }                     (prompt adaptado / refinar)
 //   gerar   { post_id?, prompt, n_slides }           → { slides, legenda, hashtags }
 //   editar  { post_id?, slide, pedido, n, total }    → { alteracoes, resposta }
+//   pautas  { inicio }  (segunda-feira AAAA-MM-DD)   → { criadas }  8 pautas origem 'ia' (2/semana, ter e sex)
 //   chave   { chave }  (só o dono)                   → { ok }  grava a chave do Gemini no Vault
 //
 // Toda chamada ao Gemini fica em geracoes_ia (custo 0 na cota gratuita).
@@ -247,6 +248,81 @@ Responda em JSON: {"alteracoes": {...}, "resposta": "..."}.`;
   return await gerarJson(ctx, Edicao, instrucao, `Slide ${n} de ${total}, JSON atual:\n${slide}\n\nPedido: ${pedido}`);
 }
 
+// ---------- Recomendações IA do calendário (Fase 6) ------------------------------------------
+
+const PRODUTOS = [
+  "Ecossistema completo", "ERP + TOTVS RM", "Imobiliárias", "Portal de compras", "Helpdesk",
+  "Cobrança + assinatura", "Aprovações / RH", "Confeitarias",
+] as const;
+const SEMANAS = 4;
+const POR_SEMANA = 2;
+const DIAS = [2, 5]; // terça e sexta
+
+const Sugestoes = z.object({
+  pautas: z.array(z.object({
+    titulo: z.string().trim().min(3).max(140),
+    produto: z.enum(PRODUTOS),
+    formato: z.enum(["post", "carrossel", "reels"]),
+    notas: z.string().trim().max(500),
+  })).min(SEMANAS * POR_SEMANA),
+});
+
+/** AAAA-MM-DD + n dias, sem passar por fuso. */
+function somarDias(data: string, n: number) {
+  const d = new Date(`${data}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+async function acaoPautas(ctx: Parameters<typeof gerarJson>[0], corpo: Record<string, unknown>) {
+  // inicio = segunda-feira da primeira semana (o front manda a próxima segunda no fuso do usuário)
+  const inicio = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).parse(corpo.inicio);
+  if (new Date(`${inicio}T12:00:00Z`).getUTCDay() !== 1) throw new ErroUsuario("O início precisa ser uma segunda-feira.");
+  const fim = somarDias(inicio, SEMANAS * 7 - 1);
+
+  const { count } = await ctx.db.from("pautas").select("id", { count: "exact", head: true })
+    .eq("conta_id", ctx.contaId).eq("origem", "ia").gte("data", inicio).lte("data", fim);
+  if ((count ?? 0) > 0) throw new ErroUsuario("Já existem sugestões da IA nessas 4 semanas. Apague-as no calendário para gerar de novo.", 409);
+
+  // Ranking real da Fase 2: alcance do retrato mais recente de cada post publicado.
+  const { data: posts, error } = await ctx.db.from("posts")
+    .select("formato, legenda, publicado_em, metricas_post(data, alcance)")
+    .eq("conta_id", ctx.contaId).eq("status", "publicado");
+  if (error) throw error;
+  type Linha = { formato: string; legenda: string | null; publicado_em: string | null; metricas_post: { data: string; alcance: number | null }[] };
+  const ranking = ((posts ?? []) as Linha[])
+    .map((p) => ({
+      formato: p.formato,
+      titulo: (p.legenda ?? "").split("\n").find((l) => l.trim() && !l.trim().startsWith("#"))?.trim().slice(0, 120) ?? "",
+      alcance: [...(p.metricas_post ?? [])].sort((a, b) => b.data.localeCompare(a.data))[0]?.alcance ?? null,
+    }))
+    .filter((p) => p.alcance != null)
+    .sort((a, b) => b.alcance! - a.alcance!)
+    .slice(0, 10);
+
+  const n = SEMANAS * POR_SEMANA;
+  const instrucao = `${MARCA}
+Você é estrategista de conteúdo para Instagram e monta o calendário das próximas ${SEMANAS} semanas: ${n} pautas, ${POR_SEMANA} por semana, na ordem em que vão ao ar.
+Regras: alterne o produto (não repita o mesmo produto em pautas seguidas e cubra pelo menos 5 produtos diferentes) e alterne o formato (carrossel, reels, post).
+Use o ranking de alcance para decidir temas e formatos que repetir. Em "notas", explique em 1 ou 2 frases por que a pauta faz sentido,
+citando SOMENTE os posts e números do ranking fornecido. Se o ranking estiver vazio, diga que é uma aposta inicial, sem inventar números.
+Produtos permitidos (use o texto exato): ${PRODUTOS.join(" | ")}.
+Responda em JSON: {"pautas": [{"titulo": "...", "produto": "...", "formato": "carrossel|reels|post", "notas": "..."}]}.`;
+  const pedido = ranking.length
+    ? `Ranking dos posts por alcance (dado real do Instagram):\n${ranking.map((p, i) => `${i + 1}. [${p.formato}] alcance ${p.alcance} · "${p.titulo}"`).join("\n")}`
+    : "Ranking vazio: a conta ainda não tem métricas de alcance.";
+  const r = await gerarJson(ctx, Sugestoes, instrucao, pedido);
+
+  const linhas = r.pautas.slice(0, n).map((p, i) => ({
+    conta_id: ctx.contaId,
+    data: somarDias(inicio, Math.floor(i / POR_SEMANA) * 7 + DIAS[i % POR_SEMANA] - 1),
+    titulo: p.titulo, produto: p.produto, formato: p.formato, notas: p.notas || null, origem: "ia",
+  }));
+  const { data: criadas, error: eIns } = await ctx.db.from("pautas").insert(linhas).select("id, data");
+  if (eIns) throw eIns;
+  return { criadas: criadas?.length ?? 0, inicio, fim, com_ranking: ranking.length };
+}
+
 async function acaoChave(db: Db, contaId: string, userId: string, corpo: Record<string, unknown>) {
   if ((await papelNaConta(db, contaId, userId)) !== "dono") throw new ErroUsuario("Só o dono da conta pode trocar a chave.", 403);
   const chave = z.string().trim().min(20).max(200).parse(corpo.chave);
@@ -296,6 +372,8 @@ Deno.serve(async (req) => {
         return json(await acaoGerar(ctx, corpo));
       case "editar":
         return json(await acaoEditar(ctx, corpo));
+      case "pautas":
+        return json(await acaoPautas(ctx, corpo));
       case "chave":
         return json(await acaoChave(db, contaId, user.id, corpo));
       default:

@@ -10,10 +10,9 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 - O `docs/PRD.md` (v0.1) registra só a Fase 0.
 
 ## Fase atual
-Fases 0 a 4 em produção. Fase 5 aprovada pelo Wagner (preview; push para produção só com o OK dele);
-falta o teste real da automação, que espera o crédito do AI Studio (Gemini).
-Fase 6 (Calendário e pautas): etapa 6.1 no código (migration 20261027050000, pendente de rodar no SQL Editor);
-etapa 6.2 (Recomendações IA) espera o crédito do AI Studio.
+Fases 0 a 6 no código e em produção (push de 27/10). Pendente do Wagner: migration 20261027050000
+no SQL Editor e crédito no AI Studio (Gemini), que libera os testes reais da automação (Fase 5) e das
+Recomendações IA (Fase 6). A próxima é a Fase 7 (IA paga), que só começa com o OK do Wagner.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 
