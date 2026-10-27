@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, ArrowRight, DollarSign, Facebook, Globe, Heart, Instagram, LayoutGrid, Lightbulb, Link as LinkIcon, Linkedin,
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, Toggle } from "@/components/ui/hig";
 import { Tile } from "@/components/ui/tile";
 import { useAcesso } from "@/features/auth/acesso";
+import { type Pauta, usePauta } from "@/features/calendario/dados";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Chip, Etapas, Nota, Opcao, Rotulo } from "./comum";
 import { ID_DEMO, criarRascunho } from "./dados";
@@ -54,22 +56,36 @@ function PromptFormatado({ texto }: { texto: string }) {
   );
 }
 
-/** Wizard do post de imagem: Formato → Conteúdo → Prompt adaptado → (gera e abre o Editor). */
+/** Abre o wizard; com ?pauta=<id> (Calendário), já vem com formato, produto e ideia da pauta. */
 export function WizardImagem() {
+  const [busca] = useSearchParams();
+  const pautaId = busca.get("pauta");
+  const pauta = usePauta(pautaId);
+  if (pautaId && pauta.isLoading) {
+    return <div className="grid h-[60vh] place-items-center text-label2"><LoaderCircle className="size-6 animate-spin" aria-label="Carregando a pauta" /></div>;
+  }
+  const p = pauta.data && !pauta.data.post_id ? pauta.data : null;
+  return <Wizard key={p?.id ?? "novo"} pauta={p} />;
+}
+
+/** Wizard do post de imagem: Formato → Conteúdo → Prompt adaptado → (gera e abre o Editor). */
+function Wizard({ pauta }: { pauta: Pauta | null }) {
   const { demo, conta } = useAcesso();
   const navegar = useNavigate();
   const [etapa, setEtapa] = useState(0);
 
   const [rede, setRede] = useState<Rede>("todas");
-  const [formato, setFormato] = useState<"post" | "carrossel">("carrossel");
+  const [formato, setFormato] = useState<"post" | "carrossel">(pauta?.formato === "post" ? "post" : "carrossel");
   const [nSlides, setNSlides] = useState(5);
   const [template, setTemplate] = useState<TemplateId>("wsa-neon");
 
   const [objetivo, setObjetivo] = useState<Objetivo>("vender");
-  const [produto, setProduto] = useState<string>(PRODUTOS[0]);
+  const [produto, setProduto] = useState<string>(
+    pauta?.produto && (PRODUTOS as readonly string[]).includes(pauta.produto) ? pauta.produto : PRODUTOS[0],
+  );
   const [abordagem, setAbordagem] = useState<string | null>("Dor + solução");
   const [origem, setOrigem] = useState<Origem>("zero");
-  const [ideia, setIdeia] = useState("");
+  const [ideia, setIdeia] = useState(pauta ? [pauta.titulo, pauta.notas].filter(Boolean).join("\n\n") : "");
   const [url, setUrl] = useState("");
   const [link, setLink] = useState<Link | null>(null);
   const [usar, setUsar] = useState({ titulo: true, descricao: true, corpo: true });
@@ -102,10 +118,13 @@ export function WizardImagem() {
       if (demo) return ID_DEMO;
       const r = await iaTexto(Geracao, { acao: "gerar", conta_id: conta!.conta_id, prompt, n_slides: n });
       const legenda = [r.legenda.trim(), r.hashtags.join(" ")].filter(Boolean).join("\n\n").slice(0, 2200);
-      return criarRascunho(conta!.conta_id, {
+      const id = await criarRascunho(conta!.conta_id, {
         formato, objetivo, produto, abordagem, origem, link_url: origem === "link" ? link?.url ?? null : null, prompt, legenda,
         template_id: template, mostrar_logo: mostrarLogo, criar_automacao: automacao,
       }, r.slides.slice(0, n));
+      // Liga o rascunho à pauta. Se falhar, o post já existe: não perde o trabalho, só o vínculo.
+      if (pauta) await supabase.from("pautas").update({ post_id: id }).eq("id", pauta.id);
+      return id;
     },
     onSuccess: (id) => navegar(`/criar/editor/${id}`),
   });

@@ -10,10 +10,10 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 - O `docs/PRD.md` (v0.1) registra só a Fase 0.
 
 ## Fase atual
-Fases 0 a 4 entregues e em produção. Fase 5 (Publicar, agendar e Chatfyre) em andamento:
-etapas 5.1, 5.2 e 5.3 no código e nas Edge Functions (preview, sem push para produção).
-O pacote do Chatfyre já está no Vault (27/10). Pendente do Wagner: migration 20261027040000,
-resolver o "API access blocked" da Meta e o teste real (publicar 1 post, ativar, comentar QUERO).
+Fases 0 a 4 em produção. Fase 5 aprovada pelo Wagner (preview; push para produção só com o OK dele);
+falta o teste real da automação, que espera o crédito do AI Studio (Gemini).
+Fase 6 (Calendário e pautas): etapa 6.1 no código (migration 20261027050000, pendente de rodar no SQL Editor);
+etapa 6.2 (Recomendações IA) espera o crédito do AI Studio.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

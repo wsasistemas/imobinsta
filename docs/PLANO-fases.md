@@ -157,10 +157,16 @@ que só aparecem com o token de escrita (`automacoes:escrever`).
 
 ## Fase 6: Calendário e pautas
 
-- [ ] Migration `pautas`
-- [ ] Calendário mensal com pautas, posts agendados e publicados
+- [x] Migration `pautas` (20261027050000, testada no PGlite 16/16)
+- [x] Calendário mensal com pautas, posts agendados e publicados (grade no computador, agenda no celular)
 - [ ] "Recomendações IA": 8 pautas (4 semanas × 2), alternando produto e formato, a partir do ranking da Fase 2
-- [ ] Pauta → "Criar post" abre o wizard já preenchido
+- [x] Pauta → "Criar post" abre o wizard já preenchido (`/criar/imagem?pauta=<id>`) e liga o rascunho à pauta
+
+**Etapas da Fase 6:** 6.1 pautas e calendário · 6.2 Recomendações IA (Gemini; espera o crédito do AI Studio).
+
+**Para ligar em produção (Wagner):** SQL Editor do ikvj: rodar `supabase/migrations/20261027050000_fase6_pautas.sql`.
+
+**Pendente da Fase 5:** teste real (publicar 1 post, ativar a automação, comentar "QUERO") depois do crédito do AI Studio.
 
 ---
 
