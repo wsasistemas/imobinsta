@@ -10,7 +10,7 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 - O `docs/PRD.md` (v0.1) registra só a Fase 0.
 
 ## Fase atual
-Fases 0 a 4 entregues e testadas em produção pelo Wagner (Fase 4 testada com o Gemini em 27/10/2026).
+Fases 0 a 4 entregues. Fase 4 testada pelo Wagner no preview da Vercel com o Gemini em 27/10/2026; produção ainda sem o push.
 A próxima é a Fase 5 (Publicar, agendar e Chatfyre), que só começa com o OK do Wagner.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
