@@ -93,7 +93,7 @@ const ETAPAS: Etapa[] = [
     resumo: "Diz para a Meta para onde devolver você depois de autorizar.",
     itens: [
       { id: "3a", texto: <>Em <b>Concluir configuração</b>, abra <b>Configurar o Login do Facebook para Empresas</b>.</> },
-      { id: "3b", texto: <>Em <b>URIs de redirecionamento do OAuth válidos</b>, cole o endereço abaixo e salve.</> },
+      { id: "3b", texto: <>Em <b>URIs de redirecionamento do OAuth válidos</b>, cole o endereço abaixo, tecle Enter (vira uma etiqueta) e salve. Vazio, a Meta mostra “Não é possível carregar o URL”. Confira no <b>Validador da URI de redirecionamento</b>.</> },
       { id: "3c", texto: <>Em <b>Configurações</b>, clique em <b>Criar configuração</b>: nome <code>imobinsta-estudio</code>, token de <b>acesso do usuário</b>, ativos <b>Páginas</b> e <b>Contas do Instagram</b>, mesmas permissões da etapa anterior.</> },
       { id: "3d", texto: <>Anote o <b>ID da configuração</b>.</> },
     ],

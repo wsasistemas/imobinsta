@@ -7,7 +7,7 @@
 // Publicar com:  supabase functions deploy ig-oauth --no-verify-jwt
 // (o retorno da Meta não traz JWT; o POST valida o JWT aqui dentro).
 // Secrets: META_APP_ID, META_APP_SECRET, META_CONFIG_ID. Opcional: APP_ORIGENS (lista separada por vírgula).
-import { admin, conexaoInstagram, CORS, env, graph, json, papelNaConta, usuario } from "../_shared/comum.ts";
+import { admin, conexaoInstagram, CORS, env, ErroGraph, graph, json, papelNaConta, usuario } from "../_shared/comum.ts";
 
 const VALIDADE_ESTADO_MS = 10 * 60 * 1000;
 
@@ -128,8 +128,11 @@ async function retorno(req: Request) {
 
     return voltar(reg.retorno, { ok: "1" });
   } catch (e) {
-    console.error("ig-oauth retorno:", e instanceof Error ? e.message : e);
-    return voltar(reg.retorno, { erro: "A Meta recusou a conexão. Confira as etapas do guia e tente de novo." });
+    // Erro da Graph API ou do banco (PostgrestError não é instanceof Error). Nenhum dos dois traz segredo.
+    const detalhe = e instanceof Error ? e.message : String((e as { message?: string })?.message ?? JSON.stringify(e));
+    const etapa = e instanceof ErroGraph ? "A Meta respondeu" : "Falha ao salvar a conexão";
+    console.error("ig-oauth retorno:", etapa, detalhe);
+    return voltar(reg.retorno, { erro: `${etapa}: ${detalhe}` });
   }
 }
 

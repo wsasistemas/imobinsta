@@ -54,6 +54,8 @@ outro nome, me mande um print e eu ajusto o passo.
    ```
    https://ikvjaowvpvxojvcfwnct.supabase.co/functions/v1/ig-oauth
    ```
+   Tecle **Enter** para virar etiqueta. Com o campo vazio e o modo estrito ligado, a Meta mostra
+   "Não é possível carregar o URL" (visto em 26/10/2026). Confira no **Validador da URI de redirecionamento**.
    Deixe ligados **Login no OAuth do cliente** e **Login no OAuth da Web**. Salve.
 3. Em **Configurações** (*Configurations*), clique em **Criar configuração**:
    - Nome: `imobinsta-estudio`
