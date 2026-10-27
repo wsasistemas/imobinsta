@@ -5,7 +5,10 @@ import { DadosSlide, type Objetivo, type Origem, type TemplateId } from "./esque
 
 export type Rascunho = {
   id: string;
-  formato: "post" | "carrossel";
+  formato: "post" | "carrossel" | "reels";
+  /** Reels (Fase 7.2): vídeo do banco de mídias; post e carrossel usam os slides. */
+  video_midia_id?: string | null;
+  midias?: { storage_path: string } | null;
   objetivo: Objetivo | null;
   produto: string | null;
   abordagem: string | null;
@@ -73,7 +76,7 @@ export function useRascunho(id: string | undefined) {
       if (id === ID_DEMO) return structuredClone(DEMO);
       const { data: post, error } = await supabase
         .from("posts")
-        .select("id, formato, objetivo, produto, abordagem, origem, link_url, prompt, legenda, status, template_id, mostrar_logo, criar_automacao, automacao_json, agendado_para, permalink, erro")
+        .select("id, formato, objetivo, produto, abordagem, origem, link_url, prompt, legenda, status, template_id, mostrar_logo, criar_automacao, automacao_json, agendado_para, permalink, erro, video_midia_id, midias!posts_video_midia_id_fkey(storage_path)")
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -90,7 +93,7 @@ export function useRascunho(id: string | undefined) {
           dados: v.success ? v.data : { layout: "lista", titulo: "Slide com dados inválidos: edite o texto" },
         };
       });
-      return { post: post as Rascunho, slides };
+      return { post: post as unknown as Rascunho, slides };
     },
     staleTime: Infinity,
     refetchOnWindowFocus: false,

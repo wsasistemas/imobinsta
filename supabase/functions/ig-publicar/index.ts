@@ -1,5 +1,7 @@
 // ig-publicar — publica post único e carrossel no Instagram pela API oficial (containers → media_publish).
 //
+// Formatos: post único, carrossel (JPEG) e Reels (MP4 do banco de mídias; o container de vídeo pode
+// levar minutos: se não ficar pronto em ~1 min, o post fica "publicando" e a fila do pg_cron termina).
 // POST com JWT de um membro da conta:
 //   { acao: "publicar", conta_id, post_id }            → publica agora
 //   { acao: "agendar",  conta_id, post_id, quando }    → status agendado (a fila publica na hora)
@@ -25,13 +27,23 @@ class ErroUsuario extends Error {
   }
 }
 
-type Post = { id: string; conta_id: string; formato: string; legenda: string | null; status: string };
+type Post = {
+  id: string; conta_id: string; formato: string; legenda: string | null; status: string;
+  video_midia_id: string | null; ig_container_id: string | null;
+};
 type Slide = { ordem: number; midia_id: string | null; midias: { storage_path: string; mime: string | null } | null };
+const CAMPOS_POST = "id, conta_id, formato, legenda, status, video_midia_id, ig_container_id";
 
-/** Confere se o post pode sair: formato, quantidade de imagens, JPEG e legenda. */
-async function validar(db: Db, post: Post) {
-  if (!["post", "carrossel"].includes(post.formato)) throw new ErroUsuario("Por enquanto só post único e carrossel podem ser publicados.");
+/** Confere se o post pode sair: formato, imagens JPEG (ou o MP4 do Reels) e legenda. */
+async function validar(db: Db, post: Post): Promise<{ imagens: string[] } | { video: string }> {
+  if (!["post", "carrossel", "reels"].includes(post.formato)) throw new ErroUsuario("Por enquanto só post único, carrossel e Reels podem ser publicados.");
   if ((post.legenda ?? "").length > 2200) throw new ErroUsuario("A legenda passou de 2.200 caracteres.");
+  if (post.formato === "reels") {
+    if (!post.video_midia_id) throw new ErroUsuario("O Reels não tem vídeo.");
+    const { data } = await db.from("midias").select("storage_path, mime, conta_id").eq("id", post.video_midia_id).maybeSingle();
+    if (!data || data.conta_id !== post.conta_id || data.mime !== "video/mp4") throw new ErroUsuario("O vídeo do Reels precisa ser um MP4 do banco de mídias.");
+    return { video: data.storage_path as string };
+  }
   const { data, error } = await db
     .from("post_slides")
     .select("ordem, midia_id, midias(storage_path, mime)")
@@ -43,7 +55,7 @@ async function validar(db: Db, post: Post) {
   if (post.formato === "carrossel" && (slides.length < 2 || slides.length > 10)) throw new ErroUsuario("Carrossel precisa de 2 a 10 imagens.");
   const faltando = slides.filter((s) => !s.midias || s.midias.mime !== "image/jpeg");
   if (faltando.length) throw new ErroUsuario(`Imagens não preparadas (slides ${faltando.map((s) => s.ordem).join(", ")}). Clique em Publicar de novo.`, 409);
-  return slides.map((s) => s.midias!.storage_path);
+  return { imagens: slides.map((s) => s.midias!.storage_path) };
 }
 
 async function tokenInstagram(db: Db, contaId: string) {
@@ -83,15 +95,88 @@ async function urlsPublicas(db: Db, post: Post, caminhos: string[]) {
   return { destino, urls };
 }
 
+type Ig = Awaited<ReturnType<typeof tokenInstagram>>;
+const caminhoReels = (post: Post) => `${post.conta_id}/${post.id}/reel.mp4`;
+
+/** Vídeo leva mais que imagem: espera até ~1 min. false = ainda processando (a fila termina depois). */
+async function videoPronto(id: string, token: string, tentativas: number) {
+  for (let i = 0; i < tentativas; i++) {
+    const r = await graph<{ status_code?: string; status?: string }>(id, { fields: "status_code,status", access_token: token });
+    if (r.status_code === "FINISHED" || r.status_code === "PUBLISHED") return true;
+    if (r.status_code === "ERROR" || r.status_code === "EXPIRED") throw new ErroUsuario(`A Meta recusou o vídeo: ${r.status ?? r.status_code}`, 422);
+    if (i < tentativas - 1) await new Promise((ok) => setTimeout(ok, 3000));
+  }
+  return false;
+}
+
+/** media_publish do container pronto, grava o post e cria a automação. */
+async function concluir(db: Db, post: Post, ig: Ig, criacao: string) {
+  const { id: mediaId } = await graphPost<{ id: string }>(`${ig.igId}/media_publish`, { creation_id: criacao, access_token: ig.token });
+  const info = await graph<{ permalink?: string; timestamp?: string }>(mediaId, { fields: "permalink,timestamp", access_token: ig.token })
+    .catch(() => ({} as { permalink?: string; timestamp?: string }));
+  const { error } = await db.from("posts").update({
+    status: "publicado", ig_media_id: mediaId, permalink: info.permalink ?? null, ig_container_id: null,
+    publicado_em: info.timestamp ?? new Date().toISOString(), erro: null,
+  }).eq("id", post.id);
+  if (error) throw error;
+  if (post.formato === "reels") await db.storage.from(PUBLICO).remove([caminhoReels(post)]);
+  return { status: "publicado", ig_media_id: mediaId, permalink: info.permalink ?? null, automacao: await automacaoAposPublicar(db, post.id) };
+}
+
+/** Reels: copia o MP4 para o bucket público, cria o container REELS e publica se ficar pronto a tempo. */
+async function publicarReels(db: Db, post: Post, ig: Ig, caminho: string) {
+  const { data: arquivo, error } = await db.storage.from(PRIVADO).download(caminho);
+  if (error || !arquivo) throw new Error(`Não foi possível ler o vídeo: ${error?.message}`);
+  const alvo = caminhoReels(post);
+  const { error: eUp } = await db.storage.from(PUBLICO).upload(alvo, arquivo, { contentType: "video/mp4", upsert: true });
+  if (eUp) throw new Error(`Não foi possível preparar o vídeo: ${eUp.message}`);
+  const url = db.storage.from(PUBLICO).getPublicUrl(alvo).data.publicUrl;
+  const { id: criacao } = await graphPost<{ id: string }>(`${ig.igId}/media`, {
+    media_type: "REELS", video_url: url, caption: post.legenda ?? "", share_to_feed: "true", access_token: ig.token,
+  });
+  await db.from("posts").update({ ig_container_id: criacao }).eq("id", post.id);
+  if (!(await videoPronto(criacao, ig.token, 20))) return { status: "publicando", processando: true };
+  return await concluir(db, post, ig, criacao);
+}
+
+/** Marca o post com erro (e o token como expirado, se for o caso). */
+async function falhou(db: Db, post: Post, e: unknown, conexaoId?: string) {
+  const mensagem = e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e);
+  console.error("ig-publicar", post.id, mensagem);
+  if (e instanceof ErroGraph && e.tokenInvalido && conexaoId) {
+    await db.from("conexoes").update({
+      status: "expirado", detalhe: "Token da Meta expirou ou foi revogado. Conecte de novo.", atualizado_em: new Date().toISOString(),
+    }).eq("id", conexaoId);
+  }
+  const prefixo = e instanceof ErroGraph ? "A Meta recusou: " : "";
+  await db.from("posts").update({ status: "erro", ig_container_id: null, erro: (prefixo + mensagem).slice(0, 500) }).eq("id", post.id);
+  if (post.formato === "reels") await db.storage.from(PUBLICO).remove([caminhoReels(post)]);
+  return { status: "erro", erro: prefixo + mensagem };
+}
+
+/** Fila: Reels cujo container ainda processava. Publica quando a Meta terminar. */
+async function continuarReels(db: Db, post: Post) {
+  let conexaoId: string | undefined;
+  try {
+    const ig = await tokenInstagram(db, post.conta_id);
+    conexaoId = ig.conexaoId;
+    if (!(await videoPronto(post.ig_container_id!, ig.token, 1))) return { status: "publicando", processando: true };
+    return await concluir(db, post, ig, post.ig_container_id!);
+  } catch (e) {
+    return await falhou(db, post, e, conexaoId);
+  }
+}
+
 /** Publica um post já reservado (status = publicando). Grava o resultado no próprio post. */
 async function publicarReservado(db: Db, post: Post) {
   let copias: string[] = [];
   let conexaoId: string | undefined;
   try {
-    const caminhos = await validar(db, post);
+    const alvo = await validar(db, post);
     const ig = await tokenInstagram(db, post.conta_id);
     conexaoId = ig.conexaoId;
-    const { destino, urls } = await urlsPublicas(db, post, caminhos);
+    if ("video" in alvo) return await publicarReels(db, post, ig, alvo.video);
+    const { destino, urls } = await urlsPublicas(db, post, alvo.imagens);
     copias = destino;
     const legenda = post.legenda ?? "";
 
@@ -109,27 +194,9 @@ async function publicarReservado(db: Db, post: Post) {
       })).id;
     }
     await esperarContainer(criacao, ig.token);
-    const { id: mediaId } = await graphPost<{ id: string }>(`${ig.igId}/media_publish`, { creation_id: criacao, access_token: ig.token });
-    const info = await graph<{ permalink?: string; timestamp?: string }>(mediaId, { fields: "permalink,timestamp", access_token: ig.token })
-      .catch(() => ({} as { permalink?: string; timestamp?: string }));
-
-    const { error } = await db.from("posts").update({
-      status: "publicado", ig_media_id: mediaId, permalink: info.permalink ?? null,
-      publicado_em: info.timestamp ?? new Date().toISOString(), erro: null,
-    }).eq("id", post.id);
-    if (error) throw error;
-    return { status: "publicado", ig_media_id: mediaId, permalink: info.permalink ?? null, automacao: await automacaoAposPublicar(db, post.id) };
+    return await concluir(db, post, ig, criacao);
   } catch (e) {
-    const mensagem = e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e);
-    console.error("ig-publicar", post.id, mensagem);
-    if (e instanceof ErroGraph && e.tokenInvalido && conexaoId) {
-      await db.from("conexoes").update({
-        status: "expirado", detalhe: "Token da Meta expirou ou foi revogado. Conecte de novo.", atualizado_em: new Date().toISOString(),
-      }).eq("id", conexaoId);
-    }
-    const prefixo = e instanceof ErroGraph ? "A Meta recusou: " : "";
-    await db.from("posts").update({ status: "erro", erro: (prefixo + mensagem).slice(0, 500) }).eq("id", post.id);
-    return { status: "erro", erro: prefixo + mensagem };
+    return await falhou(db, post, e, conexaoId);
   } finally {
     if (copias.length) await db.storage.from(PUBLICO).remove(copias);
   }
@@ -154,7 +221,7 @@ async function reservar(db: Db, postId: string, de: string[]) {
     .update({ status: "publicando", erro: null, tentativas: (atual?.tentativas ?? 0) + 1 })
     .eq("id", postId)
     .in("status", de)
-    .select("id, conta_id, formato, legenda, status")
+    .select(CAMPOS_POST)
     .maybeSingle();
   if (error) throw error;
   return data as Post | null;
@@ -173,6 +240,10 @@ async function processarFila(db: Db) {
     const post = await reservar(db, id, ["agendado"]);
     if (post) resultados.push({ post_id: id, ...(await publicarReservado(db, post)) });
   }
+  // Reels cujo vídeo ainda processava na Meta quando o pedido terminou.
+  const { data: processando } = await db.from("posts").select(CAMPOS_POST)
+    .eq("status", "publicando").not("ig_container_id", "is", null).limit(LOTE_FILA);
+  for (const post of (processando ?? []) as Post[]) resultados.push({ post_id: post.id, ...(await continuarReels(db, post)) });
   return { resultados };
 }
 
@@ -195,7 +266,7 @@ Deno.serve(async (req) => {
     const contaId = z.string().uuid().parse(corpo.conta_id);
     const postId = z.string().uuid().parse(corpo.post_id);
     if (!(await papelNaConta(db, contaId, user.id))) return json({ erro: "Sem acesso a esta conta." }, 403);
-    const { data: post } = await db.from("posts").select("id, conta_id, formato, legenda, status").eq("id", postId).eq("conta_id", contaId).maybeSingle();
+    const { data: post } = await db.from("posts").select(CAMPOS_POST).eq("id", postId).eq("conta_id", contaId).maybeSingle();
     if (!post) return json({ erro: "Post não encontrado nesta conta." }, 404);
 
     switch (corpo.acao) {

@@ -175,15 +175,18 @@ que só aparecem com o token de escrita (`automacoes:escrever`).
 - [x] Tela Conexões: campos de chave OpenAI, HeyGen e fal.ai (gravam no Vault pela Edge Function `ia-imagem`, ação `chave`)
 - [x] Teto de gasto: `config_ia` + `gasto_ia_mes()` (migration 20261027060000, PGlite 11/11); a `ia-imagem` bloqueia no teto e pede confirmação acima do valor por geração (padrão US$ 30 / US$ 2)
 - [x] `ia-imagem` (OpenAI GPT Image ou fal.ai) no fluxo "Imagem gerada por IA" (`/criar/ia-imagem`): a foto vira fundo do template (`fundo_midia`), título e logo por cima
-- [ ] Migration `avatares` e `roteiros`
-- [ ] Tela Meus avatares: cadastro do avatar treinado no provedor + registro do consentimento
-- [ ] Wizard Vídeo com avatar: roteiro (Gemini) → avatar/voz → `ia-avatar` → vídeo no banco de mídias → Publicar como Reels
-- [ ] Publicação de Reels em `ig-publicar` (container de vídeo + espera do processamento)
+- [x] Migration `avatares` e `roteiros` (20261027070000, com `posts.video_midia_id` e a fila de Reels; PGlite 24/24)
+- [x] Tela Meus avatares: cadastro do avatar treinado no provedor + registro do consentimento (só o dono)
+- [x] Wizard Vídeo com avatar: roteiro (Gemini, `ia-texto` ação `roteiro`) → avatar/voz → `ia-avatar` (HeyGen, com teto) → vídeo no banco de mídias → Publicar como Reels
+- [x] Publicação de Reels em `ig-publicar` (container REELS; espera ~1 min e, se a Meta ainda processa, a fila do pg_cron termina)
 
 **Etapas da Fase 7:** 7.1 chaves, teto e imagem por IA · 7.2 avatar (HeyGen), roteiro e Reels.
 
-**Para ligar em produção (Wagner):** SQL Editor do ikvj: rodar `supabase/migrations/20261027060000_fase7_ia_paga.sql`;
-em Conexões, colar a chave da OpenAI (ou fal.ai) e conferir o teto.
+**Para ligar em produção (Wagner):** SQL Editor do ikvj: rodar `supabase/migrations/20261027060000_fase7_ia_paga.sql`
+e depois `20261027070000_fase7_avatar_reels.sql`; em Conexões, colar a chave da OpenAI (ou fal.ai) e a da HeyGen e conferir o teto.
+**Ordem obrigatória:** só depois da migration 20261027070000 publicar o `ig-publicar` novo
+(`supabase functions deploy ig-publicar --no-verify-jwt`). A versão nova lê `video_midia_id`/`ig_container_id`
+e quebraria a publicação num banco sem essas colunas. Em 27/10 a produção ficou com a versão anterior (commit f18f036).
 
 ---
 

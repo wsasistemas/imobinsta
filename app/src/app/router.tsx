@@ -8,6 +8,8 @@ import { ConfigurarInstagram } from "@/features/conexoes/configurar-instagram";
 import { Analytics } from "@/features/instagram/analytics";
 import { Automacoes } from "@/features/automacoes/automacoes";
 import { Calendario } from "@/features/calendario/calendario";
+import { MeusAvatares } from "@/features/avatares/avatares";
+import { VideoAvatar } from "@/features/criar/avatar";
 import { Biblioteca } from "@/features/instagram/biblioteca";
 import { BancoDeMidias } from "@/features/midias/midias";
 import { Criar } from "@/features/criar/criar";
@@ -29,6 +31,8 @@ const PRONTAS: Record<string, React.ReactNode> = {
   "criar-imagem": <WizardImagem />,
   automacoes: <Automacoes />,
   calendario: <Calendario />,
+  avatares: <MeusAvatares />,
+  "criar-avatar": <VideoAvatar />,
 };
 
 export const router = createBrowserRouter([

@@ -12,8 +12,9 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 ## Fase atual
 Fases 0 a 6 no código e em produção (push de 27/10). Pendente do Wagner: migration 20261027050000
 no SQL Editor e crédito no AI Studio (Gemini), que libera os testes reais da automação (Fase 5) e das
-Recomendações IA (Fase 6). Fase 7 (IA paga): etapa 7.1 (chaves, teto, imagem por IA) no preview,
-sem push; migration 20261027060000 pendente. Etapa 7.2 (avatar HeyGen, roteiro, Reels) a fazer.
+Recomendações IA (Fase 6). Fase 7 (IA paga) no código e no preview, sem push: 7.1 (chaves, teto,
+imagem por IA) e 7.2 (Meus avatares, vídeo com avatar HeyGen, Reels). Pendente do Wagner: migrations
+20261027060000 e 20261027070000. Depois delas: publicar o `ig-publicar` novo e fazer o push (ver PLANO-fases.md).
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

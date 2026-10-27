@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark, CalendarClock, ChevronLeft, ChevronRight, ExternalLink, Heart, Instagram, LoaderCircle, MessageCircle,
   MoreHorizontal, Pencil, Save, Send, Undo2, Zap,
@@ -66,8 +66,10 @@ function PublicarCarregado({ post, slides }: { post: Rascunho; slides: SlideSalv
   const nos = useRef<(HTMLDivElement | null)[]>([]);
 
   const tags = hashtagsDa(legenda);
+  const reels = post.formato === "reels";
   const problemas = [
-    !slides.length && "O post não tem slides.",
+    reels && !post.video_midia_id && "O Reels não tem vídeo.",
+    !reels && !slides.length && "O post não tem slides.",
     post.formato === "post" && slides.length !== 1 && "Post único precisa de exatamente 1 slide.",
     post.formato === "carrossel" && (slides.length < 2 || slides.length > 10) && "Carrossel precisa de 2 a 10 slides.",
     legenda.length > MAX_LEGENDA && "A legenda passou de 2.200 caracteres.",
@@ -113,12 +115,14 @@ function PublicarCarregado({ post, slides }: { post: Rascunho; slides: SlideSalv
     if (ehDemo) throw new Error("Modo demonstração: nada é publicado.");
     setEtapa("salvando");
     await salvarRascunho();
-    setEtapa("imagens");
-    setFeitos(0);
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); // espera os slides ocultos montarem
-    await prepararImagens({
-      contaId: conta!.conta_id, postId: post.id, pasta: post.produto ?? "Posts", slides, nos: nos.current, aoAvancar: setFeitos,
-    });
+    if (!reels) {
+      setEtapa("imagens");
+      setFeitos(0);
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); // espera os slides ocultos montarem
+      await prepararImagens({
+        contaId: conta!.conta_id, postId: post.id, pasta: post.produto ?? "Posts", slides, nos: nos.current, aoAvancar: setFeitos,
+      });
+    }
     setEtapa("enviando");
     if (quando === "agendar") {
       const r = await chamarFuncao<{ agendado_para: string }>("ig-publicar", {
@@ -126,9 +130,10 @@ function PublicarCarregado({ post, slides }: { post: Rascunho; slides: SlideSalv
       });
       return `Agendado para ${dataHora(r.agendado_para)}. A fila confere a cada 5 minutos.`;
     }
-    const r = await chamarFuncao<{ status: string; permalink?: string; automacao?: { status: string; erro?: string | null } | null }>("ig-publicar", {
+    const r = await chamarFuncao<{ status: string; permalink?: string; processando?: boolean; automacao?: { status: string; erro?: string | null } | null }>("ig-publicar", {
       acao: "publicar", conta_id: conta!.conta_id, post_id: post.id,
     });
+    if (r.processando) return "O Instagram está processando o vídeo. O Reels sai sozinho em alguns minutos (a fila confere a cada 5 min) e a automação é criada em seguida.";
     const texto = r.permalink ? "Publicado no Instagram." : "Publicado no Instagram (o link aparece na próxima sincronização).";
     if (!r.automacao) return texto;
     if (r.automacao.status === "erro") throw new Error(`${texto} Mas a automação falhou: ${r.automacao.erro ?? "sem detalhe"}. Tente de novo em Automações.`);
@@ -295,7 +300,22 @@ function StatusPost({ post, ocupado, onVoltar }: { post: Rascunho; ocupado: bool
   );
 }
 
-/** Preview no formato do feed do Instagram, com as setas do carrossel. */
+/** Reels: o vídeo do bucket privado por URL assinada (1 h). */
+function VideoReels({ caminho }: { caminho: string }) {
+  const url = useQuery({
+    queryKey: ["video-url", caminho],
+    staleTime: 50 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("imobinsta-midias").createSignedUrl(caminho, 3600);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  });
+  if (!url.data) return <div className="grid aspect-[9/16] place-items-center bg-black text-label2"><LoaderCircle className="size-6 animate-spin" /></div>;
+  return <video src={url.data} controls playsInline className="aspect-[9/16] w-full bg-black" />;
+}
+
+/** Preview no formato do feed do Instagram, com as setas do carrossel (ou o vídeo do Reels). */
 function PreviewInstagram({ post, slides, legenda, usuario }: { post: Rascunho; slides: SlideSalvo[]; legenda: string; usuario: string }) {
   const [ref, largura] = useLargura<HTMLDivElement>();
   const [i, setI] = useState(0);
@@ -312,12 +332,13 @@ function PreviewInstagram({ post, slides, legenda, usuario }: { post: Rascunho; 
           </span>
           <div className="leading-tight">
             <b className="text-foot">{usuario}</b>
-            <small className="block text-cap1 text-label2">{post.formato === "carrossel" ? `Carrossel · ${i + 1}/${slides.length}` : "Post"}</small>
+            <small className="block text-cap1 text-label2">{post.formato === "carrossel" ? `Carrossel · ${i + 1}/${slides.length}` : post.formato === "reels" ? "Reels" : "Post"}</small>
           </div>
           <MoreHorizontal className="ml-auto size-5 text-label2" aria-hidden />
         </div>
         <div className="relative">
-          {atual && largura > 0 && (
+          {post.formato === "reels" && post.midias?.storage_path && <VideoReels caminho={post.midias.storage_path} />}
+          {post.formato !== "reels" && atual && largura > 0 && (
             <SlideEscala largura={largura} template={atual.template_id} dados={atual.dados} n={i + 1} total={slides.length} logo={post.mostrar_logo} />
           )}
           {slides.length > 1 && (

@@ -6,6 +6,7 @@
 //   gerar   { post_id?, prompt, n_slides }           → { slides, legenda, hashtags }
 //   editar  { post_id?, slide, pedido, n, total }    → { alteracoes, resposta }
 //   pautas  { inicio }  (segunda-feira AAAA-MM-DD)   → { criadas }  8 pautas origem 'ia' (2/semana, ter e sex)
+//   roteiro { tema, produto, segundos }              → { titulo, texto, legenda, hashtags }  fala do vídeo com avatar
 //   chave   { chave }  (só o dono)                   → { ok }  grava a chave do Gemini no Vault
 //
 // Toda chamada ao Gemini fica em geracoes_ia (custo 0 na cota gratuita).
@@ -323,6 +324,30 @@ Responda em JSON: {"pautas": [{"titulo": "...", "produto": "...", "formato": "ca
   return { criadas: criadas?.length ?? 0, inicio, fim, com_ranking: ranking.length };
 }
 
+// ---------- Roteiro de vídeo com avatar (Fase 7.2) -------------------------------------------
+
+const Roteiro = z.object({
+  titulo: z.string().trim().min(3).max(160),
+  texto: z.string().trim().min(20).max(3000),
+  legenda: z.string().trim().min(1).max(1800),
+  hashtags: z.array(z.string().regex(/^#[\p{L}\p{N}_]+$/u)).max(5),
+});
+
+async function acaoRoteiro(ctx: Parameters<typeof gerarJson>[0], corpo: Record<string, unknown>) {
+  const tema = z.string().trim().min(10).max(1500).parse(corpo.tema);
+  const produto = z.enum(PRODUTOS).parse(corpo.produto);
+  const segundos = z.union([z.literal(30), z.literal(45), z.literal(60), z.literal(90)]).parse(corpo.segundos);
+  const palavras = Math.round((segundos / 60) * 150);
+  const instrucao = `${MARCA}
+Você escreve roteiros de Reels falados por um avatar (apresentador em vídeo, olhando para a câmera).
+O texto é lido em voz alta: frases curtas, linguagem falada, sem emojis, sem hashtags, sem marcadores, sem indicação de cena.
+Estrutura: gancho forte nos primeiros 3 segundos, a dor do cliente, a solução da WSA, e um único pedido de ação no fim
+(comentar a palavra QUERO para receber no direct). Cerca de ${palavras} palavras (≈ ${segundos} segundos). Não invente números, clientes nem resultados.
+Legenda do post: até 1.200 caracteres, sem hashtags no texto. Hashtags: de 3 a 5.
+Responda em JSON: {"titulo": "...", "texto": "<o que o avatar fala>", "legenda": "...", "hashtags": ["#..."]}.`;
+  return await gerarJson(ctx, Roteiro, instrucao, `Produto: ${produto}\nTema: ${tema}`);
+}
+
 async function acaoChave(db: Db, contaId: string, userId: string, corpo: Record<string, unknown>) {
   if ((await papelNaConta(db, contaId, userId)) !== "dono") throw new ErroUsuario("Só o dono da conta pode trocar a chave.", 403);
   const chave = z.string().trim().min(20).max(200).parse(corpo.chave);
@@ -374,6 +399,8 @@ Deno.serve(async (req) => {
         return json(await acaoEditar(ctx, corpo));
       case "pautas":
         return json(await acaoPautas(ctx, corpo));
+      case "roteiro":
+        return json(await acaoRoteiro(ctx, corpo));
       case "chave":
         return json(await acaoChave(db, contaId, user.id, corpo));
       default:
