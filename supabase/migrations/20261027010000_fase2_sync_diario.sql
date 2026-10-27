@@ -3,8 +3,17 @@
 -- Padrão: segredo gerado no próprio Vault, conferido por RPC só service_role
 -- (Cerebro: supabase-pg-cron-chamar-edge-function-com-segredo-gerado-no-vault).
 
-create extension if not exists pg_cron;
-create extension if not exists pg_net with schema extensions;
+-- Só cria se faltar. No Supabase, todo CREATE EXTENSION pg_cron (mesmo com IF NOT EXISTS) dispara
+-- extensions.grant_pg_cron_access(), que faz "revoke ... on cron.job from postgres". No ikvj compartilhado
+-- outros apps já têm grants derivados e o revoke falha com 2BP01 (dependent privileges exist).
+do $$ begin
+  if not exists (select 1 from pg_extension where extname = 'pg_cron') then
+    create extension pg_cron;
+  end if;
+  if not exists (select 1 from pg_extension where extname = 'pg_net') then
+    create extension pg_net with schema extensions;
+  end if;
+end $$;
 
 -- 1. Segredo do agendador: gerado aqui, ninguém digita nem vê ---------------------------
 do $$ begin
