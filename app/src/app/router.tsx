@@ -6,6 +6,7 @@ import { Entrar } from "@/features/auth/entrar";
 import { Conexoes } from "@/features/conexoes/conexoes";
 import { ConfigurarInstagram } from "@/features/conexoes/configurar-instagram";
 import { Analytics } from "@/features/instagram/analytics";
+import { Automacoes } from "@/features/automacoes/automacoes";
 import { Biblioteca } from "@/features/instagram/biblioteca";
 import { BancoDeMidias } from "@/features/midias/midias";
 import { Criar } from "@/features/criar/criar";
@@ -24,6 +25,7 @@ const PRONTAS: Record<string, React.ReactNode> = {
   midias: <BancoDeMidias />,
   criar: <Criar />,
   "criar-imagem": <WizardImagem />,
+  automacoes: <Automacoes />,
 };
 
 export const router = createBrowserRouter([

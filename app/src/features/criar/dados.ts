@@ -23,9 +23,13 @@ export type Rascunho = {
   erro: string | null;
 };
 
-/** Configuração da automação "comente a palavra → DM" escolhida na tela Publicar (vai para o Chatfyre na Etapa 5.3). */
+/**
+ * Configuração da automação "comente a palavra → DM" escolhida na tela Publicar. Depois de publicar, o
+ * ig-publicar cria no Chatfyre (pausada, com o media_id). Espelho do zod em supabase/functions/_shared/automacao.ts.
+ */
 export type AutomacaoConfig = {
-  palavra: string; resposta_publica: string; dm: string; botao: string; so_seguidores: boolean; link: string; lembrete_min: number;
+  palavra: string; resposta_publica: string; dm: string; botao: string; so_seguidores: boolean; link: string;
+  texto_link: string; botao_link: string; lembrete_min: number; texto_lembrete: string;
 };
 
 export const AUTOMACAO_PADRAO: AutomacaoConfig = {
@@ -35,7 +39,10 @@ export const AUTOMACAO_PADRAO: AutomacaoConfig = {
   botao: "Quero conhecer",
   so_seguidores: true,
   link: "",
+  texto_link: "Aqui está o link que te prometi 👇",
+  botao_link: "Abrir",
   lembrete_min: 60,
+  texto_lembrete: "Passando para lembrar: o link continua aqui em cima 😉",
 };
 
 export type SlideSalvo = { id: string; ordem: number; template_id: TemplateId; dados: DadosSlide; midia_id: string | null };

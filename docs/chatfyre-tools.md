@@ -22,6 +22,21 @@ do servidor (`montar_fluxo`, criação de automações) não aparecem para o esc
 | `ver_fila` | Leitura | Itens recentes da fila de envio com status e erro | `limite` (number, opc., padrão 20); `status` (`pending` \| `sending` \| `sent` \| `unconfirmed` \| `failed` \| `skipped`, opc.) |
 | `ver_fluxo` | Leitura | Fluxo em blocos de uma automação e histórico de versões | `automacao_id` (string, **obrig.**) |
 
+### Escrita (escopo `automacoes:escrever`, levantado em 27/10/2026 pelo estúdio)
+
+Com o pacote do `-Exportar`, o servidor expõe 12 ferramentas: as 7 acima e mais 5 de escrita.
+
+| Ferramenta | Para que serve | Parâmetros principais |
+|---|---|---|
+| `criar_automacao` | Cria automação comentário/story/DM → DM, com follow-ups (link e lembrete) | `name` (**obrig.**); `active` (padrão **false**); `trigger_comment` (padrão true), `trigger_story`, `trigger_dm`, `trigger_follow`, `trigger_live`; `keywords[]`; `match_type` (`contains` \| `exact` \| `any`); `media_id` (vazio = vale para **todos** os posts); `public_replies[]`; `welcome_dm`; `quick_reply_label` (≤20); `link_text`, `link_button_label` (≤20), `link_url`, `link_delay_minutes`; `reminder_text`, `reminder_delay_minutes` (padrão 15); `utm{source,medium,campaign,content,term}` |
+| `atualizar_automacao` | Muda só os campos enviados | `id` (**obrig.**) + os mesmos de `criar_automacao` |
+| `definir_status_automacao` | Liga/desliga sem apagar | `id`, `ativa` (ambos **obrig.**) |
+| `montar_fluxo` | Fluxo em blocos (gatilho, mensagem, espera, randomizador, condicao, estagio, aplicar_tag, condicao_tag) ligados por setas | `automacao_id`, `fluxo{nos[], arestas[]}` (**obrig.**); `publicar` (padrão **false** = rascunho). Regras: 1 gatilho; 1ª mensagem com `respostaRapida`; condição `segue_a_conta` precisa de `sim` e `nao`, e o `nao` volta para a condição por uma mensagem com `respostaRapida` |
+| `duplicar_automacao` | Copia uma automação (nasce desligada) | `automacao_id` (**obrig.**); `novo_nome`; `media_id` |
+
+O formato da **resposta** de `criar_automacao`, `listar_automacoes` e `metricas_do_fluxo` não vem no schema.
+O estúdio lê esses campos de forma defensiva (`_shared/automacao.ts` e a tela Automações mostra os dados brutos).
+
 ## Exemplos de retorno real
 
 `status_da_conta`:

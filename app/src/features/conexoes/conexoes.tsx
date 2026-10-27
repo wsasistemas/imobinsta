@@ -242,8 +242,10 @@ function PacoteChatfyre({ contaId, dono }: { contaId: string; dono: boolean }) {
   const [aberto, setAberto] = useState(false);
   const [pacote, setPacote] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const [ultima, setUltima] = useState<"salvar" | "testar">("testar");
   const salvar = useMutation({
     mutationFn: () => chamarFuncao<RespostaChatfyre>("chatfyre", { acao: "credenciais", conta_id: contaId, pacote: pacote.trim() }),
+    onMutate: () => setUltima("salvar"),
     onSuccess: () => {
       setPacote("");
       setAberto(false);
@@ -252,10 +254,13 @@ function PacoteChatfyre({ contaId, dono }: { contaId: string; dono: boolean }) {
   });
   const testar = useMutation({
     mutationFn: () => chamarFuncao<RespostaChatfyre>("chatfyre", { acao: "diagnostico", conta_id: contaId }),
+    onMutate: () => setUltima("testar"),
     onSettled: () => cliente.invalidateQueries({ queryKey: ["conexoes"] }),
   });
-  const resultado = salvar.data ?? testar.data;
-  const erro = salvar.error ?? testar.error;
+  // Só mostra a ação mais recente, senão um erro antigo fica na tela ao lado de um sucesso novo.
+  const atual = ultima === "salvar" ? salvar : testar;
+  const resultado = atual.data;
+  const erro = atual.error;
 
   async function copiar() {
     await navigator.clipboard.writeText(JSON.stringify(resultado?.ferramentas ?? [], null, 2));

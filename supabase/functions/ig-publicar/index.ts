@@ -5,6 +5,7 @@
 //   { acao: "agendar",  conta_id, post_id, quando }    → status agendado (a fila publica na hora)
 //   { acao: "rascunho", conta_id, post_id }            → cancela o agendamento ou volta um post com erro
 // POST { acao: "fila" } com o cabeçalho x-cron-segredo (pg_cron a cada 5 min): publica os agendados vencidos.
+// Depois de publicar, se o post pediu automação, ela é criada no Chatfyre pausada e com o media_id (_shared/automacao.ts).
 //
 // As imagens são os JPEG do post (a Meta só aceita JPEG), gerados no navegador e guardados no bucket
 // privado. Na hora de publicar são copiados para o bucket público (a Meta baixa por URL) e apagados depois.
@@ -12,6 +13,7 @@
 // (o pg_cron chama sem JWT; as duas portas são conferidas aqui dentro).
 import { z } from "npm:zod@3.25.76";
 import { admin, conexaoInstagram, CORS, type Db, ErroGraph, graph, graphPost, json, papelNaConta, usuario } from "../_shared/comum.ts";
+import { criarAutomacaoDoPost } from "../_shared/automacao.ts";
 
 const PRIVADO = "imobinsta-midias";
 const PUBLICO = "imobinsta-publicados";
@@ -116,7 +118,7 @@ async function publicarReservado(db: Db, post: Post) {
       publicado_em: info.timestamp ?? new Date().toISOString(), erro: null,
     }).eq("id", post.id);
     if (error) throw error;
-    return { status: "publicado", ig_media_id: mediaId, permalink: info.permalink ?? null };
+    return { status: "publicado", ig_media_id: mediaId, permalink: info.permalink ?? null, automacao: await automacaoAposPublicar(db, post.id) };
   } catch (e) {
     const mensagem = e instanceof Error ? e.message : String((e as { message?: string })?.message ?? e);
     console.error("ig-publicar", post.id, mensagem);
@@ -130,6 +132,17 @@ async function publicarReservado(db: Db, post: Post) {
     return { status: "erro", erro: prefixo + mensagem };
   } finally {
     if (copias.length) await db.storage.from(PUBLICO).remove(copias);
+  }
+}
+
+/** Cria a automação pausada do post. Nunca derruba a publicação: o erro fica em imobinsta.automacoes. */
+async function automacaoAposPublicar(db: Db, postId: string) {
+  try {
+    return await criarAutomacaoDoPost(db, postId);
+  } catch (e) {
+    const erro = e instanceof Error ? e.message : String(e);
+    console.error("ig-publicar automacao", postId, erro);
+    return { status: "erro", erro };
   }
 }
 

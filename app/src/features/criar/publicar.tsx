@@ -73,6 +73,8 @@ function PublicarCarregado({ post, slides }: { post: Rascunho; slides: SlideSalv
     legenda.length > MAX_LEGENDA && "A legenda passou de 2.200 caracteres.",
     tags.length > MAX_HASHTAGS && `Tire ${tags.length - MAX_HASHTAGS} hashtag(s): o limite do estúdio é ${MAX_HASHTAGS}.`,
     comAutomacao && !auto.palavra.trim() && "Defina a palavra-chave da automação.",
+    comAutomacao && (!auto.dm.trim() || !auto.botao.trim()) && "A automação precisa da DM de boas-vindas e do texto do botão.",
+    comAutomacao && !/^https:\/\/\S+$/.test(auto.link.trim()) && "Defina o link da automação (https://…).",
   ].filter(Boolean) as string[];
 
   async function atualizarListas() {
@@ -124,10 +126,13 @@ function PublicarCarregado({ post, slides }: { post: Rascunho; slides: SlideSalv
       });
       return `Agendado para ${dataHora(r.agendado_para)}. A fila confere a cada 5 minutos.`;
     }
-    const r = await chamarFuncao<{ status: string; permalink?: string; erro?: string }>("ig-publicar", {
+    const r = await chamarFuncao<{ status: string; permalink?: string; automacao?: { status: string; erro?: string | null } | null }>("ig-publicar", {
       acao: "publicar", conta_id: conta!.conta_id, post_id: post.id,
     });
-    return r.permalink ? "Publicado no Instagram." : "Publicado no Instagram (o link aparece na próxima sincronização).";
+    const texto = r.permalink ? "Publicado no Instagram." : "Publicado no Instagram (o link aparece na próxima sincronização).";
+    if (!r.automacao) return texto;
+    if (r.automacao.status === "erro") throw new Error(`${texto} Mas a automação falhou: ${r.automacao.erro ?? "sem detalhe"}. Tente de novo em Automações.`);
+    return `${texto} Automação criada e pausada: ative em Automações.`;
   });
 
   const voltarRascunho = () => executar(async () => {
@@ -379,13 +384,23 @@ function PainelAutomacao({ ligado, onLigado, auto, onAuto, editavel }: {
           </span>
           <label htmlFor="a-link" className="text-foot text-label2">Link</label>
           <input id="a-link" className="campo" type="url" placeholder="https://… (com utm_campaign)" value={auto.link} maxLength={500} onChange={(e) => campo("link", e.target.value)} />
+          <label htmlFor="a-tlink" className="text-foot text-label2">Mensagem do link</label>
+          <input id="a-tlink" className="campo" value={auto.texto_link} maxLength={1000} onChange={(e) => campo("texto_link", e.target.value)} />
+          <label htmlFor="a-blink" className="text-foot text-label2">Botão do link</label>
+          <input id="a-blink" className="campo" value={auto.botao_link} maxLength={20} onChange={(e) => campo("botao_link", e.target.value)} />
           <label htmlFor="a-lembrete" className="text-foot text-label2">Lembrete</label>
           <span className="flex items-center gap-2 text-foot">
             após
             <input id="a-lembrete" className="campo w-24" type="number" min={0} max={1440} value={auto.lembrete_min}
               onChange={(e) => campo("lembrete_min", Math.max(0, Math.min(1440, Number(e.target.value) || 0)))} />
-            min, para quem não clicou (0 = sem lembrete)
+            min do link (0 = sem lembrete)
           </span>
+          {auto.lembrete_min > 0 && (
+            <>
+              <label htmlFor="a-tlemb" className="text-foot text-label2">Texto do lembrete</label>
+              <input id="a-tlemb" className="campo" value={auto.texto_lembrete} maxLength={1000} onChange={(e) => campo("texto_lembrete", e.target.value)} />
+            </>
+          )}
         </fieldset>
       )}
       {ligado && (

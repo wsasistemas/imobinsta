@@ -158,7 +158,10 @@ Write-Host "3. No Network, botão direito na linha auth_callback > Copy > Copy U
 Write-Host ""
 Start-Process $urlAutorizacao
 
-$retorno = Read-Host "Cole aqui a URL de retorno"
+do {
+    $retorno = (Read-Host "Cole aqui a URL de retorno (começa com https://claude.ai/api/mcp/auth_callback?code=)").Trim()
+    if ($retorno -and $retorno -notmatch '\?') { Write-Host "Essa não é a URL completa. Copie de novo (Copy URL)." -ForegroundColor Yellow; $retorno = "" }
+} until ($retorno)
 
 # --- 3. Valida o retorno e troca o código pelo token -----------------------------------
 $params = @{}

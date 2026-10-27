@@ -11,9 +11,9 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 
 ## Fase atual
 Fases 0 a 4 entregues e em produção. Fase 5 (Publicar, agendar e Chatfyre) em andamento:
-etapas 5.1 (Edge Function `chatfyre`) e 5.2 (`ig-publicar`, tela Publicar, fila no pg_cron) no código.
-Pendente do Wagner: migration 20261027040000, pacote do Chatfyre (`-Exportar`, fora da rede do escritório).
-Etapa 5.3 (automação ligada ao post) espera os esquemas reais das ferramentas de escrita.
+etapas 5.1, 5.2 e 5.3 no código e nas Edge Functions (preview, sem push para produção).
+O pacote do Chatfyre já está no Vault (27/10). Pendente do Wagner: migration 20261027040000,
+resolver o "API access blocked" da Meta e o teste real (publicar 1 post, ativar, comentar QUERO).
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

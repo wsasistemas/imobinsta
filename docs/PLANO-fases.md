@@ -132,10 +132,10 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 - [x] Tela Publicar: preview do Instagram, legenda editável, painel da automação (`/criar/publicar/:id`)
 - [x] Edge Function `ig-publicar`: post único e carrossel (containers → publish), salvando `ig_media_id` e permalink (JPEG gerado no navegador; a Meta não aceita PNG)
 - [x] Agendamento: `status = agendado` + pg_cron a cada 5 min chamando `ig-publicar` (migration 20261027040000, testada no PGlite 20/20)
-- [x] Edge Function `chatfyre`: cliente JSON-RPC (MCP por HTTP) com Bearer e renovação de token (falta o teste real com o pacote do script)
-- [ ] Depois de publicar, a automação é criada com `media_id` do post, **pausada**, e fica em `automacoes`
-- [ ] Botão "Ativar automação" (`definir_status_automacao`), com confirmação
-- [ ] Tela Automações com o funil (`metricas_do_fluxo`) e a lista
+- [x] Edge Function `chatfyre`: cliente JSON-RPC (MCP por HTTP) com Bearer e renovação de token (testada com o pacote em 27/10: 12 ferramentas, 5 de escrita)
+- [x] Depois de publicar, a automação é criada com `media_id` do post, **pausada**, e fica em `automacoes` (`_shared/automacao.ts`; "só para quem segue" vira fluxo em rascunho)
+- [x] Botão "Ativar automação" (`definir_status_automacao`), com confirmação, só para o dono (publica o fluxo junto)
+- [x] Tela Automações com o funil (`metricas_do_fluxo`) e a lista (do estúdio + as criadas fora dele, só leitura)
 - [ ] Teste real: 1 post publicado + automação ativa + 1 comentário "QUERO" de teste recebendo a DM
 
 **Etapas da Fase 5:** 5.1 Chatfyre pelo backend · 5.2 publicar e agendar · 5.3 automação ligada ao post e tela Automações.
