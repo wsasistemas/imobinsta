@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { botao } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { Button, botao } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Cpu, Instagram, PlugZap, Sparkles, Zap, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
@@ -73,6 +74,22 @@ export function Conexoes() {
     enabled: demo || !!conta,
   });
 
+  const cliente = useQueryClient();
+  const sync = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke<{ posts: number; seguidores: number | null; erro?: string }>(
+        "ig-sync",
+        { body: { conta_id: conta!.conta_id } },
+      );
+      if (error) {
+        const corpo = "context" in error ? await (error.context as Response).json().catch(() => null) : null;
+        throw new Error(corpo?.erro ?? "Não foi possível sincronizar.");
+      }
+      return data!;
+    },
+    onSettled: () => cliente.invalidateQueries({ queryKey: ["conexoes"] }),
+  });
+
   const lista = [...(data ?? [])].sort((a, b) => ORDEM.indexOf(a.provedor) - ORDEM.indexOf(b.provedor));
 
   return (
@@ -104,8 +121,19 @@ export function Conexoes() {
                     </div>
                     {c.provedor === "instagram" && c.status !== "conectado" && (
                       <Link to="/conexoes/instagram" className={cn(botao({ tamanho: "sm" }), "mt-3")}>
-                        Configurar
+                        {c.status === "expirado" ? "Conectar de novo" : "Configurar"}
                       </Link>
+                    )}
+                    {c.provedor === "instagram" && c.status === "conectado" && (
+                      <Button tamanho="sm" variante="secundario" className="mt-3" onClick={() => sync.mutate()} disabled={sync.isPending || demo}>
+                        <RefreshCw className={cn(sync.isPending && "animate-spin")} />
+                        {sync.isPending ? "Sincronizando…" : "Sincronizar agora"}
+                      </Button>
+                    )}
+                    {c.provedor === "instagram" && (sync.data || sync.error) && (
+                      <p role="status" className={cn("mt-2 text-cap1", sync.error ? "text-red" : "text-green")}>
+                        {sync.error ? sync.error.message : `${sync.data!.posts} posts · ${sync.data!.seguidores ?? "?"} seguidores`}
+                      </p>
                     )}
                   </div>
                 </Card>

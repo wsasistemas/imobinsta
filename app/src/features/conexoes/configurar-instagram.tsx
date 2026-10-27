@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "react-router";
-import { Check, ChevronLeft, Copy, ExternalLink, Instagram } from "lucide-react";
+import { Link, useSearchParams } from "react-router";
+import { Check, ChevronLeft, Copy, ExternalLink, Instagram, LoaderCircle } from "lucide-react";
+import { useAcesso } from "@/features/auth/acesso";
+import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button, botao } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/hig";
@@ -130,7 +132,28 @@ function lerFeitos(): Set<string> {
 
 /** Guia da Fase 2: criar o app da Meta e deixar o estúdio pronto para conectar o Instagram. */
 export function ConfigurarInstagram() {
+  const { demo, conta } = useAcesso();
+  const [params] = useSearchParams();
+  const retorno = { ok: params.get("ok") === "1", erro: params.get("erro") };
+  const [conectando, setConectando] = useState(false);
+  const [falha, setFalha] = useState<string | null>(null);
   const [feitos, setFeitos] = useState(lerFeitos);
+
+  async function conectar() {
+    setConectando(true);
+    setFalha(null);
+    const { data, error } = await supabase.functions.invoke<{ url?: string; erro?: string }>("ig-oauth", {
+      body: { conta_id: conta!.conta_id },
+    });
+    if (data?.url) {
+      window.location.assign(data.url);
+      return;
+    }
+    let msg = data?.erro;
+    if (!msg && error && "context" in error) msg = (await (error.context as Response).json().catch(() => null))?.erro;
+    setFalha(msg ?? "Não foi possível falar com o servidor. Confira se a ig-oauth foi publicada.");
+    setConectando(false);
+  }
 
   useEffect(() => {
     try {
@@ -171,10 +194,16 @@ export function ConfigurarInstagram() {
             <div className="h-full rounded-full bg-green transition-[width] duration-300" style={{ width: `${(feitos.size / total) * 100}%` }} />
           </div>
         </div>
-        <Button disabled title="Disponível quando a Edge Function ig-oauth for publicada">
-          <Instagram /> Conectar Instagram
+        <Button onClick={conectar} disabled={conectando || demo || conta?.papel !== "dono"}>
+          {conectando ? <LoaderCircle className="animate-spin" /> : <Instagram />} Conectar Instagram
         </Button>
       </Card>
+
+      {(retorno.ok || retorno.erro || falha) && (
+        <Card role="status" className={cn("mb-6 p-5 text-sub", retorno.ok ? "text-green" : "text-red")}>
+          {retorno.ok ? "Instagram conectado. Os posts e métricas já podem ser sincronizados em Conexões e custos." : (falha ?? retorno.erro)}
+        </Card>
+      )}
 
       <ol className="grid gap-4">
         {ETAPAS.map((etapa, i) => {
@@ -228,7 +257,7 @@ export function ConfigurarInstagram() {
 
       <p className="mt-6 text-foot text-label2">
         {pronto
-          ? "Tudo pronto do seu lado. Avise para publicarmos a Edge Function ig-oauth e liberar o botão Conectar."
+          ? "Tudo pronto do seu lado. Clique em Conectar Instagram e autorize a Página e a @wsasistemas.ia na tela da Meta."
           : "O progresso fica salvo neste navegador."}
       </p>
     </section>
