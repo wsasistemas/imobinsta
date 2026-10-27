@@ -10,10 +10,8 @@ O produto agora é o **Estúdio imobinsta** (mockup aprovado em 26/10/2026):
 - O `docs/PRD.md` (v0.1) registra só a Fase 0.
 
 ## Fase atual
-Fases 0 a 4 entregues no código (Fase 4 = criar imagem/carrossel, commit 88f74a2).
-Pendente do Wagner: aplicar as migrations 20261027010000, 20261027020000 e 20261027030000 no SQL
-Editor, publicar `ia-texto` e colar a chave do Gemini em Conexões. A próxima é a Fase 5
-(Publicar, agendar e Chatfyre), que só começa com o OK do Wagner.
+Fases 0 a 4 entregues e testadas em produção pelo Wagner (Fase 4 testada com o Gemini em 27/10/2026).
+A próxima é a Fase 5 (Publicar, agendar e Chatfyre), que só começa com o OK do Wagner.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

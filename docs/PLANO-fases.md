@@ -113,7 +113,7 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 - [x] Editor: lista de slides, canvas, edição de texto ao clicar, chat IA que devolve JSON de alterações
 - [x] Render para PNG 1080×1350 no navegador, salvo em `midias`
 - [x] Cada chamada de IA registrada em `geracoes_ia` (custo 0 no Gemini gratuito)
-- [ ] Teste real com o Gemini (depende de aplicar a migration, publicar `ia-texto` e colar a chave em Conexões)
+- [x] Teste real com o Gemini (Wagner, 27/10/2026: link, prompt, gerar, chat do editor, Finalizar e Biblioteca OK)
 
 **Para ligar em produção (Wagner):**
 1. SQL Editor do ikvj: rodar `supabase/migrations/20261027030000_fase4_criar.sql`.
