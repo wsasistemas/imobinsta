@@ -1,4 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
+import { botao } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Cpu, Instagram, PlugZap, Sparkles, Zap, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge, Card } from "@/components/ui/hig";
@@ -99,6 +102,11 @@ export function Conexoes() {
                       <Badge tom={s.tom}>{s.texto}</Badge>
                       {c.expira_em && <span className="text-cap1 text-label2">token até {dataCurta(c.expira_em)}</span>}
                     </div>
+                    {c.provedor === "instagram" && c.status !== "conectado" && (
+                      <Link to="/conexoes/instagram" className={cn(botao({ tamanho: "sm" }), "mt-3")}>
+                        Configurar
+                      </Link>
+                    )}
                   </div>
                 </Card>
               );

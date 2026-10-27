@@ -4,12 +4,14 @@ import { MENU } from "@/components/layout/menu";
 import { Guarda } from "@/features/auth/guarda";
 import { Entrar } from "@/features/auth/entrar";
 import { Conexoes } from "@/features/conexoes/conexoes";
+import { ConfigurarInstagram } from "@/features/conexoes/configurar-instagram";
 import { Explorar } from "@/pages/explorar";
 import { EmConstrucao } from "@/pages/em-construcao";
 
 const PRONTAS: Record<string, React.ReactNode> = {
   explorar: <Explorar />,
   conexoes: <Conexoes />,
+  "conectar-instagram": <ConfigurarInstagram />,
 };
 
 export const router = createBrowserRouter([

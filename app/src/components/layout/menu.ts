@@ -1,5 +1,5 @@
 import {
-  CalendarDays, ChartColumn, Clapperboard, Compass, Images, LibraryBig, Plus, PlugZap, Radar, Send,
+  CalendarDays, ChartColumn, Clapperboard, Compass, Images, Instagram, LibraryBig, Plus, PlugZap, Radar, Send,
   Sparkles, UserRound, Zap, type LucideIcon,
 } from "lucide-react";
 import type { CorTile } from "@/components/ui/tile";
@@ -34,4 +34,5 @@ export const MENU: ItemMenu[] = [
   { id: "criar-imagem", rotulo: "Post de imagem e carrossel", caminho: "/criar/imagem", icone: Sparkles, cor: "pink", fase: 4, oculto: true },
   { id: "criar-avatar", rotulo: "Vídeo narrado com avatar", caminho: "/criar/avatar", icone: Clapperboard, cor: "purple", fase: 7, oculto: true },
   { id: "publicar", rotulo: "Publicar", caminho: "/publicar", icone: Send, cor: "blue", fase: 5, oculto: true },
+  { id: "conectar-instagram", rotulo: "Conectar o Instagram", caminho: "/conexoes/instagram", icone: Instagram, cor: "instagram", fase: 2, oculto: true },
 ];

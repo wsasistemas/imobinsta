@@ -1,6 +1,6 @@
 # Fase 2 — passo a passo do app da Meta (Facebook Login for Business)
 
-Para o Wagner fazer no navegador. Decisão aprovada em 26/10/2026, ver `docs/fase2-proposta-app-meta.md`.
+Para o Wagner fazer no navegador. A mesma lista está no app, em **Conexões e custos → Instagram → Configurar** (`/conexoes/instagram`), com checklist. Decisão aprovada em 26/10/2026, ver `docs/fase2-proposta-app-meta.md`.
 Página do Facebook vinculada à @wsasistemas.ia: https://www.facebook.com/profile.php?id=61595954939588
 
 Os nomes das telas seguem a documentação da Meta de outubro/2026. Se algum botão estiver com
@@ -72,19 +72,18 @@ Vá em **Configurações do app → Básico**:
 3. **Ícone:** o logo da WSA (1024×1024).
 4. Salve.
 
-## Etapa 5 — Me passar os dados (e só estes)
+## Etapa 5 — Guardar as chaves no Supabase
 
-**Pode mandar no chat:**
-- [ ] **ID do app**, que aparece no topo do painel
-- [ ] **ID da configuração**, da Etapa 3
+Nada vai para o chat. No painel do Supabase, abra o projeto ikvj → **Edge Functions → Secrets**
+e crie três secrets:
 
-**Não mande no chat:** a **Chave secreta do app** (*App Secret*). Ela vai direto para o Supabase:
+| Nome | Valor |
+|---|---|
+| `META_APP_ID` | ID do app (topo do painel da Meta) |
+| `META_CONFIG_ID` | ID da configuração (Etapa 3) |
+| `META_APP_SECRET` | Chave secreta do app (Configurações do app → Básico → Mostrar) |
 
-1. Abra o painel do Supabase, projeto ikvj → **Edge Functions → Secrets**.
-2. Clique em **Add new secret**:
-   - Nome: `META_APP_SECRET`
-   - Valor: a chave secreta, de **Configurações do app → Básico → Mostrar**
-3. Salve e me avise que salvou.
+A Edge Function `ig-oauth` monta o login da Meta com esses valores, e o front nunca os vê.
 
 ## Etapa 6 — Modo do app
 
