@@ -87,16 +87,18 @@
   list-style: none;
   border-top: 2px solid var(--mpl-abobora);
 }
-.mpl-metrics li { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; }
+.mpl-metrics li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 10px; min-width: 0; }
 .mpl-metrics li > span { grid-row: span 2; display: flex; align-items: center; }
-.mpl-metrics b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; line-height: normal; }
+.mpl-metrics b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.2; }
+/* Rótulo cabe na coluna: fonte e espaçamento menores e quebra de linha (não invade o ícone ao lado). */
 .mpl-metrics small {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
   text-transform: uppercase;
   color: rgb(255 255 255 / 0.84);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .mpl-panel { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 24px; padding: 48px 56px; }
 .mpl-panel__conteudo { width: 100%; max-width: 460px; }
