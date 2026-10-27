@@ -31,7 +31,7 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 - [x] Diagnóstico parcial em `reports/2026-10-25-diagnostico.md`
 - [x] Automação "QUERO" criada e pausada (fluxo v3 publicado)
 - [x] Migration do schema `imobinsta` criada e testada
-- [ ] Schema aplicado no Supabase (o Wagner roda no SQL Editor)
+- [x] Schema aplicado no Supabase (o Wagner roda no SQL Editor)
 - [ ] Métricas por post. Fica para a Fase 2, pela API oficial; o Chatfyre dá 403.
 
 ---
@@ -40,21 +40,21 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 
 **Entrega:** app React rodando localmente e na Vercel, com login, o menu lateral do mockup e as tabelas base.
 
-- [ ] Projeto Vite + React + TS + Tailwind + shadcn criado em `app/`
-- [ ] Design system Apple HIG do mockup v2 convertido em tokens Tailwind:
+- [x] Projeto Vite + React + TS + Tailwind + shadcn criado em `app/`
+- [x] Design system Apple HIG do mockup v2 convertido em tokens Tailwind:
   - cores de sistema dark/light;
   - fonte SF com Inter de reserva;
   - grade de 8 pt e raios concêntricos;
   - botões em cápsula de 44 pt e controle segmentado;
   - toggle iOS e ícones Lucide com traço 1.75 em blocos coloridos.
-- [ ] Layout com sidebar idêntica ao mockup e rotas vazias para as 13 telas
-- [ ] Supabase client apontando para o schema `imobinsta`, com variáveis em `.env.local`
-- [ ] Migration com `contas`, `membros` e `conexoes` + RLS por `conta_id` + função `eh_membro(conta_id)`
-- [ ] RLS testada em transação desfeita, simulando o dono, um outro usuário e o anon
+- [x] Layout com sidebar idêntica ao mockup e rotas vazias para as 13 telas
+- [x] Supabase client apontando para o schema `imobinsta`, com variáveis em `.env.local`
+- [x] Migration com `contas`, `membros` e `conexoes` + RLS por `conta_id` + função `eh_membro(conta_id)`
+- [x] RLS testada em transação desfeita, simulando o dono, um outro usuário e o anon
 - [ ] Login funcionando, com redirecionamento se o usuário não for membro
 - [ ] Tela Conexões e custos lendo `conexoes` (status real; chaves nunca no front)
-- [ ] Build sem erro + conferência visual 1440 px e 390 px
-- [ ] Deploy de preview na Vercel
+- [x] Build sem erro + conferência visual 1440 px e 390 px
+- [x] Deploy de preview na Vercel
 
 **Prompt da fase:**
 > Leia `CLAUDE.md`, `docs/PRD-v2-estudio.md` e `docs/PLANO-fases.md`. Execute a Fase 1.
