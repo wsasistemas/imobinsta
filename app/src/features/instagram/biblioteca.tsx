@@ -70,6 +70,10 @@ function CardPost({ post, pastas, onPasta }: { post: Post; pastas: string[]; onP
         <a href={post.permalink} target="_blank" rel="noreferrer" className={classe} aria-label={`${titulo} — abrir no Instagram`}>
           {conteudo}
         </a>
+      ) : post.status === "rascunho" ? (
+        <Link to={`/criar/editor/${post.id}`} className={classe} aria-label={`${titulo} — abrir no editor`}>
+          {conteudo}
+        </Link>
       ) : (
         <div className={classe}>{conteudo}</div>
       )}

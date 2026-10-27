@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { RefreshCw } from "lucide-react";
@@ -142,6 +143,7 @@ export function Conexoes() {
                         {sync.isPending ? "Sincronizando…" : "Sincronizar agora"}
                       </Button>
                     )}
+                    {c.provedor === "gemini" && conta?.papel === "dono" && !demo && <ChaveGemini contaId={conta.conta_id} conectado={c.status === "conectado"} />}
                     {c.provedor === "instagram" && (sync.data || sync.error) && (
                       <p role="status" className={cn("mt-2 text-cap1", sync.error ? "text-red" : "text-green")}>
                         {sync.error ? sync.error.message : `${sync.data!.posts} posts · ${sync.data!.seguidores ?? "?"} seguidores`}
@@ -179,5 +181,49 @@ export function Conexoes() {
         </table>
       </Card>
     </section>
+  );
+}
+
+/** Cola a chave do Gemini (AI Studio). Vai direto para a Edge Function, que testa e guarda no Vault. */
+function ChaveGemini({ contaId, conectado }: { contaId: string; conectado: boolean }) {
+  const cliente = useQueryClient();
+  const [aberto, setAberto] = useState(!conectado);
+  const [chave, setChave] = useState("");
+  const salvar = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.functions.invoke("ia-texto", { body: { acao: "chave", conta_id: contaId, chave } });
+      if (error) {
+        const corpo = "context" in error ? await (error.context as Response).json().catch(() => null) : null;
+        throw new Error(corpo?.erro ?? "Não foi possível salvar a chave.");
+      }
+    },
+    onSuccess: () => {
+      setChave("");
+      setAberto(false);
+      cliente.invalidateQueries({ queryKey: ["conexoes"] });
+    },
+  });
+  if (!aberto) {
+    return <Button tamanho="sm" variante="secundario" className="mt-3" onClick={() => setAberto(true)}>Trocar chave</Button>;
+  }
+  return (
+    <form className="mt-3" onSubmit={(e) => { e.preventDefault(); salvar.mutate(); }}>
+      <div className="flex gap-2">
+        <input
+          className="campo min-h-9 py-1.5 text-foot"
+          type="password"
+          autoComplete="off"
+          placeholder="Chave do Google AI Studio"
+          aria-label="Chave do Gemini"
+          value={chave}
+          onChange={(e) => setChave(e.target.value)}
+        />
+        <Button type="submit" tamanho="sm" disabled={chave.trim().length < 20 || salvar.isPending}>{salvar.isPending ? "Testando…" : "Salvar"}</Button>
+      </div>
+      {salvar.error && <p role="alert" className="mt-2 text-cap1 text-red">{salvar.error.message}</p>}
+      <p className="mt-2 text-cap1 text-label2">
+        Gere em <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-blue underline">aistudio.google.com/apikey</a>. A chave não fica no navegador.
+      </p>
+    </form>
   );
 }

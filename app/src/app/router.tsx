@@ -8,6 +8,9 @@ import { ConfigurarInstagram } from "@/features/conexoes/configurar-instagram";
 import { Analytics } from "@/features/instagram/analytics";
 import { Biblioteca } from "@/features/instagram/biblioteca";
 import { BancoDeMidias } from "@/features/midias/midias";
+import { Criar } from "@/features/criar/criar";
+import { Editor } from "@/features/criar/editor";
+import { WizardImagem } from "@/features/criar/wizard";
 import { Explorar } from "@/pages/explorar";
 import { EmConstrucao } from "@/pages/em-construcao";
 
@@ -18,6 +21,8 @@ const PRONTAS: Record<string, React.ReactNode> = {
   biblioteca: <Biblioteca />,
   analytics: <Analytics />,
   midias: <BancoDeMidias />,
+  criar: <Criar />,
+  "criar-imagem": <WizardImagem />,
 };
 
 export const router = createBrowserRouter([
@@ -34,6 +39,7 @@ export const router = createBrowserRouter([
           ? { index: true, element: PRONTAS[item.id] ?? <EmConstrucao /> }
           : { path: item.caminho.slice(1), element: PRONTAS[item.id] ?? <EmConstrucao /> },
       ),
+      { path: "criar/editor/:id", element: <Editor /> },
       { path: "*", element: <EmConstrucao /> },
     ],
   },

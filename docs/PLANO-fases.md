@@ -105,14 +105,20 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 
 ## Fase 4: Criar imagem e carrossel
 
-- [ ] Migration `templates`, `post_slides` e `geracoes_ia`
-- [ ] 3 templates HTML da WSA (Neon azul, Escuro, Docerias) com campos editáveis
-- [ ] Wizard: Formato → Conteúdo → Prompt adaptado (igual ao mockup)
-- [ ] Edge Function `ia-texto` (Gemini): prompt adaptado, campos dos slides em JSON e legenda
-- [ ] "A partir de link": a Edge Function lê título, descrição e corpo da página
-- [ ] Editor: lista de slides, canvas, edição de texto ao clicar, chat IA que devolve JSON de alterações
-- [ ] Render para PNG 1080×1350 no navegador, salvo em `midias`
-- [ ] Cada chamada de IA registrada em `geracoes_ia` (custo 0 no Gemini gratuito)
+- [x] Migration `templates`, `post_slides` e `geracoes_ia` (`20261027030000_fase4_criar.sql`, RLS testada em PGlite: 30/30)
+- [x] 3 templates HTML da WSA (Neon azul, Escuro, Docerias) com campos editáveis
+- [x] Wizard: Formato → Conteúdo → Prompt adaptado (igual ao mockup)
+- [x] Edge Function `ia-texto` (Gemini): prompt adaptado, campos dos slides em JSON e legenda
+- [x] "A partir de link": a Edge Function lê título, descrição e corpo da página
+- [x] Editor: lista de slides, canvas, edição de texto ao clicar, chat IA que devolve JSON de alterações
+- [x] Render para PNG 1080×1350 no navegador, salvo em `midias`
+- [x] Cada chamada de IA registrada em `geracoes_ia` (custo 0 no Gemini gratuito)
+- [ ] Teste real com o Gemini (depende de aplicar a migration, publicar `ia-texto` e colar a chave em Conexões)
+
+**Para ligar em produção (Wagner):**
+1. SQL Editor do ikvj: rodar `supabase/migrations/20261027030000_fase4_criar.sql`.
+2. `npx supabase functions deploy ia-texto --project-ref ikvjaowvpvxojvcfwnct`
+3. Conexões e custos → card Gemini → colar a chave do AI Studio (fica no Vault).
 
 **Prompt da fase:**
 > Fase 4 do `docs/PLANO-fases.md`. A IA nunca gera imagem nesta fase: ela só preenche JSON de
