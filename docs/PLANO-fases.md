@@ -51,8 +51,8 @@ Base: `docs/PRD-v2-estudio.md` e o mockup aprovado em `docs/mockups/estudio-imob
 - [x] Supabase client apontando para o schema `imobinsta`, com variáveis em `.env.local`
 - [x] Migration com `contas`, `membros` e `conexoes` + RLS por `conta_id` + função `eh_membro(conta_id)`
 - [x] RLS testada em transação desfeita, simulando o dono, um outro usuário e o anon
-- [ ] Login funcionando, com redirecionamento se o usuário não for membro
-- [ ] Tela Conexões e custos lendo `conexoes` (status real; chaves nunca no front)
+- [x] Login funcionando, com redirecionamento se o usuário não for membro
+- [x] Tela Conexões e custos lendo `conexoes` (status real; chaves nunca no front)
 - [x] Build sem erro + conferência visual 1440 px e 390 px
 - [x] Deploy de preview na Vercel
 
