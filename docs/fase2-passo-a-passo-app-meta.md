@@ -66,11 +66,14 @@ outro nome, me mande um print e eu ajusto o passo.
 
 Vá em **Configurações do app → Básico**:
 
-1. **URL da Política de Privacidade:** use uma página da WSA. Se não houver, me avise que eu
+1. **Domínios do app:** `ikvjaowvpvxojvcfwnct.supabase.co`. Sem isso, a Meta mostra
+   "Não é possível carregar o URL" ao clicar em Conectar (visto em 26/10/2026).
+2. **Adicionar plataforma → Site**, com a URL `https://ikvjaowvpvxojvcfwnct.supabase.co/`.
+3. **URL da Política de Privacidade:** use uma página da WSA. Se não houver, me avise que eu
    preparo uma.
-2. **Categoria:** Negócios e páginas.
-3. **Ícone:** o logo da WSA (1024×1024).
-4. Salve.
+4. **Categoria:** Negócios e páginas.
+5. **Ícone:** o logo da WSA (1024×1024).
+6. Salve.
 
 ## Etapa 5 — Guardar as chaves no Supabase
 

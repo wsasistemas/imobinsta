@@ -103,6 +103,8 @@ const ETAPAS: Etapa[] = [
     titulo: "Dados básicos do app",
     resumo: "Em Configurações do app → Básico.",
     itens: [
+      { id: "4c", texto: <>Em <b>Domínios do app</b>, adicione <code>ikvjaowvpvxojvcfwnct.supabase.co</code>. Sem isso a Meta mostra “Não é possível carregar o URL”.</> },
+      { id: "4d", texto: <>No fim da página, <b>Adicionar plataforma → Site</b> com a URL <code>https://ikvjaowvpvxojvcfwnct.supabase.co/</code>.</> },
       { id: "4a", texto: <><b>URL da Política de Privacidade</b> (uma página da WSA).</> },
       { id: "4b", texto: <>Categoria <b>Negócios e páginas</b> e ícone com o logo da WSA (1024×1024). Salve.</> },
     ],
