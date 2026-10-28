@@ -68,7 +68,8 @@ async function gemini(chave: string, instrucao: string, pedido: string) {
   const corpo = await resp.json().catch(() => ({}));
   if (resp.status === 429) throw new ErroUsuario("Cota gratuita do Gemini esgotada por agora. Tente de novo em 1 minuto.", 429);
   if (resp.status === 400 && /API key/i.test(corpo?.error?.message ?? "")) throw new ErroUsuario("Chave do Gemini inválida. Troque em Conexões e custos.", 409);
-  if (!resp.ok) throw new Error(`Gemini respondeu ${resp.status}: ${corpo?.error?.message ?? "sem detalhe"}`);
+  // Recusa do Gemini (crédito, região, modelo sobrecarregado...): a mensagem dele ajuda mais que um "falha inesperada".
+  if (!resp.ok) throw new ErroUsuario(`O Gemini recusou (${resp.status}): ${corpo?.error?.message ?? "sem detalhe"}`, 502);
   const texto: string = corpo?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
   return { texto, uso: (corpo?.usageMetadata ?? {}) as Uso };
 }
@@ -673,6 +674,8 @@ Deno.serve(async (req) => {
     if (e instanceof ErroUsuario) return json({ erro: e.message }, e.status);
     if (e instanceof z.ZodError) return json({ erro: `Dados inválidos: ${e.issues[0]?.path.join(".")} ${e.issues[0]?.message}` }, 400);
     console.error("ia-texto", e);
-    return json({ erro: "Falha inesperada na IA de texto. Tente de novo." }, 500);
+    // PostgrestError não é instanceof Error, mas traz message. Nenhum dos dois carrega segredo.
+    const detalhe = (e as { message?: string })?.message;
+    return json({ erro: detalhe ? `Falha na IA de texto: ${detalhe.slice(0, 300)}` : "Falha inesperada na IA de texto. Tente de novo." }, 500);
   }
 });
