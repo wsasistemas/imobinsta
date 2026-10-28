@@ -19,6 +19,17 @@ export function env(nome: string): string {
   return v;
 }
 
+/** Só volta para origens do próprio estúdio (evita redirecionamento aberto). */
+export function origemPermitida(origem: string | null): origem is string {
+  if (!origem) return false;
+  const extras = (Deno.env.get("APP_ORIGENS") ?? "").split(",").map((o) => o.trim()).filter(Boolean);
+  return (
+    extras.includes(origem) ||
+    /^https:\/\/imobinsta(-[a-z0-9-]+)?\.vercel\.app$/.test(origem) ||
+    /^http:\/\/localhost:\d+$/.test(origem)
+  );
+}
+
 // deno-lint-ignore no-explicit-any
 export type Db = SupabaseClient<any, "imobinsta", any>;
 

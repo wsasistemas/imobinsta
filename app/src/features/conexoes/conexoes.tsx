@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { RefreshCw } from "lucide-react";
 import { Button, botao } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Cpu, Dna, Instagram, PlugZap, Sparkles, Zap, type LucideIcon } from "lucide-react";
+import { Cpu, Dna, HardDrive, Instagram, PlugZap, Sparkles, Zap, type LucideIcon } from "lucide-react";
 import { useDna } from "@/features/marca/dados";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge, Card } from "@/components/ui/hig";
@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { chamarFuncao } from "@/features/criar/dados";
 import { useAcesso } from "@/features/auth/acesso";
 
-type Provedor = "instagram" | "chatfyre" | "gemini" | "openai" | "heygen" | "fal";
+type Provedor = "instagram" | "chatfyre" | "gemini" | "openai" | "heygen" | "fal" | "google";
 type Status = "a_conectar" | "conectado" | "expirado" | "erro";
 type Conexao = { provedor: Provedor; status: Status; detalhe: string | null; expira_em: string | null };
 
@@ -24,6 +24,7 @@ const VISUAL: Record<Provedor, { nome: string; icone: LucideIcon; cor: CorTile; 
   openai: { nome: "OpenAI", icone: Cpu, cor: "gray", pago: true },
   heygen: { nome: "HeyGen", icone: Cpu, cor: "purple", pago: true },
   fal: { nome: "fal.ai", icone: Cpu, cor: "gray", pago: true },
+  google: { nome: "Google Drive", icone: HardDrive, cor: "blue", pago: false },
 };
 
 const STATUS: Record<Status, { texto: string; tom: "ok" | "aviso" | "neutro" }> = {
@@ -99,7 +100,9 @@ export function Conexoes() {
     },
   });
 
-  const lista = [...(data ?? [])].sort((a, b) => ORDEM.indexOf(a.provedor) - ORDEM.indexOf(b.provedor));
+  // O Google aparece na seção "Google · grátis", não na grade.
+  const lista = (data ?? []).filter((c) => c.provedor !== "google").sort((a, b) => ORDEM.indexOf(a.provedor) - ORDEM.indexOf(b.provedor));
+  const google = data?.find((c) => c.provedor === "google");
 
   return (
     <section className="pagina-entra">
@@ -165,7 +168,7 @@ export function Conexoes() {
         Chaves e tokens ficam no Vault do Supabase e só as Edge Functions os usam. Esta tela mostra apenas o status.
       </p>
 
-      {!demo && conta && <GoogleGratis />}
+      {!demo && conta && <GoogleGratis contaId={conta.conta_id} dono={conta.papel === "dono"} conexao={google} />}
       {!demo && conta && <TetoIa contaId={conta.conta_id} dono={conta.papel === "dono"} />}
 
       <Card className="mt-8 overflow-x-auto">
@@ -237,8 +240,8 @@ function ChaveGemini({ contaId, conectado }: { contaId: string; conectado: boole
   );
 }
 
-/** Seção "Google · grátis" (Fases 10 e 11): DNA da marca pelo Gemini; Drive + Vids e Veo entram na Fase 11. */
-function GoogleGratis() {
+/** Seção "Google · grátis" (Fases 10 e 11): DNA da marca pelo Gemini e a conexão com o Drive (ponte com o Vids). */
+function GoogleGratis({ contaId, dono, conexao }: { contaId: string; dono: boolean; conexao?: Conexao }) {
   const dna = useDna();
   return (
     <Card className="mt-8 ring-1 ring-blue/40">
@@ -261,12 +264,12 @@ function GoogleGratis() {
             <Link to="/marca" className={cn(botao({ tamanho: "sm", variante: "secundario" }), "mt-3")}>Abrir DNA da marca</Link>
           </div>
         </div>
-        <div className="flex items-start gap-4 rounded-hig-xl bg-fill3 p-4 opacity-70">
-          <Tile icone={Cpu} cor="blue" tamanho="lg" />
+        <div className="flex items-start gap-4 rounded-hig-xl bg-fill3 p-4">
+          <Tile icone={HardDrive} cor="blue" tamanho="lg" />
           <div className="min-w-0">
             <b className="text-sub font-semibold">Google Drive + Vids</b>
             <p className="mt-1 text-foot text-label2">Manda o roteiro para o Google Vids e traz o MP4 pronto para virar Reels.</p>
-            <Badge className="mt-2">Fase 11 · em seguida</Badge>
+            <ConectarGoogle contaId={contaId} dono={dono} conexao={conexao} />
           </div>
         </div>
         <div className="flex items-start gap-4 rounded-hig-xl bg-fill3 p-4 opacity-70">
@@ -279,6 +282,63 @@ function GoogleGratis() {
         </div>
       </div>
     </Card>
+  );
+}
+
+/**
+ * Conexão com o Google Drive (escopo drive.file: o estúdio só enxerga o que ele mesmo criar).
+ * O consentimento acontece no Google; a google-oauth volta para /conexoes com google_ok ou google_erro.
+ */
+function ConectarGoogle({ contaId, dono, conexao }: { contaId: string; dono: boolean; conexao?: Conexao }) {
+  const cliente = useQueryClient();
+  const [params, setParams] = useSearchParams();
+  const retorno = params.get("google_erro") ?? (params.get("google_ok") ? "ok" : null);
+  const conectar = useMutation({
+    mutationFn: () => chamarFuncao<{ url: string }>("google-oauth", { conta_id: contaId }),
+    onSuccess: ({ url }) => window.location.assign(url),
+  });
+  const testar = useMutation({
+    mutationFn: () => chamarFuncao<{ email: string | null }>("google-oauth", { conta_id: contaId, acao: "testar" }),
+    onSettled: () => cliente.invalidateQueries({ queryKey: ["conexoes"] }),
+  });
+  const status = conexao?.status ?? "a_conectar";
+  const s = STATUS[status];
+
+  function limparRetorno() {
+    params.delete("google_ok");
+    params.delete("google_erro");
+    setParams(params, { replace: true });
+  }
+
+  return (
+    <>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Badge tom={s.tom}>{s.texto}</Badge>
+        {conexao?.status === "conectado" && conexao.detalhe && <span className="text-cap1 text-label2">{conexao.detalhe.replace(/^Google Drive · /, "")}</span>}
+      </div>
+      {retorno && (
+        <p role={retorno === "ok" ? "status" : "alert"} className={cn("mt-2 text-cap1", retorno === "ok" ? "text-green" : "text-red")}>
+          {retorno === "ok" ? "Google Drive conectado." : retorno}{" "}
+          <button type="button" className="underline" onClick={limparRetorno}>Fechar</button>
+        </p>
+      )}
+      {dono ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button tamanho="sm" variante={status === "conectado" ? "secundario" : undefined} onClick={() => conectar.mutate()} disabled={conectar.isPending || conectar.isSuccess}>
+            {conectar.isPending || conectar.isSuccess ? "Abrindo o Google…" : status === "conectado" ? "Conectar de novo" : "Conectar Google"}
+          </Button>
+          {status === "conectado" && (
+            <Button tamanho="sm" variante="secundario" onClick={() => testar.mutate()} disabled={testar.isPending}>
+              <RefreshCw className={cn(testar.isPending && "animate-spin")} /> {testar.isPending ? "Testando…" : "Testar"}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <p className="mt-2 text-cap1 text-label2">Só o dono da conta conecta o Google.</p>
+      )}
+      {(conectar.error || testar.error) && <p role="alert" className="mt-2 text-cap1 text-red">{(conectar.error ?? testar.error)!.message}</p>}
+      {testar.data && <p role="status" className="mt-2 text-cap1 text-green">O estúdio acessou o Drive de {testar.data.email ?? "sua conta"}.</p>}
+    </>
   );
 }
 

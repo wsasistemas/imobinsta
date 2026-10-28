@@ -7,23 +7,12 @@
 // Publicar com:  supabase functions deploy ig-oauth --no-verify-jwt
 // (o retorno da Meta não traz JWT; o POST valida o JWT aqui dentro).
 // Secrets: META_APP_ID, META_APP_SECRET, META_CONFIG_ID. Opcional: APP_ORIGENS (lista separada por vírgula).
-import { admin, conexaoInstagram, CORS, env, ErroGraph, graph, json, papelNaConta, usuario } from "../_shared/comum.ts";
+import { admin, conexaoInstagram, CORS, env, ErroGraph, graph, json, origemPermitida, papelNaConta, usuario } from "../_shared/comum.ts";
 
 const VALIDADE_ESTADO_MS = 10 * 60 * 1000;
 
 function redirectUri() {
   return `${env("SUPABASE_URL")}/functions/v1/ig-oauth`;
-}
-
-/** Só volta para origens do próprio estúdio (evita redirecionamento aberto). */
-function origemPermitida(origem: string | null): origem is string {
-  if (!origem) return false;
-  const extras = (Deno.env.get("APP_ORIGENS") ?? "").split(",").map((o) => o.trim()).filter(Boolean);
-  return (
-    extras.includes(origem) ||
-    /^https:\/\/imobinsta(-[a-z0-9-]+)?\.vercel\.app$/.test(origem) ||
-    /^http:\/\/localhost:\d+$/.test(origem)
-  );
 }
 
 function voltar(retorno: string, params: Record<string, string>) {

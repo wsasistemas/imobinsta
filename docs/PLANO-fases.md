@@ -225,7 +225,14 @@ Detalhes em `docs/PLANO-google-vids-dna.md` e mockup `docs/mockups/google-vids-d
 
 ## Fase 11: Google Vids pelo Drive e Veo 3.1 · aprovada em 27/10/2026 (conta Google pessoal)
 
-- [ ] Conexão Google (OAuth `drive.file`, token no Vault) — app OAuth do Google Cloud em modo de teste
+- [x] App OAuth no Google Cloud (conta pessoal, modo de teste) e secrets `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (Wagner, 27/10)
+- [x] Etapa 11.1 no código: migration `20261027090000_fase11_google.sql` (provedor `google`, PGlite ok), Edge Function
+  `google-oauth` (consentimento, refresh token no Vault, ação `testar`) e "Conectar Google" em Conexões → Google · grátis
+- [ ] Etapa 11.1 ligada: rodar a migration, publicar a `google-oauth` e conectar uma vez (Wagner)
 - [ ] "Abrir no Google Vids": pasta com roteiro, imagens e legenda no Drive
 - [ ] Importar MP4 da pasta `prontos/` (botão + pg_cron) → Banco de mídias → Reels
 - [ ] Veo 3.1 pela chave do Gemini, dentro do teto de gasto (pago por segundo)
+
+**Para ligar a 11.1 (Wagner):** SQL Editor: `20261027090000_fase11_google.sql`. PowerShell:
+`npx supabase functions deploy google-oauth --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt`.
+Depois: Conexões → Google · grátis → Conectar Google. Em modo de teste o Google invalida o acesso em 7 dias.
