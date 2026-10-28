@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vídeo com avatar · Estúdio imobinsta</title>
+<style>
+/* Mockup para aprovação: Fase 13 (vídeo explicativo com avatar + telas do sistema) e Fase 14 (LinkedIn).
+ * Mesmo visual do estúdio. Gradientes representam fotos do Banco de mídias (dados de exemplo). */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
+  --bg: #000; --bg2: #1c1c1e; --bg3: #2c2c2e; --fill: rgba(118,118,128,.24); --sep: rgba(84,84,88,.6);
+  --label: #fff; --label2: rgba(235,235,245,.6); --label3: rgba(235,235,245,.3);
+  --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --pink: #ff375f; --purple: #bf5af2; --indigo: #5e5ce6; --yellow: #ffd60a; --red: #ff453a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--label); -webkit-font-smoothing: antialiased; font-size: 15px; }
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+nav.lado { background: #1c1c1e; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; }
+nav.lado .marca { display: flex; gap: 10px; align-items: center; padding: 6px 8px 16px; font-weight: 700; font-size: 14px; }
+nav.lado .marca i { width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #0a4fd6; display: grid; place-items: center; font: 800 10px var(--font); font-style: normal; }
+nav.lado small { padding: 14px 10px 6px; font-size: 11px; color: var(--label2); letter-spacing: .04em; }
+nav.lado button { all: unset; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+nav.lado button[aria-current="page"] { background: rgba(10,132,255,.18); color: var(--blue); }
+nav.lado .t { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 13px; }
+nav.lado .novo { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: rgba(48,209,88,.2); color: var(--green); }
+main { padding: 28px 36px 60px; max-width: 1180px; }
+.pag { display: none; } .pag.on { display: block; }
+.cab { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.cab .t { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; }
+.cab h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.cab p { margin: 2px 0 0; color: var(--label2); font-size: 15px; }
+.cab .acoes { margin-left: auto; display: flex; gap: 10px; }
+.card { background: var(--bg2); border-radius: 20px; padding: 20px; }
+.grid { display: grid; gap: 16px; } .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+h2 { margin: 0 0 4px; font-size: 20px; font-weight: 600; } h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.mut { color: var(--label2); } .peq { font-size: 13px; }
+.b { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; flex: none; min-height: 36px; padding: 0 16px; border-radius: 9999px; border: 0; font: 600 14px var(--font); cursor: pointer; }
+.b.p { background: var(--blue); color: #fff; } .b.s { background: rgba(10,132,255,.16); color: var(--blue); } .b.v { background: var(--purple); color: #fff; }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+.ok { background: rgba(48,209,88,.16); color: var(--green); } .wait { background: rgba(255,159,10,.16); color: var(--orange); } .neu { background: var(--fill); color: var(--label2); } .no { background: rgba(255,69,58,.16); color: var(--red); }
+.conn { display: flex; gap: 14px; align-items: flex-start; }
+.tile { width: 48px; height: 48px; flex: none; border-radius: 12px; display: grid; place-items: center; font: 700 15px var(--font); color: #fff; }
+.campo { width: 100%; min-height: 44px; border-radius: 12px; border: 0; background: var(--fill); color: var(--label); padding: 0 14px; font: 16px var(--font); }
+.nota { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--bg3); color: var(--label2); font-size: 13px; line-height: 1.5; }
+.nota b { color: var(--label); }
+.ex { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: .04em; text-transform: uppercase; }
+.paleta { display: flex; gap: 10px; flex-wrap: wrap; }
+.cor { width: 74px; } .cor i { display: block; height: 56px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); } .cor small { display: block; margin-top: 6px; font: 12px ui-monospace, Menlo, monospace; color: var(--label2); }
+.fontes div { padding: 12px 14px; border-radius: 12px; background: var(--bg3); margin-top: 8px; }
+.imgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .imgs i { aspect-ratio: 1; border-radius: 12px; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; } .chip { padding: 5px 11px; border-radius: 9999px; background: var(--fill); font-size: 13px; } .chip.ev { background: rgba(255,69,58,.14); color: var(--red); }
+.tom { font-size: 15px; line-height: 1.5; } .tom q { color: var(--label2); font-style: italic; }
+.camp { border: 1px solid var(--sep); border-radius: 16px; padding: 16px; }
+.camp ol { margin: 10px 0 0; padding-left: 18px; color: var(--label2); font-size: 13px; line-height: 1.8; }
+.camp ol b { color: var(--label); font-weight: 600; }
+.passos { counter-reset: p; display: grid; gap: 12px; }
+.passo { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 16px; background: var(--bg2); }
+.passo::before { counter-increment: p; content: counter(p); flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; font-weight: 700; }
+.passo.manual::before { background: var(--orange); }
+.arq { font: 13px ui-monospace, Menlo, monospace; background: var(--bg3); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.7; color: var(--label2); }
+.lista td, .lista th { padding: 10px 8px; border-bottom: .5px solid var(--sep); text-align: left; font-size: 14px; } .lista th { color: var(--label2); font-weight: 500; font-size: 12px; }
+.lista { width: 100%; border-collapse: collapse; }
+@media (max-width: 900px) { .app { grid-template-columns: 1fr; } nav.lado { flex-direction: row; overflow-x: auto; } nav.lado small, nav.lado .marca { display: none; } .g2, .g3, .g4 { grid-template-columns: 1fr; } main { padding: 20px 16px; } }
+/* ---- Fase 12: mídia real ---- */
+.fotoA { background: linear-gradient(160deg,#c9b79c 0%,#8a6f4e 45%,#3b2f25 100%); }
+.fotoB { background: linear-gradient(200deg,#9ec5e8 0%,#4f7fa8 50%,#1f3347 100%); }
+.fotoC { background: linear-gradient(140deg,#e8d6c0 0%,#b88a5a 55%,#5a3a22 100%); }
+.fotoD { background: linear-gradient(180deg,#d7e3d0 0%,#7f9d72 50%,#2f3f2a 100%); }
+.fotoE { background: linear-gradient(170deg,#f3c7a0 0%,#d07a4a 50%,#4a2414 100%); }
+.ia { background: linear-gradient(150deg,#b8c4ff 0%,#6d5df0 50%,#24135f 100%); }
+.tpl { background: linear-gradient(160deg,#0b1220,#0a4fd6); }
+.mini { position: relative; border-radius: 12px; overflow: hidden; }
+.mini .tag { position: absolute; left: 6px; top: 6px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; }
+.mini .play { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: rgba(255,255,255,.9); text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.mini .faixa { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px; background: linear-gradient(transparent, rgba(0,0,0,.75)); font-weight: 700; font-size: 13px; line-height: 1.25; }
+.tira { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.tira .mini { flex: none; width: 96px; aspect-ratio: 4/5; cursor: pointer; }
+.tira .mini.sel { outline: 3px solid var(--blue); outline-offset: 2px; }
+.tira .mais { flex: none; width: 96px; aspect-ratio: 4/5; border-radius: 12px; border: 1.5px dashed var(--sep); display: grid; place-items: center; color: var(--label2); font-size: 28px; }
+.palco { aspect-ratio: 4/5; max-width: 420px; margin: 0 auto; }
+.palco .faixa { font-size: 26px; padding: 28px 24px 22px; }
+.palco .faixa small { display: block; font-size: 15px; font-weight: 500; margin-top: 6px; color: rgba(255,255,255,.85); }
+.seg { display: inline-flex; background: var(--fill); border-radius: 10px; padding: 2px; gap: 2px; flex-wrap: wrap; }
+.seg span { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--label2); cursor: pointer; }
+.seg span.on { background: #636366; color: #fff; }
+.banco { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.banco .mini { aspect-ratio: 1; }
+.banco .mini.sel::after { content: "✓"; position: absolute; right: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.linha { display: flex; gap: 6px; align-items: stretch; overflow-x: auto; padding: 8px 0; }
+.cena { flex: none; border-radius: 10px; position: relative; height: 74px; overflow: hidden; }
+.cena small { position: absolute; left: 6px; bottom: 5px; font-size: 11px; font-weight: 700; text-shadow: 0 1px 3px #000; }
+.trilha { height: 30px; border-radius: 8px; background: repeating-linear-gradient(90deg, rgba(48,209,88,.55) 0 3px, transparent 3px 6px); }
+.regua { display: flex; justify-content: space-between; font-size: 11px; color: var(--label3); }
+.celular { width: 260px; aspect-ratio: 9/16; border-radius: 30px; overflow: hidden; position: relative; margin: 0 auto; border: 6px solid #2c2c2e; }
+.celular .txt { position: absolute; left: 16px; right: 16px; font-weight: 800; font-size: 22px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.celular .logo { position: absolute; right: 12px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #0a4fd6; display: grid; place-items: center; font: 800 9px var(--font); }
+.prog { height: 8px; border-radius: 99px; background: var(--fill); overflow: hidden; } .prog i { display: block; height: 100%; width: 62%; background: var(--blue); border-radius: 99px; }
+.tipos .card { padding: 0; overflow: hidden; } .tipos .capa { height: 120px; display: grid; place-items: center; font-size: 34px; } .tipos .corpo { padding: 16px; }
+.storybar { display: flex; gap: 4px; position: absolute; top: 8px; left: 10px; right: 10px; } .storybar i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.45); } .storybar i.on { background: #fff; }
+/* ---- Fase 13: avatar + sistema ---- */
+.sis { background: linear-gradient(180deg,#f5f7fb 0 14%,#e8edf6 14% 100%); }
+.sis::before { content: ""; position: absolute; left: 8%; right: 8%; top: 20%; height: 12%; border-radius: 8px; background: #0a4fd6; opacity: .85; }
+.sis::after { content: ""; position: absolute; left: 8%; right: 8%; top: 38%; bottom: 30%; border-radius: 8px; background: repeating-linear-gradient(180deg,#fff 0 18%,#dfe5ef 18% 20%); }
+.escr { background: linear-gradient(160deg,#cfd8e3 0%,#7d8fa6 40%,#2b3a4d 100%); }
+.pessoa { position: absolute; width: 46%; aspect-ratio: 3/4; z-index: 2; }
+.pessoa::before { content: ""; position: absolute; left: 30%; top: 4%; width: 40%; aspect-ratio: 1; border-radius: 50%; background: #c99a77; box-shadow: inset 0 -6px 0 rgba(0,0,0,.12); }
+.pessoa::after { content: ""; position: absolute; left: 8%; right: 8%; top: 44%; bottom: 0; border-radius: 40% 40% 0 0; background: #1f3a68; }
+.pessoa.circ { aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: #2b3a4d; border: 3px solid #fff; }
+.leg { position: absolute; left: 10%; right: 10%; text-align: center; font-weight: 800; font-size: 17px; line-height: 1.25; text-shadow: 0 2px 8px #000; z-index: 3; color: #fff; }
+.leg b { color: var(--yellow); }
+.lay { cursor: pointer; } .lay .celular { width: 130px; border-width: 4px; border-radius: 18px; } .lay.sel .celular { outline: 3px solid var(--blue); outline-offset: 3px; }
+.lay p { text-align: center; margin: 10px 0 0; font-weight: 600; font-size: 14px; } .lay small { display: block; text-align: center; color: var(--label2); font-size: 12px; margin-top: 2px; }
+.cenas td { vertical-align: top; }
+.cenas textarea { width: 100%; min-height: 54px; border-radius: 10px; border: 0; background: var(--fill); color: var(--label); padding: 8px 10px; font: 13px var(--font); resize: vertical; }
+.alca { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid var(--blue); z-index: 4; }
+.rede { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: var(--bg3); }
+.rede .tile { width: 40px; height: 40px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="lado" aria-label="Telas do mockup">
+    <div class="marca"><i>WSA</i>Estúdio imobinsta</div>
+    <small>MOCKUP · FASES 13 E 14</small>
+    <button data-p="fluxo" aria-current="page"><span class="t" style="background:var(--blue)">1</span>O processo</button>
+    <button data-p="roteiro"><span class="t" style="background:var(--purple)">2</span>Roteiro em cenas</button>
+    <button data-p="montar"><span class="t" style="background:var(--orange)">3</span>Montar o vídeo</button>
+    <button data-p="publicar"><span class="t" style="background:var(--green)">4</span>Publicar<span class="novo">IG + IN</span></button>
+  </nav>
+  <main>
+
+    <!-- ================= 1. PROCESSO ================= -->
+    <section class="pag on" id="fluxo">
+      <div class="cab"><span class="t" style="background:var(--purple)">▶︎</span><div><h1>Vídeo explicativo com avatar</h1><p>Você (avatar) apresentando os sistemas, com as telas do sistema no vídeo</p></div></div>
+      <div class="passos">
+        <div class="passo"><div><h3>Roteiro em cenas (IA · Gemini)</h3><p class="mut peq">Você escolhe o sistema e o objetivo. A IA escreve a fala dividida em cenas e sugere, para cada uma, o layout e qual print ou vídeo do sistema mostrar. Tudo editável.</p></div></div>
+        <div class="passo"><div><h3>Escolher o look e a voz</h3><p class="mut peq">Um look da sua conta HeyGen, por exemplo "Professional in blue blazer" (sentado no escritório), e a sua voz clonada. Dá para trocar de look por cena.</p></div></div>
+        <div class="passo manual"><div><h3>Gerar o avatar (HeyGen · crédito de API)</h3><p class="mut peq">Uma geração por cena, em paralelo. Cena de <b>apresentador</b>: vídeo com o cenário do look. Cena com o <b>sistema ao fundo</b>: avatar com fundo transparente (recortado). Mostra o custo antes, pede confirmação e respeita o teto do mês.</p></div></div>
+        <div class="passo"><div><h3>Montar no navegador (grátis)</h3><p class="mut peq">O motor do Reels (Fase 12.2) junta tudo: tela do sistema ao fundo, avatar onde você arrastar (canto, lado, embaixo, em bolha), legenda automática, logo e trilha baixa. Formatos 9:16, 4:5, 1:1 e 16:9 do mesmo projeto.</p></div></div>
+        <div class="passo"><div><h3>Publicar</h3><p class="mut peq">No Instagram como Reels, com a legenda e a automação "QUERO". No LinkedIn, no seu perfil pessoal (Fase 14). O MP4 fica no Banco de mídias.</p></div></div>
+      </div>
+      <div class="grid g3" style="margin-top:18px">
+        <div class="card"><span class="badge ok">R$ 0</span><h3 style="margin-top:8px">Roteiro e montagem</h3><p class="mut peq">Gemini (seu crédito do AI Studio, frações de centavo) e motor no navegador.</p></div>
+        <div class="card"><span class="badge wait">Pago por uso</span><h3 style="margin-top:8px">Avatar falando</h3><p class="mut peq">Crédito de API da HeyGen, pela duração. O crédito do plano do site não vale aqui. Usa o mesmo teto mensal da Fase 7.</p></div>
+        <div class="card"><span class="badge neu">Limite</span><h3 style="margin-top:8px">Até 90 s</h3><p class="mut peq">Bom para Reels e LinkedIn. Vídeo mais longo vai pelo Google Vids (Fase 11).</p></div>
+      </div>
+      <div class="nota" style="margin-top:16px"><span>ℹ︎</span><div><b>Por que a montagem é no estúdio e não na HeyGen:</b> a API da HeyGen não deixa pôr o avatar num canto nem mudar o tamanho dele sobre o fundo. Por isso o avatar vem recortado (vídeo com transparência) e o estúdio monta a tela, com controle total e sem custo extra.</div></div>
+    </section>
+
+    <!-- ================= 2. ROTEIRO ================= -->
+    <section class="pag" id="roteiro">
+      <div class="cab"><span class="t" style="background:var(--purple)">✎</span><div><h1>Roteiro em cenas</h1><p>A IA escreve, você ajusta. Cada cena tem fala, layout e o que aparece ao fundo</p></div>
+        <div class="acoes"><button class="b s">✦ Reescrever com IA</button><button class="b v">Gerar avatar*</button></div></div>
+      <p class="ex">Exemplo</p>
+      <div class="grid" style="grid-template-columns:1fr 2fr;align-items:start">
+        <div class="card">
+          <p class="mut peq" style="margin:0 0 6px">Sistema</p><select class="campo"><option>Imobiliárias (ImobSystem)</option></select>
+          <p class="mut peq" style="margin:12px 0 6px">Objetivo</p><div class="seg"><span>Engajar</span><span class="on">Vender</span><span>Ensinar</span></div>
+          <p class="mut peq" style="margin:12px 0 6px">Duração</p><div class="seg"><span>30 s</span><span class="on">45 s</span><span>60 s</span><span>90 s</span></div>
+          <p class="mut peq" style="margin:12px 0 6px">Look e voz</p>
+          <div class="rede"><span class="tile escr" style="border-radius:50%"></span><div><b class="peq">Professional in blue blazer</b><br><small class="mut">W.Santana informática · voz clonada</small></div></div>
+          <p class="mut peq" style="margin:12px 0 6px">Telas do sistema</p>
+          <div class="banco" style="grid-template-columns:repeat(3,1fr)"><div class="mini sis sel"></div><div class="mini sis sel"></div><div class="mini fotoB"><span class="play">▶︎</span></div></div>
+          <p class="mut" style="font-size:12px;margin-top:6px">Do Banco de mídias (pasta Sistemas): prints e gravações de tela.</p>
+        </div>
+        <div class="card">
+          <table class="lista cenas">
+            <tr><th>#</th><th style="width:48%">Fala</th><th>Layout</th><th>Ao fundo</th></tr>
+            <tr><td>1</td><td><textarea>Você ainda perde cliente porque esqueceu de retornar uma mensagem?</textarea></td><td><span class="badge neu">Apresentador</span></td><td class="mut peq">cenário do look</td></tr>
+            <tr><td>2</td><td><textarea>No ImobSystem, cada lead tem etapa e lembrete. Olha o funil aqui.</textarea></td><td><span class="badge neu">Avatar no canto</span></td><td class="mut peq">print · Funil</td></tr>
+            <tr><td>3</td><td><textarea>O corretor recebe o aviso no celular e responde em um clique.</textarea></td><td><span class="badge neu">Tela dividida</span></td><td class="mut peq">vídeo · App</td></tr>
+            <tr><td>4</td><td><textarea>Comente QUERO que eu te mando a demonstração no direct.</textarea></td><td><span class="badge neu">Apresentador</span></td><td class="mut peq">cenário do look</td></tr>
+          </table>
+          <p class="mut" style="font-size:12px;margin-top:10px">* O custo aparece antes de gerar: cerca de 45 s de fala, pelo preço por minuto da sua conta de API da HeyGen. Acima do valor de confirmação, o estúdio pergunta.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. MONTAR ================= -->
+    <section class="pag" id="montar">
+      <div class="cab"><span class="t" style="background:var(--orange)">⧉</span><div><h1>Montar o vídeo</h1><p>Arraste o avatar para qualquer lugar da tela · o MP4 é gerado no navegador</p></div>
+        <div class="acoes"><button class="b s">Prévia</button><button class="b p">Gerar MP4</button></div></div>
+      <p class="ex">Exemplo · cena 2 de 4</p>
+      <div class="grid" style="grid-template-columns:300px 1fr;align-items:start">
+        <div class="card">
+          <div class="celular sis">
+            <div class="pessoa" style="right:4%;bottom:4%;width:44%"></div>
+            <span class="alca" style="right:46%;bottom:62%"></span><span class="alca" style="right:2%;bottom:2%"></span>
+            <div class="leg" style="top:12%">Olha o <b>funil</b> aqui</div>
+            <div class="logo">WSA</div>
+          </div>
+          <div class="regua" style="margin-top:10px"><span>0:09</span><span>cena 2 de 4</span><span>0:44</span></div>
+        </div>
+        <div class="grid">
+          <div class="card"><h3>Layout da cena</h3>
+            <div class="grid g4" style="margin-top:12px">
+              <div class="lay"><div class="celular escr"><div class="pessoa" style="left:12%;bottom:0;width:76%"></div></div><p>Apresentador</p><small>sentado, tela cheia</small></div>
+              <div class="lay sel"><div class="celular sis"><div class="pessoa" style="right:4%;bottom:4%;width:44%"></div></div><p>Avatar no canto</p><small>sistema ao fundo</small></div>
+              <div class="lay"><div class="celular sis"><div class="pessoa circ" style="left:8%;bottom:8%;width:40%"></div></div><p>Bolha</p><small>avatar em círculo</small></div>
+              <div class="lay"><div class="celular" style="background:linear-gradient(180deg,#e8edf6 0 50%,#2b3a4d 50%)"><div class="pessoa" style="left:27%;bottom:0;width:46%"></div></div><p>Tela dividida</p><small>sistema em cima</small></div>
+            </div>
+          </div>
+          <div class="grid g2">
+            <div class="card"><h3>Avatar nesta cena</h3>
+              <p class="mut peq" style="margin:10px 0 6px">Posição (ou arraste na prévia)</p><div class="seg"><span>↖</span><span>↗</span><span>↙</span><span class="on">↘</span><span>centro</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Tamanho</p><input type="range" min="20" max="100" value="44" style="width:100%" aria-label="Tamanho do avatar">
+              <p class="mut peq" style="margin:12px 0 6px">Forma</p><div class="seg"><span class="on">Recorte</span><span>Bolha</span><span>Cartão</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Ao fundo</p><div class="seg"><span class="on">Print do sistema</span><span>Vídeo do sistema</span><span>Cor da marca</span></div>
+            </div>
+            <div class="card"><h3>Vídeo inteiro</h3>
+              <p class="mut peq" style="margin:10px 0 6px">Formato</p><div class="seg"><span class="on">Reels 9:16</span><span>LinkedIn 4:5</span><span>1:1</span><span>16:9</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Legenda automática</p><div class="seg"><span class="on">Palavra a palavra</span><span>Frase</span><span>Sem</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Extras</p><div class="seg"><span class="on">Logo</span><span class="on">Trilha baixa</span><span>Zoom no print</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Avatar na HeyGen</p><span class="badge ok">4 de 4 cenas prontas</span>
+            </div>
+          </div>
+          <div class="nota"><span>ℹ︎</span><div>Trocar layout, posição, fundo ou formato <b>não gera de novo na HeyGen</b> e não gasta crédito. Só mudar a fala de uma cena gera aquela cena de novo.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. PUBLICAR ================= -->
+    <section class="pag" id="publicar">
+      <div class="cab"><span class="t" style="background:var(--green)">↗</span><div><h1>Publicar</h1><p>Um vídeo, duas redes</p></div></div>
+      <div class="grid g2" style="align-items:start">
+        <div class="card"><div class="conn"><span class="tile" style="background:linear-gradient(45deg,#f9a03f,#e4405f,#8a3ab9)">IG</span><div><h3>Instagram · Reels 9:16</h3><p class="mut peq">Já funciona (Fase 7.2): legenda, hashtags, agendamento e automação "QUERO" no Chatfyre.</p><span class="badge ok">Pronto</span></div></div></div>
+        <div class="card"><div class="conn"><span class="tile" style="background:#0a66c2">in</span><div><h3>LinkedIn · perfil pessoal</h3><p class="mut peq">Fase 14: conectar o LinkedIn (produto "Share on LinkedIn", permissão <code>w_member_social</code>), enviar o vídeo em partes e publicar com o texto. Formato sugerido 4:5 ou 1:1; vertical também é aceito. MP4 de 3 s a 30 min.</p><span class="badge wait">Novo · Fase 14</span></div></div></div>
+      </div>
+      <div class="card" style="margin-top:16px"><h3>Texto do LinkedIn</h3><p class="mut peq">A IA adapta a legenda do Instagram para o LinkedIn: tom mais profissional e sem "comente QUERO" (lá não tem a automação), com chamada para o site ou para mensagem.</p>
+        <textarea class="campo" style="min-height:90px;padding:10px 14px;margin-top:8px">Quantos leads a sua imobiliária perde por falta de retorno? Mostro no vídeo como o ImobSystem organiza o funil e avisa o corretor na hora. Quer ver na sua operação? Me chama aqui.</textarea></div>
+      <div class="nota" style="margin-top:16px"><span>⚠︎</span><div><b>Página da empresa no LinkedIn</b> exige outro produto da LinkedIn (Community Management API), com análise e aprovação. Fica para depois do perfil pessoal funcionar.</div></div>
+    </section>
+
+  </main>
+</div>
+<script>
+  const ir = (p) => {
+    document.querySelectorAll(".pag").forEach((s) => s.classList.toggle("on", s.id === p));
+    document.querySelectorAll("nav.lado button").forEach((b) => b.setAttribute("aria-current", b.dataset.p === p ? "page" : "false"));
+    scrollTo(0, 0);
+  };
+  document.querySelectorAll("nav.lado [data-p]").forEach((b) => b.addEventListener("click", () => ir(b.dataset.p)));
+  document.querySelectorAll(".seg").forEach((g) => g.addEventListener("click", (e) => { if (e.target.tagName === "SPAN") { g.querySelectorAll("span").forEach((s) => s.classList.remove("on")); e.target.classList.add("on"); } }));
+  document.querySelectorAll(".lay").forEach((l) => l.addEventListener("click", () => { document.querySelectorAll(".lay").forEach((x) => x.classList.remove("sel")); l.classList.add("sel"); }));
+</script>
+</body>
+</html>
