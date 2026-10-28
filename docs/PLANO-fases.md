@@ -233,7 +233,10 @@ Detalhes em `docs/PLANO-google-vids-dna.md` e mockup `docs/mockups/google-vids-d
   `google-drive` ação `vids` (pasta `Estúdio imobinsta/Vids/<título · dd-mm>` com roteiro.txt, legenda.txt, logo,
   até 6 imagens da pasta do produto e subpasta `prontos/`) e card "Ou monte no Google Vids" na tela do roteiro
 - [ ] Etapa 11.2 ligada: rodar a migration e publicar a `google-drive` (Wagner); testar com um roteiro real
-- [ ] Importar MP4 da pasta `prontos/` (botão + pg_cron) → Banco de mídias → Reels
+- [x] Etapa 11.3 no código (botão): `google-drive` ação `buscar` pega o vídeo mais recente de `prontos/` (até 100 MB,
+  MP4/MOV/WebM), copia para o Banco de mídias (pasta Vids, nome = id do arquivo no Drive, sem duplicar) e marca o
+  roteiro como pronto → "Criar Reels e publicar". Sem migration nova
+- [ ] Importação automática a cada hora (pg_cron): fica para depois do teste real do botão
 - [ ] Veo 3.1 pela chave do Gemini, dentro do teto de gasto (pago por segundo)
 
 **Para ligar a 11.1 (Wagner):** SQL Editor: `20261027090000_fase11_google.sql`. PowerShell:

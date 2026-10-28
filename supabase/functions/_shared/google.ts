@@ -39,6 +39,16 @@ export async function drive<T = Record<string, unknown>>(accessToken: string, ca
   return corpo as T;
 }
 
+/** Conteúdo de um arquivo do Drive (alt=media). */
+export async function baixarDoDrive(accessToken: string, id: string): Promise<Uint8Array<ArrayBuffer>> {
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(120_000),
+  });
+  if (!r.ok) throw new ErroGoogle(`Não foi possível baixar o arquivo do Drive (HTTP ${r.status}).`);
+  return new Uint8Array(await r.arrayBuffer());
+}
+
 export const PASTA = "application/vnd.google-apps.folder";
 type Arquivo = { id: string; name: string; webViewLink?: string };
 

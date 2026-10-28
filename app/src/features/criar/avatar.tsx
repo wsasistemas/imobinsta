@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Clapperboard, FolderOpen, LoaderCircle, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, Clapperboard, Download, FolderOpen, LoaderCircle, Sparkles, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button, botao } from "@/components/ui/button";
 import { Card, Segmentado } from "@/components/ui/hig";
@@ -153,6 +153,12 @@ function Wizard({ inicial, contaId, demo }: { inicial: Roteiro | null; contaId?:
   });
   const pastaDrive = vids.data?.url ?? inicial?.drive_url;
 
+  /** Fase 11.3: traz o MP4 exportado no Vids (subpasta "prontos") para o Banco de mídias; o roteiro fica pronto. */
+  const buscar = useMutation({
+    mutationFn: () => chamarFuncao<{ status: "pronto" | "vazio"; arquivo?: string }>("google-drive", { acao: "buscar", conta_id: contaId, roteiro_id: inicial!.id }),
+    onSuccess: (r) => r.status === "pronto" && Promise.all(["roteiro", "roteiros-recentes"].map((k) => cliente.invalidateQueries({ queryKey: [k] }))),
+  });
+
   const criarReels = useMutation({
     mutationFn: async () => {
       if (inicial!.post_id) return inicial!.post_id;
@@ -282,6 +288,12 @@ function Wizard({ inicial, contaId, demo }: { inicial: Roteiro | null; contaId?:
               <div className="mt-3 grid gap-2">
                 <a href={pastaDrive} target="_blank" rel="noreferrer" className={cn(botao({ tamanho: "sm" }), "w-full")}>Abrir a pasta no Drive</a>
                 <a href="https://vids.google.com/" target="_blank" rel="noreferrer" className={cn(botao({ tamanho: "sm", variante: "secundario" }), "w-full")}>Abrir o Google Vids</a>
+                {inicial && inicial.status !== "gerando" && (
+                  <Button tamanho="sm" variante="secundario" className="w-full" onClick={() => buscar.mutate()} disabled={demo || buscar.isPending}>
+                    {buscar.isPending ? <LoaderCircle className="animate-spin" /> : <Download />}
+                    {buscar.isPending ? "Buscando…" : inicial.status === "pronto" ? "Buscar de novo em prontos" : "Buscar vídeo pronto"}
+                  </Button>
+                )}
               </div>
             ) : (
               <Button tamanho="sm" variante="secundario" className="mt-3 w-full" onClick={() => vids.mutate()}
@@ -289,6 +301,9 @@ function Wizard({ inicial, contaId, demo }: { inicial: Roteiro | null; contaId?:
                 {vids.isPending ? <LoaderCircle className="animate-spin" /> : <FolderOpen />} {vids.isPending ? "Criando a pasta…" : "Preparar pasta no Drive"}
               </Button>
             )}
+            {buscar.data?.status === "vazio" && <p role="status" className="mt-2 text-cap1 text-label2">Ainda não há vídeo na subpasta prontos. Exporte o MP4 no Vids para lá.</p>}
+            {buscar.data?.status === "pronto" && <p role="status" className="mt-2 text-cap1 text-green">Importado: {buscar.data.arquivo}. Agora é só criar o Reels.</p>}
+            {buscar.error && <p role="alert" className="mt-2 text-cap1 text-red">{buscar.error.message}</p>}
             {vids.data?.faltaram?.length ? <p className="mt-2 text-cap1 text-orange">Não subiram: {vids.data.faltaram.join(", ")}.</p> : null}
             {vids.error && (
               <p role="alert" className="mt-2 text-cap1 text-red">

@@ -17,8 +17,8 @@ imagem por IA) e 7.2 (Meus avatares, vídeo com avatar HeyGen, Reels). Pendente 
 20261027060000 e 20261027070000. Depois delas: publicar o `ig-publicar` novo e fazer o push (ver PLANO-fases.md).
 Fases 10 (DNA da marca, campanhas) e 11 (Google Vids pelo Drive + Veo 3.1) aprovadas em 27/10; a 10 está no
 código (migration 20261027080000 pendente). Fase 11: app OAuth do Google criado (secrets GOOGLE_*); etapa 11.1
-(conexão Drive) publicada; 11.2 (pasta do Vids no Drive) no código: faltam a migration 20261027100000 e publicar a
-`google-drive`. Próximo: 11.3 (importar o MP4 de `prontos/`).
+(conexão Drive) publicada; 11.2 (pasta do Vids no Drive) e 11.3 (botão que importa o MP4 de `prontos/`) no código:
+faltam a migration 20261027100000 e publicar a `google-drive`. Depois: pg_cron da importação e Veo 3.1 (pago).
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 
