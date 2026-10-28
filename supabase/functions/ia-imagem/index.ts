@@ -76,7 +76,7 @@ async function testar(provedor: Provedor, chave: string) {
     return r.ok;
   }
   if (provedor === "heygen") {
-    const r = await fetch("https://api.heygen.com/v2/user/remaining_quota", { headers: { "X-Api-Key": chave } });
+    const r = await fetch("https://api.heygen.com/v3/users/me", { headers: { "X-Api-Key": chave } });
     if (r.status === 401 || r.status === 403) throw new ErroUsuario("A HeyGen recusou esta chave.");
     return r.ok;
   }

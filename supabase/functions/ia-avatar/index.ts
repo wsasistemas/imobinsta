@@ -1,12 +1,13 @@
 // ia-avatar — vídeo narrado com avatar (HeyGen), com o mesmo teto de gasto da ia-imagem (Fase 7.2).
 //
 // POST { acao, conta_id, ... } com JWT de um membro da conta:
-//   catalogo {}                          → { avatares, vozes }  da conta HeyGen (para cadastrar em Meus avatares)
+//   catalogo {}                          → { avatares, vozes }  looks e vozes da própria conta HeyGen (Meus avatares)
 //   gerar    { roteiro_id, confirmar? }  → { status: "gerando" }   envia o roteiro para a HeyGen
 //   status   { roteiro_id }              → { status, midia_id? }    confere; quando pronto, baixa o MP4 para o banco de mídias
 //
 // O avatar é treinado na HeyGen; o estúdio só usa os ids (imobinsta.avatares, com consentimento registrado).
 // Custo: estimado por minuto de vídeo (secret HEYGEN_USD_POR_MINUTO, padrão 1,00) e recalculado pela duração real.
+// API v3 da HeyGen (as rotas v1/v2 são desligadas em 01/11/2026). O vídeo gasta crédito de API, separado do plano do site.
 // Publicar com:  supabase functions deploy ia-avatar
 import { z } from "npm:zod@3.25.76";
 import { admin, CORS, type Db, json, papelNaConta, usuario } from "../_shared/comum.ts";
@@ -40,30 +41,63 @@ async function heygen<T>(chave: string, caminho: string, init: RequestInit = {})
   const corpo = await resp.json().catch(() => ({}));
   if (resp.status === 401 || resp.status === 403) throw new ErroUsuario("A HeyGen recusou a chave. Troque em Conexões e custos.", 409);
   if (!resp.ok || corpo?.error) {
-    const msg = corpo?.error?.message ?? corpo?.message ?? (typeof corpo?.error === "string" ? corpo.error : `HTTP ${resp.status}`);
+    const msg = String(corpo?.error?.message ?? corpo?.message ?? (typeof corpo?.error === "string" ? corpo.error : `HTTP ${resp.status}`));
+    if (resp.status === 402 || /credit|insufficient|balance|quota/i.test(msg)) {
+      throw new ErroUsuario(`Sem crédito de API na HeyGen. O crédito do plano do site não vale na API: compre crédito de API no painel da HeyGen. Detalhe: ${msg}`, 402);
+    }
     throw new ErroUsuario(`A HeyGen recusou: ${msg}`, 422);
   }
-  return (corpo?.data ?? corpo) as T;
+  return corpo as T;
+}
+
+/** Lista paginada da v3 ({ data, has_more, next_token }), até `max` itens. */
+async function listar<T>(chave: string, caminho: string, max: number): Promise<T[]> {
+  const itens: T[] = [];
+  let token: string | null = null;
+  do {
+    const url = token ? `${caminho}&token=${encodeURIComponent(token)}` : caminho;
+    const r: { data?: T[]; has_more?: boolean; next_token?: string | null } = await heygen(chave, url);
+    itens.push(...(r.data ?? []));
+    token = r.has_more ? r.next_token ?? null : null;
+  } while (token && itens.length < max);
+  return itens.slice(0, max);
 }
 
 const minutos = (texto: string) => Math.max(0.25, texto.trim().split(/\s+/).length / PALAVRAS_POR_MINUTO);
 
 // ---------- Ações ----------------------------------------------------------------------------
 
+type Look = {
+  id: string; name: string; avatar_type: "studio_avatar" | "digital_twin" | "photo_avatar"; group_id: string | null;
+  preview_image_url: string | null; default_voice_id: string | null; preferred_orientation: string | null; status?: string | null;
+};
+type Grupo = { id: string; name: string; default_voice_id: string | null };
+type Voz = { voice_id: string; name: string; language: string; gender: string; type: "public" | "private"; preview_audio_url: string | null };
+
+const TIPO: Record<string, string> = { photo_avatar: "Foto", digital_twin: "Gravado em vídeo", studio_avatar: "Estúdio" };
+
+/** Os looks da própria conta (avatar de foto, gêmeo digital, estúdio), agrupados pelo personagem, e as vozes. */
 async function acaoCatalogo(db: Db, contaId: string) {
   const chave = await chaveHeygen(db, contaId);
-  type Av = { avatar_id: string; avatar_name?: string; preview_image_url?: string };
-  type Vz = { voice_id: string; name?: string; language?: string; gender?: string };
-  const [a, v] = await Promise.all([
-    heygen<{ avatars?: Av[] }>(chave, "/v2/avatars"),
-    heygen<{ voices?: Vz[] }>(chave, "/v2/voices"),
+  const [looks, grupos, clonadas, publicas] = await Promise.all([
+    listar<Look>(chave, "/v3/avatars/looks?ownership=private&limit=50", 200),
+    listar<Grupo>(chave, "/v3/avatars?ownership=private&limit=50", 200),
+    listar<Voz>(chave, "/v3/voices?type=private&limit=100", 200),
+    listar<Voz>(chave, "/v3/voices?type=public&language=Portuguese&limit=100", 300),
   ]);
-  // Só avatares (character.type "avatar"); talking photos usam outro tipo na geração e ficam de fora.
-  const avatares = (a.avatars ?? []).map((x) => ({ id: x.avatar_id, nome: x.avatar_name ?? x.avatar_id, preview: x.preview_image_url ?? null }));
-  // Português primeiro, para a lista não abrir em centenas de vozes em inglês.
-  const vozes = (v.voices ?? [])
-    .map((x) => ({ id: x.voice_id, nome: x.name ?? x.voice_id, idioma: x.language ?? "", genero: x.gender ?? "" }))
-    .sort((x, y) => Number(/portug/i.test(y.idioma)) - Number(/portug/i.test(x.idioma)) || x.nome.localeCompare(y.nome));
+  const porGrupo = new Map(grupos.map((g) => [g.id, g]));
+  const avatares = looks.map((l) => {
+    const g = l.group_id ? porGrupo.get(l.group_id) : undefined;
+    return {
+      id: l.id, nome: l.name, grupo: g?.name ?? "Sem grupo", tipo: l.avatar_type, tipo_rotulo: TIPO[l.avatar_type] ?? l.avatar_type,
+      preview: l.preview_image_url, orientacao: l.preferred_orientation, pronto: !l.status || l.status === "completed",
+      voz_padrao: l.default_voice_id ?? g?.default_voice_id ?? null,
+    };
+  }).sort((a, b) => a.grupo.localeCompare(b.grupo) || Number(b.pronto) - Number(a.pronto) || a.nome.localeCompare(b.nome));
+  // Vozes clonadas primeiro ("sua voz"), depois as públicas em português.
+  const vozes = [...clonadas, ...publicas].map((v) => ({
+    id: v.voice_id, nome: v.name, idioma: v.language ?? "", genero: v.gender ?? "", clonada: v.type === "private", amostra: v.preview_audio_url,
+  }));
   return { avatares, vozes };
 }
 
@@ -100,24 +134,31 @@ async function acaoGerar(db: Db, contaId: string, userId: string, corpo: Record<
   }
 
   const chave = await chaveHeygen(db, contaId);
+  // Tipo do look: avatar de foto aceita movimento e expressividade (Avatar IV).
+  const looks = await listar<Look>(chave, "/v3/avatars/looks?ownership=private&limit=50", 200);
+  const look = looks.find((l) => l.id === r.avatares!.avatar_externo_id);
   // Reserva antes de chamar a HeyGen: dois cliques não geram (nem cobram) dois vídeos.
   const { data: reservado } = await db.from("roteiros").update({ status: "gerando", erro: null })
     .eq("id", r.id).in("status", ["rascunho", "erro"]).select("id").maybeSingle();
   if (!reservado) throw new ErroUsuario("Este roteiro já está sendo gerado.", 409);
   try {
-    const v = await heygen<{ video_id: string }>(chave, "/v2/video/generate", {
+    const foto = look?.avatar_type === "photo_avatar";
+    const v = await heygen<{ data: { video_id: string } }>(chave, "/v3/videos", {
       method: "POST",
       body: JSON.stringify({
+        type: "avatar",
         title: r.titulo.slice(0, 100),
-        caption: false,
-        dimension: { width: 1080, height: 1920 },
-        video_inputs: [{
-          character: { type: "avatar", avatar_id: r.avatares.avatar_externo_id, avatar_style: "normal" },
-          voice: { type: "text", input_text: r.texto, voice_id: r.avatares.voz_externa_id },
-        }],
+        avatar_id: r.avatares.avatar_externo_id,
+        voice_id: r.avatares.voz_externa_id,
+        script: r.texto,
+        aspect_ratio: "9:16",
+        resolution: "1080p",
+        fit: "cover",
+        engine: { type: "avatar_iv" },
+        ...(foto ? { expressiveness: "medium", motion_prompt: "talking naturally to the camera with subtle hand gestures" } : {}),
       }),
     });
-    await db.from("roteiros").update({ video_externo_id: v.video_id }).eq("id", r.id);
+    await db.from("roteiros").update({ video_externo_id: v.data.video_id }).eq("id", r.id);
     return { status: "gerando", estimativa_usd: estimativa };
   } catch (e) {
     const erro = (e instanceof Error ? e.message : String(e)).slice(0, 500);
@@ -132,11 +173,11 @@ async function acaoStatus(db: Db, contaId: string, userId: string, corpo: Record
   if (r.status !== "gerando") return { status: r.status };
   if (!r.video_externo_id) return { status: "gerando" };
   const chave = await chaveHeygen(db, contaId);
-  const s = await heygen<{ status: string; video_url?: string; duration?: number; error?: { message?: string } | string | null }>(
-    chave, `/v1/video_status.get?video_id=${encodeURIComponent(r.video_externo_id)}`,
+  const { data: s } = await heygen<{ data: { status: string; video_url?: string | null; duration?: number | null; failure_message?: string | null } }>(
+    chave, `/v3/videos/${encodeURIComponent(r.video_externo_id)}`,
   );
   if (s.status === "failed") {
-    const erro = `A HeyGen não gerou o vídeo: ${typeof s.error === "string" ? s.error : s.error?.message ?? "sem detalhe"}`.slice(0, 500);
+    const erro = `A HeyGen não gerou o vídeo: ${s.failure_message ?? "sem detalhe"}`.slice(0, 500);
     await db.from("roteiros").update({ status: "erro", erro }).eq("id", r.id);
     await db.from("geracoes_ia").insert({ conta_id: contaId, provedor: "heygen", tipo: "avatar", acao: "gerar", criado_por: userId, status: "erro", erro, custo_usd: 0 });
     return { status: "erro", erro };
@@ -162,7 +203,7 @@ async function acaoStatus(db: Db, contaId: string, userId: string, corpo: Record
     .eq("id", r.id).eq("status", "gerando").select("id").maybeSingle();
   if (virou) {
     await db.from("geracoes_ia").insert({
-      conta_id: contaId, provedor: "heygen", tipo: "avatar", acao: "gerar", modelo: "heygen-v2", criado_por: userId, status: "ok", custo_usd: custo,
+      conta_id: contaId, provedor: "heygen", tipo: "avatar", acao: "gerar", modelo: "heygen-v3-avatar-iv", criado_por: userId, status: "ok", custo_usd: custo,
     });
   }
   return { status: "pronto", midia_id: midia.id, storage_path: caminho, custo_usd: custo };

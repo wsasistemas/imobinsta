@@ -15,7 +15,10 @@ export type Avatar = {
   id: string; nome: string; avatar_externo_id: string; voz_externa_id: string; preview_url: string | null;
   consentimento_texto: string; consentimento_em: string; ativo: boolean;
 };
-type Catalogo = { avatares: { id: string; nome: string; preview: string | null }[]; vozes: { id: string; nome: string; idioma: string; genero: string }[] };
+type Look = {
+  id: string; nome: string; grupo: string; tipo: string; tipo_rotulo: string; preview: string | null; pronto: boolean; voz_padrao: string | null;
+};
+type Catalogo = { avatares: Look[]; vozes: { id: string; nome: string; idioma: string; genero: string; clonada: boolean }[] };
 
 const CONSENTIMENTO = (nome: string) =>
   `Eu, ${nome || "[nome da pessoa]"}, autorizo a WSA Sistemas de IA a usar o meu avatar digital e a minha voz clonada em vídeos ` +
@@ -106,10 +109,11 @@ export function MeusAvatares() {
         <Card>
           <h3>Como criar o seu</h3>
           <ol className="mt-3 ml-5 list-decimal text-foot leading-7 text-label2">
-            <li>Na HeyGen, crie o avatar: grave cerca de 2 minutos olhando para a câmera, com boa luz e fundo limpo.</li>
+            <li>Na HeyGen, crie o avatar: pela foto (mais rápido, gera looks como "de terno no escritório") ou gravando cerca de 2 minutos de vídeo.</li>
             <li>Leia o texto de consentimento que a HeyGen mostra (exigência dela) e clone a voz.</li>
             <li>Espere a HeyGen treinar o avatar e a voz.</li>
-            <li>Aqui, clique em <b>Novo avatar</b>, escolha o avatar e a voz e registre o consentimento.</li>
+            <li>Aqui, clique em <b>Novo avatar</b>, escolha o look e a sua voz clonada e registre o consentimento.</li>
+            <li>O vídeo gasta <b>crédito de API</b> da HeyGen, que é separado do crédito do plano do site.</li>
           </ol>
           <a href="https://app.heygen.com/avatars" target="_blank" rel="noreferrer" className={cn(botao({ tamanho: "sm", variante: "secundario" }), "mt-4")}>
             Abrir a HeyGen
@@ -139,6 +143,14 @@ function NovoAvatar({ contaId, aoFechar }: { contaId: string; aoFechar: () => vo
   const [aceite, setAceite] = useState(false);
   const escolhido = catalogo.data?.avatares.find((a) => a.id === avatarId);
   const texto = CONSENTIMENTO(nome.trim());
+  const grupos = (catalogo.data?.avatares ?? []).reduce<Record<string, Look[]>>((acc, l) => ((acc[l.grupo] ??= []).push(l), acc), {});
+
+  function escolher(l: Look) {
+    setAvatarId(l.id);
+    if (!nome) setNome(l.grupo !== "Sem grupo" ? l.grupo : l.nome);
+    const clonada = catalogo.data?.vozes.find((v) => v.clonada);
+    if (!vozId) setVozId(l.voz_padrao && catalogo.data?.vozes.some((v) => v.id === l.voz_padrao) ? l.voz_padrao : clonada?.id ?? "");
+  }
 
   const salvar = useMutation({
     mutationFn: async () => {
@@ -161,24 +173,36 @@ function NovoAvatar({ contaId, aoFechar }: { contaId: string; aoFechar: () => vo
       {catalogo.error && <p role="alert" className="mt-3 text-foot text-red">{catalogo.error.message}</p>}
       {catalogo.data && (
         <form className="mt-4 grid gap-3 sm:grid-cols-[140px_1fr] sm:items-center" onSubmit={(e) => { e.preventDefault(); salvar.mutate(); }}>
-          <label htmlFor="av-avatar" className="text-foot text-label2">Avatar da HeyGen</label>
-          <select id="av-avatar" className="campo" required value={avatarId} onChange={(e) => {
-            setAvatarId(e.target.value);
-            if (!nome) setNome(catalogo.data!.avatares.find((a) => a.id === e.target.value)?.nome ?? "");
-          }}>
-            <option value="">Escolha…</option>
-            {catalogo.data.avatares.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
-          </select>
-          {escolhido?.preview && (
-            <>
-              <span />
-              <img src={escolhido.preview} alt="" className="size-24 rounded-hig-lg object-cover" />
-            </>
-          )}
+          <span className="text-foot text-label2 sm:self-start sm:pt-1">Avatar (look)</span>
+          <div className="grid gap-4">
+            {Object.entries(grupos).map(([grupo, looks]) => (
+              <div key={grupo}>
+                <b className="text-foot">{grupo}</b>
+                <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5 xl:grid-cols-7">
+                  {looks.map((l) => (
+                    <button key={l.id} type="button" disabled={!l.pronto} aria-pressed={l.id === avatarId} title={l.pronto ? l.nome : "Ainda em treino na HeyGen"}
+                      onClick={() => escolher(l)}
+                      className={cn("overflow-hidden rounded-hig-lg bg-fill3 text-left disabled:opacity-40", l.id === avatarId && "ring-3 ring-blue")}>
+                      {l.preview ? <img src={l.preview} alt="" className="aspect-[3/4] w-full object-cover" /> : <div className="grid aspect-[3/4] place-items-center"><UserRound className="size-8 text-label2" /></div>}
+                      <span className="block px-2 pt-1.5 text-cap1 font-semibold leading-tight">{l.nome}</span>
+                      <span className="block px-2 pb-2 text-cap2 text-label2">{l.tipo_rotulo}{l.pronto ? "" : " · em treino"}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <p className="text-cap1 text-label2">Cada look é uma roupa ou cenário do mesmo personagem. "Foto" anima a imagem (Avatar IV, com gestos); "Gravado em vídeo" usa a gravação de treino.</p>
+          </div>
           <label htmlFor="av-voz" className="text-foot text-label2">Voz</label>
           <select id="av-voz" className="campo" required value={vozId} onChange={(e) => setVozId(e.target.value)}>
             <option value="">Escolha…</option>
-            {catalogo.data.vozes.map((v) => <option key={v.id} value={v.id}>{v.nome}{v.idioma ? ` · ${v.idioma}` : ""}{v.genero ? ` · ${v.genero}` : ""}</option>)}
+            {[true, false].map((clonada) => (
+              <optgroup key={String(clonada)} label={clonada ? "Suas vozes (clonadas)" : "Vozes da HeyGen em português"}>
+                {catalogo.data!.vozes.filter((v) => v.clonada === clonada).map((v) => (
+                  <option key={v.id} value={v.id}>{v.nome}{v.idioma ? ` · ${v.idioma}` : ""}{v.genero ? ` · ${v.genero}` : ""}</option>
+                ))}
+              </optgroup>
+            ))}
           </select>
           <label htmlFor="av-nome" className="text-foot text-label2">Nome da pessoa</label>
           <input id="av-nome" className="campo" required maxLength={80} value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -193,7 +217,7 @@ function NovoAvatar({ contaId, aoFechar }: { contaId: string; aoFechar: () => vo
               {salvar.isPending && <LoaderCircle className="animate-spin" />} Cadastrar avatar
             </Button>
           </div>
-          {!catalogo.data.avatares.length && <p className="text-foot text-orange sm:col-start-2">Sua conta HeyGen ainda não tem avatares. Crie o seu lá primeiro.</p>}
+          {!catalogo.data.avatares.length && <p className="text-foot text-orange sm:col-start-2">Sua conta HeyGen ainda não tem avatares próprios. Crie o seu lá primeiro.</p>}
         </form>
       )}
     </Card>
