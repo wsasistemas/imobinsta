@@ -25,6 +25,7 @@ export function origemPermitida(origem: string | null): origem is string {
   const extras = (Deno.env.get("APP_ORIGENS") ?? "").split(",").map((o) => o.trim()).filter(Boolean);
   return (
     extras.includes(origem) ||
+    origem === "https://imobestudio.imobsystems.com.br" || // produção
     /^https:\/\/imobinsta(-[a-z0-9-]+)?\.vercel\.app$/.test(origem) ||
     /^http:\/\/localhost:\d+$/.test(origem)
   );
