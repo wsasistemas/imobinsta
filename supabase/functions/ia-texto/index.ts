@@ -109,7 +109,13 @@ async function gemini(chave: string, instrucao: string, pedido: string) {
   }
   const corpo = await resp.json().catch(() => ({}));
   if (resp.status === 503) throw new ErroUsuario("O Gemini está sobrecarregado agora (pico de uso no Google). Tente de novo em alguns minutos.", 503);
-  if (resp.status === 429) throw new ErroUsuario("Cota gratuita do Gemini esgotada por agora. Tente de novo em 1 minuto.", 429);
+  if (resp.status === 429) {
+    // A mensagem do Google diz qual cota estourou: "free_tier" = a chave é de um projeto sem faturamento (não usa o crédito).
+    const msg = String(corpo?.error?.message ?? "");
+    throw new ErroUsuario(/free_tier/i.test(msg)
+      ? `Cota GRATUITA do Gemini esgotada: a chave é de um projeto sem faturamento, então o crédito pago não está sendo usado. ${msg.slice(0, 200)}`
+      : `Limite do Gemini atingido (nível pago). Tente de novo em 1 minuto. ${msg.slice(0, 200)}`, 429);
+  }
   if (resp.status === 400 && /API key/i.test(corpo?.error?.message ?? "")) throw new ErroUsuario("Chave do Gemini inválida. Troque em Conexões e custos.", 409);
   // Recusa do Gemini (crédito, região, modelo sobrecarregado...): a mensagem dele ajuda mais que um "falha inesperada".
   if (!resp.ok) throw new ErroUsuario(`O Gemini recusou (${resp.status}): ${corpo?.error?.message ?? "sem detalhe"}`, 502);
