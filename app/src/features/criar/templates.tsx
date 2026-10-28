@@ -180,6 +180,20 @@ function useImagemMidia(caminho: string | undefined) {
   }).data;
 }
 
+/** Link assinado de 1 h (vídeo do Banco: grande demais para data URL; o vídeo não vai para o PNG). */
+function useUrlAssinada(caminho: string | undefined) {
+  return useQuery({
+    queryKey: ["midia-url", caminho],
+    enabled: !!caminho,
+    staleTime: 50 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.storage.from("imobinsta-midias").createSignedUrl(caminho!, 3600);
+      if (error) throw error;
+      return data.signedUrl;
+    },
+  }).data;
+}
+
 type PropsSlide = Edicao & {
   template: TemplateId;
   dados: DadosSlide;
@@ -189,7 +203,71 @@ type PropsSlide = Edicao & {
 };
 
 /** O slide em tamanho real (1080×1350). */
-export const Slide = forwardRef<HTMLDivElement, PropsSlide>(function Slide({ template, dados, n, total, logo: comLogo, editavel, onCampo }, ref) {
+export const Slide = forwardRef<HTMLDivElement, PropsSlide>(function Slide(props, ref) {
+  return props.dados.layout === "foto" || props.dados.layout === "video" ? <SlideMidia ref={ref} {...props} /> : <SlideTemplate ref={ref} {...props} />;
+});
+
+/**
+ * Fase 12: foto ou vídeo do Banco em tela cheia, com texto opcional por cima. A foto entra no PNG (data URL);
+ * o vídeo vai para o Instagram como está (item VIDEO do carrossel), sem texto desenhado nele.
+ */
+const SlideMidia = forwardRef<HTMLDivElement, PropsSlide>(function SlideMidia({ template, dados, n, total, logo: comLogo, editavel, onCampo }, ref) {
+  const dna = useDna();
+  const cm = coresDaMarca(dna.data);
+  const t = template === "marca" ? estiloMarca(cm.principal, cm.destaque) : TEMPLATES[template] ?? TEMPLATES["wsa-neon"];
+  const destaque = dados.cor_destaque ?? t.destaque;
+  const video = dados.layout === "video";
+  const foto = useImagemMidia(video ? undefined : dados.midia);
+  const urlVideo = useUrlAssinada(video ? dados.midia : undefined);
+  const comTexto = !dados.sem_texto && !video;
+  const posicao = dados.posicao ?? "base";
+  const enquadre = `${dados.foco_x ?? 50}% ${dados.foco_y ?? 50}%`;
+  const ed = { editavel, onCampo };
+  const veu = posicao === "topo"
+    ? "linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0) 65%)"
+    : posicao === "centro"
+      ? "rgba(0,0,0,0.42)"
+      : "linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 38%, rgba(0,0,0,0) 62%)";
+
+  return (
+    <div ref={ref} style={{ width: LARGURA, height: ALTURA, position: "relative", overflow: "hidden", background: "#1c1c1e", color: "#FFFFFF", fontFamily: SANS }}>
+      {video ? (
+        urlVideo && <video src={`${urlVideo}#t=0.1`} muted loop playsInline autoPlay={editavel} preload="metadata"
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: enquadre }} />
+      ) : foto ? (
+        <img src={foto} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: enquadre }} />
+      ) : (
+        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 40, color: "rgba(255,255,255,0.5)" }}>
+          {dados.midia ? "Carregando…" : "Escolha uma foto ou um vídeo"}
+        </div>
+      )}
+      {comTexto && dados.escurecer !== false && <div style={{ position: "absolute", inset: 0, background: veu }} />}
+
+      <div style={{ position: "absolute", top: 56, left: 64, right: 64, display: "flex", alignItems: "center", gap: 18 }}>
+        {comLogo && <img src={logo} alt="" style={{ width: 72, height: 72, objectFit: "contain", borderRadius: 16, background: "rgba(255,255,255,0.92)", padding: 6 }} />}
+        {total > 1 && (
+          <div style={{ marginLeft: "auto", fontSize: 26, fontWeight: 700, padding: "8px 18px", borderRadius: 999, background: "rgba(0,0,0,0.45)" }}>{n}/{total}</div>
+        )}
+      </div>
+
+      {comTexto && (
+        <div style={{
+          position: "absolute", left: 80, right: 80, display: "flex", flexDirection: "column", gap: 22,
+          ...(posicao === "topo" ? { top: 170 } : posicao === "centro" ? { top: "50%", transform: "translateY(-50%)", textAlign: "center" } : { bottom: 96 }),
+        }}>
+          <Texto campo="titulo" valor={dados.titulo} cor={destaque} como="h2" {...ed}
+            style={{ margin: 0, fontSize: dados.titulo.length > 60 ? 64 : 80, lineHeight: 1.05, fontWeight: 800, letterSpacing: "-0.02em", textShadow: "0 4px 24px rgba(0,0,0,0.45)" }} />
+          {dados.texto && <Texto campo="texto" valor={dados.texto} cor={destaque} como="p" {...ed}
+            style={{ margin: 0, fontSize: 38, lineHeight: 1.3, color: "rgba(255,255,255,0.88)", textShadow: "0 2px 14px rgba(0,0,0,0.5)" }} />}
+          {dados.cta && <Texto campo="cta" valor={dados.cta} cor={destaque} {...ed}
+            style={{ alignSelf: posicao === "centro" ? "center" : "flex-start", marginTop: 8, padding: "18px 34px", borderRadius: 999, background: destaque, color: "#0B0B14", fontSize: 32, fontWeight: 800 }} />}
+        </div>
+      )}
+    </div>
+  );
+});
+
+const SlideTemplate = forwardRef<HTMLDivElement, PropsSlide>(function SlideTemplate({ template, dados, n, total, logo: comLogo, editavel, onCampo }, ref) {
   const dna = useDna();
   const cm = coresDaMarca(dna.data);
   const t = template === "marca" ? estiloMarca(cm.principal, cm.destaque) : TEMPLATES[template] ?? TEMPLATES["wsa-neon"];

@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Clapperboard, Facebook, Images, Instagram, Linkedin, type LucideIcon, Sparkles, UserRoundCheck, WandSparkles, Youtube } from "lucide-react";
+import { Clapperboard, Facebook, ImagePlus, Images, Instagram, Linkedin, type LucideIcon, Sparkles, UserRoundCheck, WandSparkles, Youtube } from "lucide-react";
 import { Badge } from "@/components/ui/hig";
 import { Tile, type CorTile } from "@/components/ui/tile";
 import { cn } from "@/lib/utils";
@@ -11,8 +11,9 @@ type Tipo = {
 
 const TIPOS: Tipo[] = [
   { titulo: "Vídeo narrado com avatar", texto: "Seu avatar fala o roteiro com a sua voz, com legenda, cenas e CTA. Ideal para Reels de venda.", icone: UserRoundCheck, cor: "purple", redes: [Instagram, Youtube, Linkedin], custo: "Pago por uso · provedor de IA", gratis: false, para: "/criar/avatar" },
-  { titulo: "Posts de imagem", texto: "Post único, carrossel e stories a partir de templates da WSA. Texto e fundo editáveis.", icone: Images, cor: "pink", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · template + IA de texto", gratis: true, para: "/criar/imagem" },
-  { titulo: "Reels / vídeo", texto: "Monte Reels com suas fotos e vídeos: cortes, legenda automática, trilha livre e logo.", icone: Clapperboard, cor: "blue", redes: [Instagram, Youtube], custo: "Grátis · render no seu PC", gratis: true, fase: 8 },
+  { titulo: "Post com suas fotos", texto: "Fotos e vídeos do Banco de mídias em tela cheia, com texto opcional. Mistura com slides de template no mesmo carrossel.", icone: ImagePlus, cor: "orange", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · suas fotos", gratis: true, para: "/criar/fotos" },
+  { titulo: "Posts de template", texto: "Post e carrossel a partir dos templates da WSA, com a IA escrevendo os textos. Dá para pôr foto de fundo.", icone: Images, cor: "pink", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · template + IA de texto", gratis: true, para: "/criar/imagem" },
+  { titulo: "Reels / vídeo", texto: "Monte Reels com suas fotos e vídeos: cortes, legenda automática, trilha livre e logo.", icone: Clapperboard, cor: "blue", redes: [Instagram, Youtube], custo: "Grátis · no navegador", gratis: true, fase: 12 },
   { titulo: "Imagem gerada por IA", texto: "A IA (OpenAI GPT Image ou outro modelo) cria a arte inteira do zero, com fotos realistas e a sua marca.", icone: Sparkles, cor: "indigo", redes: [Instagram], custo: "Pago por uso · provedor de IA", gratis: false, para: "/criar/ia-imagem" },
 ];
 
@@ -44,7 +45,7 @@ export function Criar() {
         <h1 className="text-[40px]">O que você quer criar?</h1>
         <p className="mt-2 text-body leading-normal text-label2">Escolha o tipo de conteúdo. Tudo sai pronto para publicar no Instagram.</p>
       </div>
-      <div className="mx-auto grid max-w-[1400px] gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mx-auto grid max-w-[1400px] gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {TIPOS.map((t) =>
           t.para ? (
             <Link key={t.titulo} to={t.para} className={cn(base, "hover:-translate-y-[3px] hover:ring-2 ring-blue active:scale-[0.98]")}>

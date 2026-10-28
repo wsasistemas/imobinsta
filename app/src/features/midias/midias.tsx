@@ -1,5 +1,5 @@
 import { useRef, useState, type DragEvent } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CloudUpload, Images, Music, Trash2, Upload } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -9,23 +9,9 @@ import { contarPastas } from "@/lib/pastas";
 import { useAcesso } from "@/features/auth/acesso";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import {
-  BUCKET, enviarComProgresso, LIMITE_BYTES, lerDimensoes, nomeSeguro, tamanhoLegivel, tipoPorMime, type TipoMidia,
-} from "./envio";
+import { type Midia, useMidias } from "./dados";
+import { BUCKET, enviarParaBanco, tamanhoLegivel, type TipoMidia } from "./envio";
 
-type Midia = {
-  id: string;
-  pasta: string;
-  tipo: TipoMidia;
-  nome: string;
-  storage_path: string;
-  mime: string | null;
-  tamanho_bytes: number | null;
-  largura: number | null;
-  altura: number | null;
-  duracao_s: number | null;
-  criado_em: string;
-};
 type Aba = "tudo" | TipoMidia;
 type Envio = { id: string; nome: string; pct: number; erro?: string };
 
@@ -38,31 +24,6 @@ const ABAS: { valor: Aba; rotulo: string }[] = [
   { valor: "print", rotulo: "Prints dos sistemas" },
 ];
 const COTA_GRATIS = 1024 * 1024 * 1024; // 1 GB do Storage no plano gratuito
-
-function useMidias() {
-  const { demo, conta } = useAcesso();
-  return useQuery({
-    queryKey: ["midias", conta?.conta_id],
-    enabled: !demo && !!conta,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("midias")
-        .select("id, pasta, tipo, nome, storage_path, mime, tamanho_bytes, largura, altura, duracao_s, criado_em")
-        .eq("conta_id", conta!.conta_id)
-        .order("criado_em", { ascending: false });
-      if (error) throw error;
-      const lista = (data ?? []) as Midia[];
-      // Links assinados de 1 h para as miniaturas (o bucket é privado).
-      const urls = new Map<string, string>();
-      if (lista.length) {
-        const { data: assinadas } = await supabase.storage.from(BUCKET).createSignedUrls(lista.map((m) => m.storage_path), 3600);
-        for (const a of assinadas ?? []) if (a.path && a.signedUrl) urls.set(a.path, a.signedUrl);
-      }
-      return lista.map((m) => ({ ...m, url: urls.get(m.storage_path) ?? null }));
-    },
-    staleTime: 30 * 60 * 1000,
-  });
-}
 
 function Miniatura({ m, onApagar, apagando }: { m: Midia & { url: string | null }; onApagar: () => void; apagando: boolean }) {
   const info = [m.largura && m.altura ? `${m.largura}×${m.altura}` : null, m.duracao_s ? `${Math.round(m.duracao_s)} s` : null, tamanhoLegivel(m.tamanho_bytes)]
@@ -126,27 +87,8 @@ export function BancoDeMidias() {
     for (const arquivo of arquivos) {
       const id = crypto.randomUUID();
       setEnvios((l) => [...l, { id, nome: arquivo.name, pct: 0 }]);
-      const tipo = tipoPorMime(arquivo.type, enviarComo);
-      if (!tipo) {
-        atualiza(id, { erro: "Formato não aceito. Use imagem, vídeo ou áudio." });
-        continue;
-      }
-      if (arquivo.size > LIMITE_BYTES) {
-        atualiza(id, { erro: "Arquivo acima de 100 MB." });
-        continue;
-      }
       try {
-        const dim = await lerDimensoes(arquivo);
-        const caminho = `${conta.conta_id}/${id}-${nomeSeguro(arquivo.name)}`;
-        await enviarComProgresso(caminho, arquivo, (pct) => atualiza(id, { pct }));
-        const { error: eReg } = await supabase.from("midias").insert({
-          conta_id: conta.conta_id, pasta: destino, tipo, nome: arquivo.name, storage_path: caminho,
-          mime: arquivo.type, tamanho_bytes: arquivo.size, ...dim, origem: "upload",
-        });
-        if (eReg) {
-          await supabase.storage.from(BUCKET).remove([caminho]); // não deixa arquivo órfão
-          throw eReg;
-        }
+        await enviarParaBanco({ contaId: conta.conta_id, arquivo, pasta: destino, enviarComo, onProgresso: (pct) => atualiza(id, { pct }) });
         setEnvios((l) => l.filter((e) => e.id !== id));
       } catch (e) {
         atualiza(id, { erro: e instanceof Error ? e.message : String((e as { message?: string }).message ?? e) });

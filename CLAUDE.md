@@ -19,6 +19,8 @@ Fases 10 (DNA da marca, campanhas) e 11 (Google Vids pelo Drive + Veo 3.1) aprov
 código (migration 20261027080000 pendente). Fase 11: app OAuth do Google criado (secrets GOOGLE_*); etapa 11.1
 (conexão Drive) publicada; 11.2 (pasta do Vids no Drive) e 11.3 (botão que importa o MP4 de `prontos/`) no código:
 faltam a migration 20261027100000 e publicar a `google-drive`. Depois: pg_cron da importação e Veo 3.1 (pago).
+Fase 12 (mídia real) aprovada em 28/10: 12.1 (fotos/vídeos do Banco no post e carrossel) no código; falta publicar a
+`ig-publicar`. Próximo: 12.2 (Reels montado no navegador). A Fase 8 (Remotion) foi substituída pela 12.2.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

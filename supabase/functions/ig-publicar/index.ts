@@ -1,6 +1,6 @@
 // ig-publicar — publica post único e carrossel no Instagram pela API oficial (containers → media_publish).
 //
-// Formatos: post único, carrossel (JPEG) e Reels (MP4 do banco de mídias; o container de vídeo pode
+// Formatos: post único (JPEG), carrossel (JPEG e, desde a Fase 12, vídeos MP4/MOV do Banco) e Reels (MP4 do banco de mídias; o container de vídeo pode
 // levar minutos: se não ficar pronto em ~1 min, o post fica "publicando" e a fila do pg_cron termina).
 // POST com JWT de um membro da conta:
 //   { acao: "publicar", conta_id, post_id }            → publica agora
@@ -34,8 +34,11 @@ type Post = {
 type Slide = { ordem: number; midia_id: string | null; midias: { storage_path: string; mime: string | null } | null };
 const CAMPOS_POST = "id, conta_id, formato, legenda, status, video_midia_id, ig_container_id";
 
-/** Confere se o post pode sair: formato, imagens JPEG (ou o MP4 do Reels) e legenda. */
-async function validar(db: Db, post: Post): Promise<{ imagens: string[] } | { video: string }> {
+type Item = { caminho: string; mime: string };
+const VIDEOS_CARROSSEL = ["video/mp4", "video/quicktime"];
+
+/** Confere se o post pode sair: formato, imagens JPEG (vídeos MP4/MOV só no carrossel, Fase 12), o MP4 do Reels e a legenda. */
+async function validar(db: Db, post: Post): Promise<{ itens: Item[] } | { video: string }> {
   if (!["post", "carrossel", "reels"].includes(post.formato)) throw new ErroUsuario("Por enquanto só post único, carrossel e Reels podem ser publicados.");
   if ((post.legenda ?? "").length > 2200) throw new ErroUsuario("A legenda passou de 2.200 caracteres.");
   if (post.formato === "reels") {
@@ -53,9 +56,10 @@ async function validar(db: Db, post: Post): Promise<{ imagens: string[] } | { vi
   const slides = (data ?? []) as unknown as Slide[];
   if (post.formato === "post" && slides.length !== 1) throw new ErroUsuario("Post único precisa de exatamente 1 imagem.");
   if (post.formato === "carrossel" && (slides.length < 2 || slides.length > 10)) throw new ErroUsuario("Carrossel precisa de 2 a 10 imagens.");
-  const faltando = slides.filter((s) => !s.midias || s.midias.mime !== "image/jpeg");
+  const aceito = (mime: string | null | undefined) => mime === "image/jpeg" || (post.formato === "carrossel" && VIDEOS_CARROSSEL.includes(mime ?? ""));
+  const faltando = slides.filter((s) => !s.midias || !aceito(s.midias.mime));
   if (faltando.length) throw new ErroUsuario(`Imagens não preparadas (slides ${faltando.map((s) => s.ordem).join(", ")}). Clique em Publicar de novo.`, 409);
-  return { imagens: slides.map((s) => s.midias!.storage_path) };
+  return { itens: slides.map((s) => ({ caminho: s.midias!.storage_path, mime: s.midias!.mime! })) };
 }
 
 async function tokenInstagram(db: Db, contaId: string) {
@@ -78,16 +82,17 @@ async function esperarContainer(id: string, token: string) {
   throw new ErroUsuario("A Meta demorou demais para processar as imagens. Tente de novo.", 504);
 }
 
-/** Copia os JPEG para o bucket público e devolve as URLs. */
-async function urlsPublicas(db: Db, post: Post, caminhos: string[]) {
+/** Copia os JPEG (e os vídeos do carrossel) para o bucket público e devolve as URLs. */
+async function urlsPublicas(db: Db, post: Post, itens: Item[]) {
   const destino: string[] = [];
   const urls: string[] = [];
   const lote = crypto.randomUUID().slice(0, 8);
-  for (const [i, caminho] of caminhos.entries()) {
+  for (const [i, { caminho, mime }] of itens.entries()) {
     const { data: arquivo, error } = await db.storage.from(PRIVADO).download(caminho);
     if (error || !arquivo) throw new Error(`Não foi possível ler a imagem ${i + 1}: ${error?.message}`);
-    const alvo = `${post.conta_id}/${post.id}/${lote}-${i + 1}.jpg`;
-    const { error: eUp } = await db.storage.from(PUBLICO).upload(alvo, arquivo, { contentType: "image/jpeg", upsert: true });
+    const ext = mime === "image/jpeg" ? "jpg" : mime === "video/quicktime" ? "mov" : "mp4";
+    const alvo = `${post.conta_id}/${post.id}/${lote}-${i + 1}.${ext}`;
+    const { error: eUp } = await db.storage.from(PUBLICO).upload(alvo, arquivo, { contentType: mime, upsert: true });
     if (eUp) throw new Error(`Não foi possível preparar a imagem ${i + 1}: ${eUp.message}`);
     destino.push(alvo);
     urls.push(db.storage.from(PUBLICO).getPublicUrl(alvo).data.publicUrl);
@@ -176,7 +181,7 @@ async function publicarReservado(db: Db, post: Post) {
     const ig = await tokenInstagram(db, post.conta_id);
     conexaoId = ig.conexaoId;
     if ("video" in alvo) return await publicarReels(db, post, ig, alvo.video);
-    const { destino, urls } = await urlsPublicas(db, post, alvo.imagens);
+    const { destino, urls } = await urlsPublicas(db, post, alvo.itens);
     copias = destino;
     const legenda = post.legenda ?? "";
 
@@ -184,13 +189,20 @@ async function publicarReservado(db: Db, post: Post) {
     if (urls.length === 1) {
       criacao = (await graphPost<{ id: string }>(`${ig.igId}/media`, { image_url: urls[0], caption: legenda, access_token: ig.token })).id;
     } else {
-      const filhos: string[] = [];
-      for (const url of urls) {
-        filhos.push((await graphPost<{ id: string }>(`${ig.igId}/media`, { image_url: url, is_carousel_item: "true", access_token: ig.token })).id);
+      const filhos: { id: string; video: boolean }[] = [];
+      for (const [i, url] of urls.entries()) {
+        const video = alvo.itens[i].mime !== "image/jpeg";
+        const midia: Record<string, string> = video ? { media_type: "VIDEO", video_url: url } : { image_url: url };
+        filhos.push({ id: (await graphPost<{ id: string }>(`${ig.igId}/media`, { ...midia, is_carousel_item: "true", access_token: ig.token })).id, video });
       }
-      for (const f of filhos) await esperarContainer(f, ig.token);
+      for (const f of filhos) {
+        if (!f.video) await esperarContainer(f.id, ig.token);
+        else if (!(await videoPronto(f.id, ig.token, 30))) {
+          throw new ErroUsuario("A Meta ainda está processando o vídeo do carrossel. Tente publicar de novo em alguns minutos.", 504);
+        }
+      }
       criacao = (await graphPost<{ id: string }>(`${ig.igId}/media`, {
-        media_type: "CAROUSEL", children: filhos.join(","), caption: legenda, access_token: ig.token,
+        media_type: "CAROUSEL", children: filhos.map((f) => f.id).join(","), caption: legenda, access_token: ig.token,
       })).id;
     }
     await esperarContainer(criacao, ig.token);

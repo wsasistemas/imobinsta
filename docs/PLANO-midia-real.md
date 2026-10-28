@@ -1,6 +1,6 @@
 # Fase 12 — Mídia real: fotos e vídeos em post, carrossel, Reels e Stories
 
-Proposta de 28/10/2026, **aguardando aprovação do mockup** (`docs/mockups/midia-real.html`).
+Aprovada pelo Wagner em 28/10/2026 (mockup `docs/mockups/midia-real.html`). Checklist em `PLANO-fases.md`.
 
 ## Por quê
 Hoje o post e o carrossel só saem dos templates da WSA, com texto e cores (Fase 4). O Banco de mídias (Fase 3)

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowDown, ArrowUp, Check, Download, Infinity as Infinito, LoaderCircle, Minus, Plus, Send, Trash2, Undo2, WandSparkles,
+  ArrowDown, ArrowUp, Check, Download, ImageMinus, ImagePlus, Infinity as Infinito, LoaderCircle, Minus, Plus, Send, Trash2, Undo2, WandSparkles,
 } from "lucide-react";
 import { Button, botao } from "@/components/ui/button";
 import { Badge, Card, Segmentado, Toggle } from "@/components/ui/hig";
@@ -12,9 +12,10 @@ import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Etapas, Nota, useLargura } from "./comum";
 import { ID_DEMO, type Rascunho, type SlideSalvo, useRascunho } from "./dados";
-import { DadosSlide, Edicao, hashtagsDa, MAX_HASHTAGS, MAX_LEGENDA, MAX_SLIDES, slideVazio, type TemplateId } from "./esquema";
+import { DadosSlide, Edicao, hashtagsDa, MAX_HASHTAGS, MAX_LEGENDA, MAX_SLIDES, slideDeMidia, slideVazio, type TemplateId } from "./esquema";
 import { iaTexto } from "./ia";
 import { baixar, imagemDoSlide, prepararImagens } from "./render";
+import { type MidiaEscolhida, SeletorMidia } from "./seletor-midia";
 import { ORDEM_TEMPLATES, Slide, SlideEscala, TEMPLATES } from "./templates";
 
 type SlideEd = Omit<SlideSalvo, "id"> & { id: string; novo?: boolean };
@@ -28,6 +29,12 @@ const LAYOUTS: { valor: DadosSlide["layout"]; rotulo: string }[] = [
 const POSICOES: { valor: NonNullable<DadosSlide["posicao"]>; rotulo: string }[] = [
   { valor: "topo", rotulo: "Topo" }, { valor: "centro", rotulo: "Centro" }, { valor: "base", rotulo: "Base" },
 ];
+type TextoNaFoto = "sem" | NonNullable<DadosSlide["posicao"]>;
+const TEXTO_NA_FOTO: { valor: TextoNaFoto; rotulo: string }[] = [
+  { valor: "sem", rotulo: "Sem texto" }, { valor: "base", rotulo: "Embaixo" }, { valor: "centro", rotulo: "Centro" }, { valor: "topo", rotulo: "Topo" },
+];
+/** Para que o seletor de mídia foi aberto: novo slide, trocar a mídia do slide ou foto de fundo do template. */
+type ModoSeletor = "novo" | "trocar" | "fundo";
 
 const agora = () => new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 const assinatura = (s: SlideEd, ordem: number) => JSON.stringify([ordem, s.template_id, s.dados]);
@@ -68,6 +75,7 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
   const [pensando, setPensando] = useState(false);
   const [exportando, setExportando] = useState<null | "baixar" | "finalizar">(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [seletor, setSeletor] = useState<ModoSeletor | null>(null);
   const [canvasRef, larguraCanvas] = useLargura<HTMLDivElement>();
   const refsPng = useRef<(HTMLDivElement | null)[]>([]);
   const salvos = useRef(new Map(inicial.map((s) => [s.id, assinatura(s as SlideEd, s.ordem)])));
@@ -210,6 +218,20 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
     setHistorico(historico.slice(0, -1));
     setAtual((a) => Math.min(a, anterior.length - 1));
   }
+  function escolherMidia([m]: MidiaEscolhida[]) {
+    const modo = seletor;
+    setSeletor(null);
+    if (!m || somenteLeitura) return;
+    if (modo === "novo") {
+      if (slides.length >= MAX_SLIDES) return;
+      mudar((l) => [...l, { id: `novo-${crypto.randomUUID()}`, novo: true, ordem: l.length + 1, template_id: slide.template_id, dados: slideDeMidia(m), midia_id: null }]);
+      setAtual(slides.length);
+    } else if (modo === "trocar") {
+      mudarDados({ midia: m.storage_path, layout: m.tipo === "video" ? "video" : "foto", foco_x: undefined, foco_y: undefined });
+    } else if (modo === "fundo") {
+      mudarDados({ fundo_midia: m.storage_path });
+    }
+  }
   function trocarTemplate(t: TemplateId) {
     mudar((l) => l.map((s) => ({ ...s, template_id: t })));
   }
@@ -221,12 +243,20 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); // espera o render oculto montar
     try {
       if (modo === "baixar") {
+        if (slide.dados.layout === "video") throw new Error("Slide de vídeo não vira PNG: ele vai para o Instagram como vídeo.");
         const no = refsPng.current[atual];
         if (!no) throw new Error("Slide não encontrado.");
         baixar(await imagemDoSlide(no, "png"), `wsa-slide-${atual + 1}.png`);
       } else {
         if (ehDemo) throw new Error("Modo demonstração: o PNG não é salvo no banco de mídias.");
         if (salvamento !== "salvo" || slides.some((s) => s.novo)) throw new Error("Aguarde o salvamento terminar e clique de novo.");
+        if (slides.length === 1 && slides[0].dados.layout === "video") throw new Error("Um vídeo sozinho sai como Reels, não como post. Junte mais itens para um carrossel.");
+        // O formato acompanha o número de slides (o editor deixa adicionar e tirar à vontade).
+        const formato = slides.length > 1 ? "carrossel" : "post";
+        if (post.formato !== formato) {
+          const { error } = await supabase.from("posts").update({ formato }).eq("id", post.id);
+          if (error) throw new Error(error.message);
+        }
         const ids = await prepararImagens({
           contaId: conta!.conta_id, postId: post.id, pasta: post.produto ?? "Posts", slides, nos: refsPng.current,
         });
@@ -242,6 +272,8 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
   }
 
   const larguraSlide = Math.max(240, Math.min(460, larguraCanvas - 48));
+  const ehMidia = slide.dados.layout === "foto" || slide.dados.layout === "video";
+  const temTexto = !ehMidia || (slide.dados.layout === "foto" && !slide.dados.sem_texto);
   const tags = hashtagsDa(legenda);
 
   return (
@@ -298,16 +330,32 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
               <Plus className="size-5" />
             </button>
           )}
+          {slides.length < MAX_SLIDES && !somenteLeitura && (
+            <button type="button" onClick={() => setSeletor("novo")} aria-label="Adicionar foto ou vídeo do Banco de mídias" title="Foto ou vídeo do Banco"
+              className="grid aspect-[4/5] w-20 flex-none place-items-center rounded-hig-sm border-[1.5px] border-dashed border-blue/60 text-blue hover:bg-tint">
+              <ImagePlus className="size-5" />
+            </button>
+          )}
         </div>
 
         {/* Canvas */}
         <div ref={canvasRef} className="flex flex-col items-center gap-4 bg-bg p-4 md:p-6">
-          {!somenteLeitura && (
+          {!somenteLeitura && (ehMidia ? (
+            <div className="flex w-full flex-wrap items-center justify-center gap-2">
+              {slide.dados.layout === "foto" ? (
+                <Segmentado rotulo="Texto na foto" opcoes={TEXTO_NA_FOTO} valor={slide.dados.sem_texto ? "sem" : slide.dados.posicao ?? "base"}
+                  onChange={(v) => mudarDados(v === "sem" ? { sem_texto: true } : { sem_texto: false, posicao: v })} />
+              ) : (
+                <span className="text-foot text-label2">O vídeo entra no carrossel como está, sem texto por cima.</span>
+              )}
+              <Button tamanho="sm" variante="secundario" onClick={() => setSeletor("trocar")}><ImagePlus /> Trocar {slide.dados.layout === "video" ? "vídeo" : "foto"}</Button>
+            </div>
+          ) : (
             <div className="flex w-full flex-wrap items-center justify-center gap-2">
               <Segmentado rotulo="Layout do slide" opcoes={LAYOUTS} valor={slide.dados.layout} onChange={(layout) => mudarDados({ layout })} />
               <Segmentado rotulo="Posição do conteúdo" opcoes={POSICOES} valor={slide.dados.posicao ?? "centro"} onChange={(posicao) => mudarDados({ posicao })} />
             </div>
-          )}
+          ))}
           <SlideEscala
             largura={larguraSlide}
             template={slide.template_id}
@@ -327,8 +375,31 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
                   <Button tamanho="sm" variante="secundario" disabled={!slide.dados.itens?.length} onClick={() => mudarDados({ itens: slide.dados.itens?.slice(0, -1) })}><Minus /> Item</Button>
                 </>
               )}
-              {!slide.dados.texto && <Button tamanho="sm" variante="secundario" onClick={() => mudarDados({ texto: "Texto de apoio" })}><Plus /> Texto</Button>}
-              {!slide.dados.cta && <Button tamanho="sm" variante="secundario" onClick={() => mudarDados({ cta: "Comente QUERO" })}><Plus /> CTA</Button>}
+              {ehMidia && (
+                <>
+                  <label className="flex items-center gap-2 rounded-full bg-fill2 px-3 py-1">
+                    Horizontal
+                    <input type="range" min={0} max={100} aria-label="Enquadrar na horizontal" className="w-24 accent-[var(--blue)]"
+                      value={slide.dados.foco_x ?? 50} onChange={(e) => mudarDados({ foco_x: Number(e.target.value) })} />
+                  </label>
+                  <label className="flex items-center gap-2 rounded-full bg-fill2 px-3 py-1">
+                    Vertical
+                    <input type="range" min={0} max={100} aria-label="Enquadrar na vertical" className="w-24 accent-[var(--blue)]"
+                      value={slide.dados.foco_y ?? 50} onChange={(e) => mudarDados({ foco_y: Number(e.target.value) })} />
+                  </label>
+                  {temTexto && (
+                    <span className="flex items-center gap-2 rounded-full bg-fill2 px-3 py-1">
+                      <Toggle ligado={slide.dados.escurecer !== false} rotulo="Escurecer para ler" onChange={(v) => mudarDados({ escurecer: v })} />
+                      Escurecer
+                    </span>
+                  )}
+                </>
+              )}
+              {!ehMidia && (slide.dados.fundo_midia
+                ? <Button tamanho="sm" variante="secundario" onClick={() => mudarDados({ fundo_midia: undefined })}><ImageMinus /> Tirar foto de fundo</Button>
+                : <Button tamanho="sm" variante="secundario" onClick={() => setSeletor("fundo")}><ImagePlus /> Foto de fundo</Button>)}
+              {temTexto && !slide.dados.texto && <Button tamanho="sm" variante="secundario" onClick={() => mudarDados({ texto: "Texto de apoio" })}><Plus /> Texto</Button>}
+              {temTexto && !slide.dados.cta && <Button tamanho="sm" variante="secundario" onClick={() => mudarDados({ cta: "Comente QUERO" })}><Plus /> CTA</Button>}
               <label className="flex items-center gap-2 rounded-full bg-fill2 px-3 py-1">
                 Destaque
                 <input type="color" aria-label="Cor de destaque" className="size-6 cursor-pointer rounded border-0 bg-transparent"
@@ -414,8 +485,16 @@ function EditorCarregado({ post, inicial }: { post: Rascunho; inicial: SlideSalv
       </div>
 
       <Nota className="mt-4">
-        Como fica grátis: o slide é um <b>template HTML</b> da WSA; a IA só troca textos, cores e posições (JSON). A imagem final sai por render do navegador. Nenhum crédito de geração de imagem é gasto.
+        Como fica grátis: o slide é um <b>template HTML</b> da WSA ou uma <b>foto/vídeo do seu Banco de mídias</b>; a IA só troca textos, cores e posições (JSON). A imagem final sai por render do navegador. Nenhum crédito de geração de imagem é gasto.
       </Nota>
+
+      <SeletorMidia
+        aberto={seletor !== null}
+        onFechar={() => setSeletor(null)}
+        onEscolher={escolherMidia}
+        tipos={seletor === "fundo" ? ["imagem"] : ["imagem", "video", "logo"]}
+        titulo={seletor === "fundo" ? "Foto de fundo do slide" : seletor === "trocar" ? "Trocar a mídia do slide" : "Adicionar foto ou vídeo"}
+      />
 
       {/* Slides em tamanho real, fora da tela, só durante a exportação */}
       {exportando && (

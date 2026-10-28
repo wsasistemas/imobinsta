@@ -190,7 +190,7 @@ e quebraria a publicação num banco sem essas colunas. Em 27/10 a produção fi
 
 ---
 
-## Fase 8: Reels de fotos (render local)
+## Fase 8: Reels de fotos (render local) · substituída pela Fase 12.2 (vídeo no navegador, decisão de 28/10/2026)
 
 - [ ] Projeto Remotion em `render/` com 2 templates (fotos + texto + legenda + trilha)
 - [ ] Comando `npm run render -- <post_id>` lê o roteiro no Supabase, renderiza o MP4 e envia ao Storage
@@ -245,3 +245,17 @@ Depois: Conexões → Google · grátis → Conectar Google. Em modo de teste o 
 
 **Para ligar a 11.2 (Wagner):** SQL Editor: `20261027100000_fase11_vids.sql` (antes de publicar o front: a tela do
 roteiro passa a ler `drive_url`). PowerShell: `npx supabase functions deploy google-drive --project-ref ikvjaowvpvxojvcfwnct`.
+
+---
+
+## Fase 12: Mídia real (fotos e vídeos em post, carrossel, Reels e Stories) · aprovada em 28/10/2026
+
+Detalhes em `docs/PLANO-midia-real.md` e mockup `docs/mockups/midia-real.html`.
+- [x] 12.1 Slides `foto` e `video` (mídia do Banco em tela cheia, texto opcional, enquadramento, escurecer), seletor do
+  Banco no editor (com envio do computador), "Foto de fundo" nos slides de template, entrada "Post com suas fotos"
+  (`/criar/fotos`) e vídeo MP4/MOV como item do carrossel na `ig-publicar`. Sem migration
+- [ ] 12.1 ligada: publicar a `ig-publicar` (Wagner) e testar um carrossel com foto e vídeo
+- [ ] 12.2 Motor de vídeo no navegador (Reels)
+- [ ] 12.3 Stories
+- [ ] 12.4 IA escolhe e escreve
+

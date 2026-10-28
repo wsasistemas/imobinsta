@@ -5,7 +5,7 @@ import { z } from "zod";
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 
 export const DadosSlide = z.object({
-  layout: z.enum(["capa", "lista", "grade", "cta"]),
+  layout: z.enum(["capa", "lista", "grade", "cta", "foto", "video"]),
   titulo: z.string().min(1).max(160),
   texto: z.string().max(300).optional(),
   itens: z.array(z.string().min(1).max(60)).max(8).optional(),
@@ -14,6 +14,12 @@ export const DadosSlide = z.object({
   cor_fundo: hex.optional(),
   posicao: z.enum(["topo", "centro", "base"]).optional(),
   fundo_midia: z.string().max(300).optional(), // caminho no bucket da imagem de fundo (Fase 7)
+  // Fase 12: layouts "foto" e "video" mostram uma mídia do Banco em tela cheia (a IA de texto não mexe nestes campos).
+  midia: z.string().max(300).optional(), // caminho no bucket da foto ou do vídeo
+  foco_x: z.number().int().min(0).max(100).optional(), // enquadramento (object-position, %)
+  foco_y: z.number().int().min(0).max(100).optional(),
+  sem_texto: z.boolean().optional(), // foto/vídeo sem texto por cima
+  escurecer: z.boolean().optional(), // véu escuro para o texto ficar legível
 });
 export type DadosSlide = z.infer<typeof DadosSlide>;
 
@@ -60,6 +66,11 @@ export const ABORDAGENS = [
 /** Slide novo, em branco, para o botão "+" do editor. */
 export function slideVazio(layout: DadosSlide["layout"] = "lista"): DadosSlide {
   return { layout, titulo: "Novo slide", texto: "Clique no texto para editar." };
+}
+
+/** Slide de foto/vídeo do Banco (Fase 12). Começa sem texto: a foto fala por si; o texto é opcional. */
+export function slideDeMidia(m: { storage_path: string; tipo: string }): DadosSlide {
+  return { layout: m.tipo === "video" ? "video" : "foto", titulo: "Escreva o título", midia: m.storage_path, sem_texto: true };
 }
 
 /** Hashtags da legenda (para o limite de 5). */

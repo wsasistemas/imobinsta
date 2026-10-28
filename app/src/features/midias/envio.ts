@@ -95,6 +95,30 @@ export async function enviarComProgresso(caminho: string, arquivo: File, onProgr
   });
 }
 
+/**
+ * Envia um arquivo para o Banco de mídias (Storage + registro em midias). Se o registro falhar, apaga o arquivo
+ * (não deixa órfão). Usado pelo Banco de mídias e pelo seletor do editor.
+ */
+export async function enviarParaBanco(p: {
+  contaId: string; arquivo: File; pasta: string; enviarComo?: "auto" | "logo" | "print"; onProgresso?: (pct: number) => void;
+}) {
+  const tipo = tipoPorMime(p.arquivo.type, p.enviarComo ?? "auto");
+  if (!tipo) throw new Error("Formato não aceito. Use imagem, vídeo ou áudio.");
+  if (p.arquivo.size > LIMITE_BYTES) throw new Error("Arquivo acima de 100 MB.");
+  const dim = await lerDimensoes(p.arquivo);
+  const caminho = `${p.contaId}/${crypto.randomUUID()}-${nomeSeguro(p.arquivo.name)}`;
+  await enviarComProgresso(caminho, p.arquivo, p.onProgresso ?? (() => {}));
+  const { data, error } = await supabase.from("midias").insert({
+    conta_id: p.contaId, pasta: p.pasta, tipo, nome: p.arquivo.name, storage_path: caminho,
+    mime: p.arquivo.type, tamanho_bytes: p.arquivo.size, ...dim, origem: "upload",
+  }).select("id, storage_path, tipo, mime").single();
+  if (error) {
+    await supabase.storage.from(BUCKET).remove([caminho]);
+    throw error;
+  }
+  return data as { id: string; storage_path: string; tipo: TipoMidia; mime: string | null };
+}
+
 export function tamanhoLegivel(bytes: number | null) {
   if (bytes == null) return "—";
   if (bytes === 0) return "0 KB";

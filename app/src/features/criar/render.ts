@@ -1,7 +1,7 @@
 import { toBlob } from "html-to-image";
 import { supabase } from "@/lib/supabase";
 import { BUCKET, enviarComProgresso } from "@/features/midias/envio";
-import { ALTURA, LARGURA } from "./esquema";
+import { ALTURA, type DadosSlide, LARGURA } from "./esquema";
 
 /**
  * Imagem 1080×1350 do slide, renderizada no navegador a partir do próprio HTML do template. Custo zero.
@@ -31,7 +31,7 @@ export function baixar(blob: Blob, nome: string) {
 
 /**
  * Guarda a imagem no banco de mídias (origem "render") e liga ao slide.
- * Se o slide já tinha imagem, a antiga é apagada para não acumular arquivos.
+ * Se o slide já tinha imagem renderizada, a antiga é apagada para não acumular arquivos.
  */
 export async function salvarImagemDoSlide(p: {
   contaId: string; postId: string; slideId: string; ordem: number; pasta: string; blob: Blob; midiaAnterior: string | null;
@@ -56,24 +56,48 @@ export async function salvarImagemDoSlide(p: {
   const { error: eSl } = await supabase.from("post_slides").update({ midia_id: midia.id }).eq("id", p.slideId);
   if (eSl) throw eSl;
 
-  if (p.midiaAnterior) {
-    const { data: antiga } = await supabase.from("midias").select("storage_path").eq("id", p.midiaAnterior).maybeSingle();
-    if (antiga) {
+  await apagarRenderAnterior(p.midiaAnterior);
+  return midia.id as string;
+}
+
+/** Apaga a imagem renderizada antiga do slide. Só origem "render": foto ou vídeo do Banco ligado ao slide nunca é apagado. */
+async function apagarRenderAnterior(midiaAnterior: string | null) {
+  if (midiaAnterior) {
+    const { data: antiga } = await supabase.from("midias").select("storage_path, origem").eq("id", midiaAnterior).maybeSingle();
+    if (antiga?.origem === "render") {
       await supabase.storage.from(BUCKET).remove([antiga.storage_path]);
-      await supabase.from("midias").delete().eq("id", p.midiaAnterior);
+      await supabase.from("midias").delete().eq("id", midiaAnterior);
     }
   }
-  return midia.id as string;
+}
+
+/** Slide de vídeo (Fase 12): não vira JPEG; o slide aponta direto para o vídeo do Banco. */
+async function ligarVideoAoSlide(slideId: string, caminho: string | undefined, midiaAnterior: string | null) {
+  if (!caminho) throw new Error("Um slide de vídeo está sem vídeo. Escolha um no Banco de mídias.");
+  const { data: video, error } = await supabase.from("midias").select("id, mime").eq("storage_path", caminho).single();
+  if (error) throw new Error("O vídeo do slide não está mais no Banco de mídias.");
+  if (video.mime !== "video/mp4" && video.mime !== "video/quicktime") throw new Error("O Instagram só aceita vídeo MP4 ou MOV no carrossel.");
+  if (video.id !== midiaAnterior) {
+    const { error: eSl } = await supabase.from("post_slides").update({ midia_id: video.id }).eq("id", slideId);
+    if (eSl) throw eSl;
+    await apagarRenderAnterior(midiaAnterior);
+  }
+  return video.id as string;
 }
 
 /** Gera o JPEG de cada slide (nós em tamanho real, fora da tela) e liga ao slide. Devolve os ids das mídias. */
 export async function prepararImagens(p: {
   contaId: string; postId: string; pasta: string;
-  slides: { id: string; midia_id: string | null }[]; nos: (HTMLElement | null)[];
+  slides: { id: string; midia_id: string | null; dados: DadosSlide }[]; nos: (HTMLElement | null)[];
   aoAvancar?: (feitos: number) => void;
 }) {
   const ids: string[] = [];
   for (const [i, s] of p.slides.entries()) {
+    if (s.dados.layout === "video") {
+      ids.push(await ligarVideoAoSlide(s.id, s.dados.midia, s.midia_id));
+      p.aoAvancar?.(i + 1);
+      continue;
+    }
     const no = p.nos[i];
     if (!no) throw new Error(`Slide ${i + 1} não encontrado.`);
     const blob = await imagemDoSlide(no, "jpeg");
