@@ -58,11 +58,29 @@ type Uso = { promptTokenCount?: number; candidatesTokenCount?: number };
 
 // Sobrecarga do Gemini (500/503) costuma passar em segundos: tenta de novo antes de desistir.
 const ESPERAS_SOBRECARGA_MS = [2_000, 5_000];
+const sobrecarga = (s: number) => s === 503 || s === 500;
 
-async function gemini(chave: string, instrucao: string, pedido: string) {
+/**
+ * Modelos reserva para quando o principal segue sobrecarregado. GEMINI_MODELOS_RESERVA (vírgulas) manda; sem ele,
+ * pergunta ao Google quais modelos "flash" de texto esta chave pode usar (nomes mudam e variam por conta).
+ */
+async function modelosReserva(chave: string): Promise<string[]> {
+  const doSecret = (Deno.env.get("GEMINI_MODELOS_RESERVA") ?? "").split(",").map((m) => m.trim()).filter(Boolean);
+  if (doSecret.length) return doSecret.filter((m) => m !== MODELO);
+  const r = await fetch(`${GEMINI}/models?pageSize=200`, { headers: { "x-goog-api-key": chave } }).catch(() => null);
+  const lista = r?.ok ? ((await r.json()).models ?? []) as { name: string; supportedGenerationMethods?: string[] }[] : [];
+  return lista
+    .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+    .map((m) => m.name.replace(/^models\//, ""))
+    .filter((n) => /flash/.test(n) && !/image|tts|audio|live|embed|preview|exp/.test(n) && n !== MODELO)
+    .sort((a, b) => b.localeCompare(a, "en", { numeric: true }))
+    .slice(0, 2);
+}
+
+async function chamarModelo(chave: string, modelo: string, instrucao: string, pedido: string) {
   let resp: Response;
   for (let tentativa = 0; ; tentativa++) {
-    resp = await fetch(`${GEMINI}/models/${MODELO}:generateContent`, {
+    resp = await fetch(`${GEMINI}/models/${modelo}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
       body: JSON.stringify({
@@ -71,9 +89,22 @@ async function gemini(chave: string, instrucao: string, pedido: string) {
         generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
       }),
     });
-    if ((resp.status !== 503 && resp.status !== 500) || tentativa >= ESPERAS_SOBRECARGA_MS.length) break;
+    if (!sobrecarga(resp.status) || tentativa >= ESPERAS_SOBRECARGA_MS.length) return resp;
     await resp.body?.cancel();
     await new Promise((ok) => setTimeout(ok, ESPERAS_SOBRECARGA_MS[tentativa]));
+  }
+}
+
+async function gemini(chave: string, instrucao: string, pedido: string) {
+  let modelo = MODELO;
+  let resp = await chamarModelo(chave, modelo, instrucao, pedido);
+  if (sobrecarga(resp.status)) {
+    for (const reserva of await modelosReserva(chave)) {
+      await resp.body?.cancel();
+      modelo = reserva;
+      resp = await chamarModelo(chave, modelo, instrucao, pedido);
+      if (!sobrecarga(resp.status)) break;
+    }
   }
   const corpo = await resp.json().catch(() => ({}));
   if (resp.status === 503) throw new ErroUsuario("O Gemini está sobrecarregado agora (pico de uso no Google). Tente de novo em alguns minutos.", 503);
@@ -82,7 +113,7 @@ async function gemini(chave: string, instrucao: string, pedido: string) {
   // Recusa do Gemini (crédito, região, modelo sobrecarregado...): a mensagem dele ajuda mais que um "falha inesperada".
   if (!resp.ok) throw new ErroUsuario(`O Gemini recusou (${resp.status}): ${corpo?.error?.message ?? "sem detalhe"}`, 502);
   const texto: string = corpo?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ?? "";
-  return { texto, uso: (corpo?.usageMetadata ?? {}) as Uso };
+  return { texto, uso: (corpo?.usageMetadata ?? {}) as Uso, modelo };
 }
 
 /** Chama o Gemini, valida o JSON com Zod (1 nova tentativa se vier fora do formato) e registra em geracoes_ia. */
@@ -100,7 +131,7 @@ async function gerarJson<T>(
   for (let tentativa = 0; tentativa < 2; tentativa++) {
     try {
       const extra = tentativa ? `\n\nA resposta anterior veio fora do formato (${erro}). Devolva SOMENTE o JSON válido.` : "";
-      const { texto, uso } = await gemini(chave, instrucao, pedido + extra);
+      const { texto, uso, modelo } = await gemini(chave, instrucao, pedido + extra);
       let bruto: unknown = null;
       try {
         bruto = JSON.parse(texto.replace(/^```(?:json)?\s*|\s*```$/g, ""));
@@ -109,7 +140,7 @@ async function gerarJson<T>(
       }
       const valido = esquema.safeParse(bruto);
       await ctx.db.from("geracoes_ia").insert({
-        ...registro, tokens_entrada: uso.promptTokenCount ?? null, tokens_saida: uso.candidatesTokenCount ?? null,
+        ...registro, modelo, tokens_entrada: uso.promptTokenCount ?? null, tokens_saida: uso.candidatesTokenCount ?? null,
         status: valido.success ? "ok" : "erro", erro: valido.success ? null : valido.error.issues[0]?.message ?? "JSON inválido",
       });
       if (valido.success) return valido.data;
