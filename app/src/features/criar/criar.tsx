@@ -13,7 +13,7 @@ const TIPOS: Tipo[] = [
   { titulo: "Vídeo narrado com avatar", texto: "Seu avatar fala o roteiro com a sua voz, com legenda, cenas e CTA. Ideal para Reels de venda.", icone: UserRoundCheck, cor: "purple", redes: [Instagram, Youtube, Linkedin], custo: "Pago por uso · provedor de IA", gratis: false, para: "/criar/avatar" },
   { titulo: "Post com suas fotos", texto: "Fotos e vídeos do Banco de mídias em tela cheia, com texto opcional. Mistura com slides de template no mesmo carrossel.", icone: ImagePlus, cor: "orange", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · suas fotos", gratis: true, para: "/criar/fotos" },
   { titulo: "Posts de template", texto: "Post e carrossel a partir dos templates da WSA, com a IA escrevendo os textos. Dá para pôr foto de fundo.", icone: Images, cor: "pink", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · template + IA de texto", gratis: true, para: "/criar/imagem" },
-  { titulo: "Reels / vídeo", texto: "Monte Reels com suas fotos e vídeos: cortes, legenda automática, trilha livre e logo.", icone: Clapperboard, cor: "blue", redes: [Instagram, Youtube], custo: "Grátis · no navegador", gratis: true, fase: 12 },
+  { titulo: "Reels / vídeo", texto: "Monte o vídeo com suas fotos (com movimento) e vídeos: corte, texto por cena, trilha e logo. O MP4 sai no próprio navegador.", icone: Clapperboard, cor: "blue", redes: [Instagram, Youtube], custo: "Grátis · no navegador", gratis: true, para: "/criar/reels" },
   { titulo: "Imagem gerada por IA", texto: "A IA (OpenAI GPT Image ou outro modelo) cria a arte inteira do zero, com fotos realistas e a sua marca.", icone: Sparkles, cor: "indigo", redes: [Instagram], custo: "Pago por uso · provedor de IA", gratis: false, para: "/criar/ia-imagem" },
 ];
 

@@ -255,7 +255,12 @@ Detalhes em `docs/PLANO-midia-real.md` e mockup `docs/mockups/midia-real.html`.
   Banco no editor (com envio do computador), "Foto de fundo" nos slides de template, entrada "Post com suas fotos"
   (`/criar/fotos`) e vídeo MP4/MOV como item do carrossel na `ig-publicar`. Sem migration
 - [ ] 12.1 ligada: publicar a `ig-publicar` (Wagner) e testar um carrossel com foto e vídeo
-- [ ] 12.2 Motor de vídeo no navegador (Reels)
+- [x] 12.2 Motor de vídeo no navegador (Reels): tela `/criar/reels` com cenas de foto (zoom, panorâmica, parado), trecho
+  de vídeo (início/fim, som opcional) e CTA na cor do DNA; texto por cena, trilha do Banco, logo no canto, corte ou
+  esmaecer; MP4 1080 × 1920, 30 fps, H.264 + AAC (Mediabunny, no lugar do `mp4-muxer` descontinuado); vai para o
+  Banco (pasta Reels) e abre no Publicar. Testado no Chrome: 16 s de vídeo em 4 s, áudio, corte de vídeo e cancelar.
+- [ ] 12.2 ligada: publicar um Reels montado de verdade (Wagner), com um vídeo do Banco e uma trilha
+- [ ] 12.2 "Roteiro com IA" (ordem e texto das cenas): vai junto com a 12.4
 - [ ] 12.3 Stories
 - [ ] 12.4 IA escolhe e escreve
 

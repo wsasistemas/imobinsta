@@ -30,6 +30,8 @@ guarda fotos e vídeos, mas o Criar não usa esse material. Também não há Ree
 ### 12.2 Motor de vídeo no navegador (Reels) · R$ 0
 - Saída em 1080 × 1920, 30 fps, H.264 + AAC. O vídeo é desenhado num canvas e codificado com WebCodecs
   (`VideoEncoder`/`AudioEncoder`), e o MP4 é montado com a biblioteca `mp4-muxer`.
+  - **Revisto em 28/10/2026:** o `mp4-muxer` está descontinuado e o autor indica o **Mediabunny** (mesmo autor), que
+    também codifica (`CanvasSource`, `AudioBufferSource`). Usado o `mediabunny@1.61.4`, carregado sob demanda.
 - Cenas:
   - foto com movimento (zoom lento ou panorâmica);
   - trecho de vídeo (início e fim) com ou sem som;

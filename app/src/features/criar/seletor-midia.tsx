@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, LoaderCircle, Play, Upload, X } from "lucide-react";
+import { Check, LoaderCircle, Music, Play, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Segmentado } from "@/components/ui/hig";
 import { useAcesso } from "@/features/auth/acesso";
@@ -9,10 +9,11 @@ import { type Midia, useMidias } from "@/features/midias/dados";
 import { cn } from "@/lib/utils";
 
 export type MidiaEscolhida = Pick<Midia, "id" | "storage_path" | "tipo" | "mime" | "nome" | "duracao_s">;
-type Aba = "imagem" | "video" | "logo";
+type Aba = "imagem" | "video" | "logo" | "trilha";
 
 const ABAS: { valor: Aba; rotulo: string }[] = [
   { valor: "imagem", rotulo: "Fotos" }, { valor: "video", rotulo: "Vídeos" }, { valor: "logo", rotulo: "Logos" },
+  { valor: "trilha", rotulo: "Trilhas" },
 ];
 
 /**
@@ -35,16 +36,19 @@ export function SeletorMidia({
   const [enviando, setEnviando] = useState<string | null>(null);
   const [falha, setFalha] = useState<string | null>(null);
 
+  const primeira = tipos[0];
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
     if (aberto && !d.open) {
       setMarcadas([]);
       setFalha(null);
+      setAba(primeira);
+      setPasta("todas");
       d.showModal();
     }
     if (!aberto && d.open) d.close();
-  }, [aberto]);
+  }, [aberto, primeira]);
 
   const daAba = midias.filter((m) => m.tipo === aba);
   const pastas = useMemo(() => [...new Set(daAba.map((m) => m.pasta))].sort(), [daAba]);
@@ -62,7 +66,7 @@ export function SeletorMidia({
     for (const arquivo of arquivos) {
       setEnviando(arquivo.name);
       try {
-        await enviarParaBanco({ contaId: conta.conta_id, arquivo, pasta: pasta === "todas" ? "Geral" : pasta });
+        await enviarParaBanco({ contaId: conta.conta_id, arquivo, pasta: pasta !== "todas" ? pasta : aba === "trilha" ? "Trilhas" : "Geral" });
       } catch (e) {
         setFalha(`${arquivo.name}: ${(e as { message?: string }).message ?? "falha no envio"}`);
       }
@@ -93,7 +97,7 @@ export function SeletorMidia({
         <Button tamanho="sm" variante="secundario" className="ml-auto" onClick={() => entrada.current?.click()} disabled={!!enviando || demo}>
           {enviando ? <LoaderCircle className="animate-spin" /> : <Upload />} {enviando ? "Enviando…" : "Enviar do computador"}
         </Button>
-        <input ref={entrada} type="file" multiple hidden accept={aba === "video" ? "video/mp4,video/quicktime" : "image/jpeg,image/png,image/webp"}
+        <input ref={entrada} type="file" multiple hidden accept={aba === "video" ? "video/mp4,video/quicktime" : aba === "trilha" ? "audio/*" : "image/jpeg,image/png,image/webp"}
           onChange={(e) => { enviar([...(e.target.files ?? [])]); e.target.value = ""; }} />
       </div>
       {falha && <p role="alert" className="px-4 pt-2 text-cap1 text-red">{falha}</p>}
@@ -114,7 +118,11 @@ export function SeletorMidia({
               return (
                 <button key={m.id} type="button" onClick={() => clicar(m)} aria-pressed={n >= 0} title={m.nome}
                   className={cn("relative aspect-square overflow-hidden rounded-hig-lg bg-bg3 focus-visible:ring-2 focus-visible:ring-blue", n >= 0 && "ring-3 ring-blue")}>
-                  {m.url && (m.tipo === "video"
+                  {m.tipo === "trilha" ? (
+                    <span className="flex size-full flex-col items-center justify-center gap-2 p-2 text-label2">
+                      <Music className="size-6" aria-hidden /><span className="line-clamp-2 text-cap1 break-all">{m.nome}</span>
+                    </span>
+                  ) : m.url && (m.tipo === "video"
                     ? <video src={m.url} muted playsInline preload="metadata" className="size-full object-cover" />
                     : <img src={m.url} alt={m.nome} loading="lazy" className={cn("size-full", m.tipo === "logo" ? "object-contain p-3" : "object-cover")} />)}
                   {m.tipo === "video" && (

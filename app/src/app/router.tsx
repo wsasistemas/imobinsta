@@ -19,6 +19,7 @@ import { Editor } from "@/features/criar/editor";
 import { Publicar } from "@/features/criar/publicar";
 import { IaImagem } from "@/features/criar/ia-imagem";
 import { PostComFotos } from "@/features/criar/fotos";
+import { Reels } from "@/features/criar/reels";
 import { WizardImagem } from "@/features/criar/wizard";
 import { Explorar } from "@/pages/explorar";
 import { EmConstrucao } from "@/pages/em-construcao";
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
       { path: "criar/publicar/:id", element: <Publicar /> },
       { path: "criar/ia-imagem", element: <IaImagem /> },
       { path: "criar/fotos", element: <PostComFotos /> },
+      { path: "criar/reels", element: <Reels /> },
       { path: "*", element: <EmConstrucao /> },
     ],
   },
