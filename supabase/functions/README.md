@@ -15,7 +15,7 @@ Rodam no Supabase ikvj (`ikvjaowvpvxojvcfwnct`). São o **único** lugar que fal
 ## Secrets necessários (painel → Edge Functions → Secrets)
 
 `META_APP_ID`, `META_APP_SECRET`, `META_CONFIG_ID`. Google (Fase 11): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
-Opcionais da IA: `GEMINI_MODELO` (padrão `gemini-2.5-flash`) e `GEMINI_API_KEY` (só se a conta não tiver chave própria no Vault).
+Opcionais da IA: `GEMINI_MODELO` (padrão `gemini-3.8-flash`) e `GEMINI_API_KEY` (só se a conta não tiver chave própria no Vault).
 Os secrets `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` já vêm prontos do Supabase.
 `APP_ORIGENS` é opcional: domínios extras do estúdio, separados por vírgula. Os previews
 `imobinsta-*.vercel.app` e o `localhost` já são aceitos.

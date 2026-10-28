@@ -21,7 +21,8 @@ import { admin, CORS, type Db, json, papelNaConta, usuario } from "../_shared/co
 import { Edicao, FORMATO_SLIDE, Geracao, PromptAdaptado } from "../_shared/slides.ts";
 
 const GEMINI = "https://generativelanguage.googleapis.com/v1beta";
-const MODELO = Deno.env.get("GEMINI_MODELO") ?? "gemini-2.5-flash";
+// gemini-2.5-flash não está mais disponível para contas novas (404 em 28/10/2026); o próprio erro indica o 3.8.
+const MODELO = Deno.env.get("GEMINI_MODELO") ?? "gemini-3.8-flash";
 
 const MARCA = `Marca: WSA Sistemas de IA (@wsasistemas.ia). Vende um ecossistema de sistemas com IA para empresas:
 ERP com integração nativa TOTVS RM, sistema para imobiliárias, portal de compras, helpdesk, cobrança e assinatura
