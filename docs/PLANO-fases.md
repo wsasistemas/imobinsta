@@ -229,10 +229,16 @@ Detalhes em `docs/PLANO-google-vids-dna.md` e mockup `docs/mockups/google-vids-d
 - [x] Etapa 11.1 no código: migration `20261027090000_fase11_google.sql` (provedor `google`, PGlite ok), Edge Function
   `google-oauth` (consentimento, refresh token no Vault, ação `testar`) e "Conectar Google" em Conexões → Google · grátis
 - [ ] Etapa 11.1 ligada: rodar a migration, publicar a `google-oauth` e conectar uma vez (Wagner)
-- [ ] "Abrir no Google Vids": pasta com roteiro, imagens e legenda no Drive
+- [x] Etapa 11.2 no código: migration `20261027100000_fase11_vids.sql` (ids do Drive no roteiro), Edge Function
+  `google-drive` ação `vids` (pasta `Estúdio imobinsta/Vids/<título · dd-mm>` com roteiro.txt, legenda.txt, logo,
+  até 6 imagens da pasta do produto e subpasta `prontos/`) e card "Ou monte no Google Vids" na tela do roteiro
+- [ ] Etapa 11.2 ligada: rodar a migration e publicar a `google-drive` (Wagner); testar com um roteiro real
 - [ ] Importar MP4 da pasta `prontos/` (botão + pg_cron) → Banco de mídias → Reels
 - [ ] Veo 3.1 pela chave do Gemini, dentro do teto de gasto (pago por segundo)
 
 **Para ligar a 11.1 (Wagner):** SQL Editor: `20261027090000_fase11_google.sql`. PowerShell:
 `npx supabase functions deploy google-oauth --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt`.
 Depois: Conexões → Google · grátis → Conectar Google. Em modo de teste o Google invalida o acesso em 7 dias.
+
+**Para ligar a 11.2 (Wagner):** SQL Editor: `20261027100000_fase11_vids.sql` (antes de publicar o front: a tela do
+roteiro passa a ler `drive_url`). PowerShell: `npx supabase functions deploy google-drive --project-ref ikvjaowvpvxojvcfwnct`.

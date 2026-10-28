@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Clapperboard, LoaderCircle, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, Clapperboard, FolderOpen, LoaderCircle, Sparkles, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
+import { Button, botao } from "@/components/ui/button";
 import { Card, Segmentado } from "@/components/ui/hig";
 import { useAcesso } from "@/features/auth/acesso";
 import { useAvatares } from "@/features/avatares/avatares";
@@ -17,7 +17,7 @@ type Segundos = "30" | "45" | "60" | "90";
 type Roteiro = {
   id: string; avatar_id: string | null; titulo: string; produto: string | null; texto: string; legenda: string | null;
   status: "rascunho" | "gerando" | "pronto" | "erro"; midia_id: string | null; post_id: string | null; custo_usd: number | null; erro: string | null;
-  midias: { storage_path: string } | null;
+  midias: { storage_path: string } | null; drive_url: string | null;
 };
 type Uso = { gasto_usd: number; teto_usd: number };
 
@@ -25,7 +25,7 @@ type Uso = { gasto_usd: number; teto_usd: number };
 const USD_POR_MINUTO = 1;
 const minutos = (texto: string) => Math.max(0.25, (texto.trim().split(/\s+/).filter(Boolean).length || 0) / 150);
 const usd = (v: number) => `US$ ${v.toFixed(2)}`;
-const CAMPOS = "id, avatar_id, titulo, produto, texto, legenda, status, midia_id, post_id, custo_usd, erro, midias(storage_path)";
+const CAMPOS = "id, avatar_id, titulo, produto, texto, legenda, status, midia_id, post_id, custo_usd, erro, midias(storage_path), drive_url";
 
 /** Vídeo narrado com avatar (Fase 7.2): roteiro (Gemini) → avatar e voz → HeyGen → Reels. ?roteiro=<id> retoma. */
 export function VideoAvatar() {
@@ -84,19 +84,24 @@ function Wizard({ inicial, contaId, demo }: { inicial: Roteiro | null; contaId?:
     },
   });
 
-  /** Grava o roteiro (cria ou atualiza) e manda gerar. */
+  /** Grava o roteiro (cria ou atualiza). Gerando ou pronto, o roteiro não muda mais: só devolve o id. */
+  async function salvar() {
+    if (inicial && !editavel) return inicial.id;
+    const campos = { titulo: titulo.trim(), produto, texto: texto.trim(), legenda: legenda.trim() || null, avatar_id: avatarId };
+    if (inicial) {
+      const { error } = await supabase.from("roteiros").update(campos).eq("id", inicial.id);
+      if (error) throw new Error(error.message);
+      return inicial.id;
+    }
+    const { data, error } = await supabase.from("roteiros").insert({ ...campos, conta_id: contaId }).select("id").single();
+    if (error) throw new Error(error.message);
+    return data.id as string;
+  }
+
+  /** Grava o roteiro e manda gerar. */
   const gerar = useMutation({
     mutationFn: async (confirmado: boolean) => {
-      const campos = { titulo: titulo.trim(), produto, texto: texto.trim(), legenda: legenda.trim() || null, avatar_id: avatarId };
-      let rid = inicial?.id;
-      if (rid) {
-        const { error } = await supabase.from("roteiros").update(campos).eq("id", rid);
-        if (error) throw new Error(error.message);
-      } else {
-        const { data, error } = await supabase.from("roteiros").insert({ ...campos, conta_id: contaId }).select("id").single();
-        if (error) throw new Error(error.message);
-        rid = data.id as string;
-      }
+      const rid = await salvar();
       try {
         await chamarFuncao("ia-avatar", { acao: "gerar", conta_id: contaId, roteiro_id: rid, confirmar: confirmado });
       } finally {
@@ -133,6 +138,20 @@ function Wizard({ inicial, contaId, demo }: { inicial: Roteiro | null; contaId?:
       return data.signedUrl;
     },
   });
+
+  /** Fase 11: pasta no Drive com roteiro, legenda e imagens, para montar no Google Vids (grátis). */
+  const vids = useMutation({
+    mutationFn: async () => {
+      const rid = await salvar();
+      try {
+        return await chamarFuncao<{ url: string; criada: boolean; faltaram?: string[] }>("google-drive", { acao: "vids", conta_id: contaId, roteiro_id: rid });
+      } finally {
+        if (!inicial) navegar(`/criar/avatar?roteiro=${rid}`, { replace: true });
+      }
+    },
+    onSettled: () => Promise.all(["roteiro", "roteiros-recentes"].map((k) => cliente.invalidateQueries({ queryKey: [k] }))),
+  });
+  const pastaDrive = vids.data?.url ?? inicial?.drive_url;
 
   const criarReels = useMutation({
     mutationFn: async () => {
@@ -251,6 +270,31 @@ function Wizard({ inicial, contaId, demo }: { inicial: Roteiro | null; contaId?:
             {criarReels.error && <p role="alert" className="mt-3 text-foot text-red">{criarReels.error.message}</p>}
             {!avatar && editavel && <p className="mt-3 text-cap1 text-label2">Escolha um avatar para gerar.</p>}
             <p className="mt-3 text-cap1 text-label2">O vídeo pronto entra no Banco de mídias e segue para Publicar, com a automação "QUERO" do Chatfyre.</p>
+          </Card>
+
+          <Card>
+            <div className="flex items-center gap-2"><FolderOpen className="size-4 text-blue" /><b className="text-foot">Ou monte no Google Vids · grátis</b></div>
+            <p className="mt-2 text-cap1 text-label2">
+              O estúdio cria uma pasta no seu Google Drive com o roteiro, a legenda, o logo e as imagens do produto. Você monta no Vids
+              e exporta o MP4 para a subpasta <b>prontos</b>. Não precisa de avatar.
+            </p>
+            {pastaDrive ? (
+              <div className="mt-3 grid gap-2">
+                <a href={pastaDrive} target="_blank" rel="noreferrer" className={cn(botao({ tamanho: "sm" }), "w-full")}>Abrir a pasta no Drive</a>
+                <a href="https://vids.google.com/" target="_blank" rel="noreferrer" className={cn(botao({ tamanho: "sm", variante: "secundario" }), "w-full")}>Abrir o Google Vids</a>
+              </div>
+            ) : (
+              <Button tamanho="sm" variante="secundario" className="mt-3 w-full" onClick={() => vids.mutate()}
+                disabled={demo || vids.isPending || titulo.trim().length === 0 || texto.trim().length < 20}>
+                {vids.isPending ? <LoaderCircle className="animate-spin" /> : <FolderOpen />} {vids.isPending ? "Criando a pasta…" : "Preparar pasta no Drive"}
+              </Button>
+            )}
+            {vids.data?.faltaram?.length ? <p className="mt-2 text-cap1 text-orange">Não subiram: {vids.data.faltaram.join(", ")}.</p> : null}
+            {vids.error && (
+              <p role="alert" className="mt-2 text-cap1 text-red">
+                {vids.error.message} {vids.error instanceof ErroFuncao && vids.error.status === 409 && <Link to="/conexoes" className="underline">Abrir Conexões</Link>}
+              </p>
+            )}
           </Card>
 
           {!demo && <RoteirosRecentes contaId={contaId} atual={inicial?.id} />}

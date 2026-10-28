@@ -39,6 +39,49 @@ export async function drive<T = Record<string, unknown>>(accessToken: string, ca
   return corpo as T;
 }
 
+export const PASTA = "application/vnd.google-apps.folder";
+type Arquivo = { id: string; name: string; webViewLink?: string };
+
+/** Cria um arquivo (ou pasta, sem conteúdo) no Drive. Upload multipart: metadados + bytes numa só chamada. */
+export async function criarNoDrive(
+  accessToken: string,
+  meta: { name: string; parents?: string[]; mimeType?: string },
+  conteudo?: { bytes: Uint8Array<ArrayBuffer> | string; mime: string },
+): Promise<Arquivo> {
+  const campos = "id,name,webViewLink";
+  let r: Response;
+  if (!conteudo) {
+    r = await fetch(`https://www.googleapis.com/drive/v3/files?fields=${campos}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(meta),
+    });
+  } else {
+    const limite = "imobinsta" + crypto.randomUUID().replaceAll("-", "");
+    const corpo = new Blob([
+      `--${limite}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n`,
+      `--${limite}\r\nContent-Type: ${conteudo.mime}\r\n\r\n`,
+      conteudo.bytes,
+      `\r\n--${limite}--`,
+    ]);
+    r = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=${campos}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": `multipart/related; boundary=${limite}` },
+      body: corpo,
+    });
+  }
+  const json = await r.json().catch(() => ({}));
+  if (!r.ok) throw new ErroGoogle(json.error?.message ?? `Drive HTTP ${r.status}`);
+  return json as Arquivo;
+}
+
+/** Pasta pelo nome dentro de outra (ou na raiz). Com drive.file só aparecem as que o estúdio criou. */
+export async function pastaGarantida(accessToken: string, nome: string, pai?: string): Promise<Arquivo> {
+  const q = [`name = '${nome.replaceAll("\\", "\\\\").replaceAll("'", "\\'")}'`, `mimeType = '${PASTA}'`, "trashed = false", pai ? `'${pai}' in parents` : "'root' in parents"];
+  const { files } = await drive<{ files: Arquivo[] }>(accessToken, "files", { q: q.join(" and "), fields: "files(id,name,webViewLink)", pageSize: "1" });
+  return files[0] ?? (await criarNoDrive(accessToken, { name: nome, mimeType: PASTA, parents: pai ? [pai] : undefined }));
+}
+
 export async function conexaoGoogle(db: Db, contaId: string) {
   const { data, error } = await db.from("conexoes").select("id, status").eq("conta_id", contaId).eq("provedor", "google").single();
   if (error) throw new Error("A conexão Google não existe. Rode a migration 20261027090000_fase11_google.sql.");

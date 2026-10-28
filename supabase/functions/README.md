@@ -9,6 +9,7 @@ Rodam no Supabase ikvj (`ikvjaowvpvxojvcfwnct`). São o **único** lugar que fal
 | `ia-texto` | IA de texto (Gemini): lê link, escreve o prompt adaptado, gera os slides em JSON + legenda, edita por chat e grava a chave do Gemini no Vault. Toda chamada vai para `geracoes_ia` | **ligado** (sempre chamado pelo app com sessão) |
 | `chatfyre` | Ponte com o Chatfyre (MCP por HTTP, JSON-RPC). Guarda o pacote do script no Vault, renova o token e lê automações/métricas. Criar e ativar automação entra na Etapa 5.3 (sempre pausada) | **ligado** |
 | `google-oauth` | POST: devolve o link do consentimento do Google (escopo `drive.file`) ou testa o acesso (`acao: "testar"`). GET: recebe o retorno, guarda o refresh token no Vault e marca a conexão `google` como conectada | **desligado** (o Google volta sem JWT; o POST valida o JWT no código) |
+| `google-drive` | Ponte com o Google Vids: ação `vids` cria no Drive a pasta do roteiro (roteiro.txt, legenda.txt, imagens, `prontos/`) | **ligado** |
 | `ig-publicar` | Publica post único e carrossel (containers → `media_publish`), agenda, cancela e processa a fila (pg_cron a cada 5 min) | **desligado** (o pg_cron chama com `x-cron-segredo`; o app manda o JWT, conferido no código) |
 
 ## Secrets necessários (painel → Edge Functions → Secrets)
@@ -29,6 +30,7 @@ npx supabase functions deploy ia-texto --project-ref ikvjaowvpvxojvcfwnct
 npx supabase functions deploy chatfyre --project-ref ikvjaowvpvxojvcfwnct
 npx supabase functions deploy ig-publicar --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt
 npx supabase functions deploy google-oauth --project-ref ikvjaowvpvxojvcfwnct --no-verify-jwt
+npx supabase functions deploy google-drive --project-ref ikvjaowvpvxojvcfwnct
 ```
 
 Antes de publicar, as migrations `20261026030000_fase2_instagram.sql` e `20261027010000_fase2_sync_diario.sql`
