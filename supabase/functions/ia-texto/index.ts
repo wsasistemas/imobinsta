@@ -10,6 +10,7 @@
 //   dna     { url }  (só o dono)                     → DNA da marca: cores, fontes, imagens (banco de mídias) e tom (Gemini)
 //   campanhas {}                                     → 3 campanhas sugeridas (status "sugerida")
 //   aprovar_campanha { campanha_id, inicio }         → as sugestões viram pautas no Calendário
+//   roteiro_cenas { produto, objetivo, segundos, midia_ids?, tema? } → { titulo, legenda, hashtags, cenas[] }  (Fase 13)
 //   radar   {}                                       → { classificadas, restantes }  lê até 15 legendas do Radar (Fase 9)
 // Toda geração recebe o DNA da marca da conta (textoDna), se existir.
 //   chave   { chave }  (só o dono)                   → { ok }  grava a chave do Gemini no Vault
@@ -655,6 +656,63 @@ Responda em JSON: {"titulo": "...", "texto": "<o que o avatar fala>", "legenda":
   return await gerarJson(ctx, Roteiro, instrucao, `Produto: ${produto}\nTema: ${tema}`);
 }
 
+// ---------- Roteiro em cenas: avatar + telas do sistema (Fase 13) -----------------------------
+
+const LAYOUTS = ["apresentador", "canto", "bolha", "dividida"] as const;
+const RoteiroCenas = z.object({
+  titulo: z.string().trim().min(3).max(160),
+  legenda: z.string().trim().min(1).max(1800),
+  hashtags: z.array(z.string().regex(/^#[\p{L}\p{N}_]+$/u)).max(5),
+  cenas: z.array(z.object({
+    fala: z.string().trim().min(3).max(600),
+    layout: z.enum(LAYOUTS),
+    midia: z.string().nullable(), // "M1", "M2"... da lista enviada, ou null
+  })).min(2).max(10),
+});
+
+/** Fala do avatar dividida em cenas, com layout e a tela do sistema (do Banco) que aparece em cada uma. */
+async function acaoRoteiroCenas(ctx: Parameters<typeof gerarJson>[0], corpo: Record<string, unknown>) {
+  const produto = z.enum(PRODUTOS).parse(corpo.produto);
+  const objetivo = z.enum(["engajar", "vender", "ensinar"]).parse(corpo.objetivo);
+  const segundos = z.union([z.literal(30), z.literal(45), z.literal(60), z.literal(90)]).parse(corpo.segundos);
+  const ids = z.array(z.string().uuid()).max(12).parse(corpo.midia_ids ?? []);
+  const tema = z.string().trim().max(1000).optional().parse(corpo.tema || undefined);
+
+  const { data: midias, error } = ids.length
+    ? await ctx.db.from("midias").select("id, nome, pasta, tipo").eq("conta_id", ctx.contaId).in("id", ids)
+    : { data: [], error: null };
+  if (error) throw error;
+  const lista = (midias ?? []).map((m, i) => ({ ...m, ref: `M${i + 1}` }));
+  const palavras = Math.round((segundos / 60) * 150);
+  const OBJ = { engajar: "engajar (conversa e compartilhamento)", vender: "vender (levar a comentar QUERO para receber no direct)", ensinar: "ensinar (mostrar como o sistema resolve, passo a passo)" };
+
+  const instrucao = `${MARCA}
+Você escreve o roteiro de um vídeo curto (Reels) em que o dono da WSA, como avatar, apresenta um sistema e mostra as telas dele.
+Divida a fala em cenas de 1 a 3 frases. Total de cerca de ${palavras} palavras (≈ ${segundos} segundos). Linguagem falada, frases curtas,
+sem emojis, sem hashtags e sem indicação de cena dentro da fala. Não invente números, clientes nem resultados.
+Layouts: "apresentador" (avatar em tela cheia, sem tela do sistema), "canto" (tela do sistema ao fundo e avatar pequeno no canto),
+"bolha" (tela do sistema ao fundo e avatar num círculo), "dividida" (tela do sistema em cima, avatar embaixo).
+Regras: a primeira cena é "apresentador" com um gancho forte; a última é "apresentador" com um único pedido de ação
+(${objetivo === "vender" ? "comentar QUERO para receber a demonstração no direct" : "seguir o perfil ou salvar o vídeo"}).
+Nas cenas do meio, quando a fala falar de uma funcionalidade, use "canto", "bolha" ou "dividida" com a tela mais adequada da lista
+(campo "midia" com o código, por exemplo "M2"); sem tela adequada, use "apresentador" e "midia": null. Não repita a mesma tela em cenas seguidas.
+Legenda do post: até 1.200 caracteres, sem hashtags no texto. Hashtags: de 3 a 5.
+Responda em JSON: {"titulo": "...", "legenda": "...", "hashtags": ["#..."], "cenas": [{"fala": "...", "layout": "apresentador|canto|bolha|dividida", "midia": "M1" | null}]}.`;
+  const pedido = [
+    `Sistema: ${produto}`, `Objetivo: ${OBJ[objetivo]}`, tema && `Tema: ${tema}`,
+    `Telas do sistema disponíveis: ${lista.length ? lista.map((m) => `${m.ref} = ${m.nome} (${m.tipo === "video" ? "vídeo" : "print"}, pasta ${m.pasta})`).join("; ") : "nenhuma (use só \"apresentador\")"}`,
+  ].filter(Boolean).join("\n");
+  const r = await gerarJson(ctx, RoteiroCenas, instrucao, pedido);
+
+  const porRef = new Map(lista.map((m) => [m.ref, m.id]));
+  const cenas = r.cenas.map((c) => {
+    const fundo = c.midia ? porRef.get(c.midia) ?? null : null;
+    // Layout com sistema e sem tela válida vira apresentador (não deixa cena "vazia").
+    return { fala: c.fala, layout: fundo || c.layout === "apresentador" ? c.layout : "apresentador", fundo_midia_id: c.layout === "apresentador" ? null : fundo };
+  });
+  return { titulo: r.titulo, legenda: r.legenda, hashtags: r.hashtags, cenas };
+}
+
 // ---------- Radar de prospecção (Fase 9) -------------------------------------------------------
 
 const RADAR_LOTE = 15;
@@ -770,6 +828,8 @@ Deno.serve(async (req) => {
         return json(await acaoCampanhas(ctx));
       case "aprovar_campanha":
         return json(await acaoAprovarCampanha(ctx, corpo));
+      case "roteiro_cenas":
+        return json(await acaoRoteiroCenas(ctx, corpo));
       case "radar":
         return json(await acaoRadar(ctx));
       case "chave":

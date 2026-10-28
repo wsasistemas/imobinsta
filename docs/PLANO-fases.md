@@ -274,3 +274,21 @@ Detalhes em `docs/PLANO-midia-real.md` e mockup `docs/mockups/midia-real.html`.
 - [ ] 12.3 Stories
 - [ ] 12.4 IA escolhe e escreve
 
+---
+
+## Fase 13: vídeo explicativo com avatar + telas do sistema · aprovada em 28/10/2026
+
+Detalhes em `docs/PLANO-video-avatar.md` e mockup `docs/mockups/video-avatar.html`.
+- [x] Pré-requisito: HeyGen na API v3 e looks da própria conta em Meus avatares (5ecc168). As rotas v1/v2 são desligadas em 01/11/2026
+- [x] 13.1 no código: migration `20261028020000_fase13_roteiro_cenas.sql` (`roteiros.tipo/objetivo/projeto_json` e tabela
+  `roteiro_cenas` com RLS, guarda de cena em geração; PGlite 16/16 + mutação detectada), `ia-texto` ação `roteiro_cenas`
+  e tela `/criar/explicativo` (configuração, roteiro com IA, editor de cenas com fala, layout, tela do sistema, ordem)
+- [ ] 13.1 ligada: rodar a migration e publicar a `ia-texto` (Wagner); escrever o primeiro roteiro real
+- [ ] 13.2 Avatar por cena na HeyGen (MP4 no apresentador, WebM transparente nos demais, SRT, custo e teto)
+- [ ] 13.3 Montagem no navegador (avatar posicionável, legenda, logo, trilha, 9:16/4:5/1:1/16:9) → Publicar
+
+## Fase 14: LinkedIn · perfil pessoal · aprovada em 28/10/2026
+- [ ] App no LinkedIn Developer Portal com "Share on LinkedIn" e "Sign In with LinkedIn using OpenID Connect" (Wagner)
+- [ ] `li-oauth` (conexão, token no Vault) e `li-publicar` (upload do vídeo em partes + post no perfil)
+- [ ] Legenda adaptada pela IA para o LinkedIn
+

@@ -1,6 +1,6 @@
 # Fases 13 e 14: vídeo explicativo com avatar + telas do sistema, e LinkedIn
 
-**Proposta de 28/10/2026, aguardando aprovação do Wagner.** Mockup: `docs/mockups/video-avatar.html`.
+**Aprovada pelo Wagner em 28/10/2026.** Mockup: `docs/mockups/video-avatar.html`.
 
 ## Pedido
 O Wagner quer vídeos em que ele mesmo, como avatar da HeyGen, explica os sistemas da WSA. As telas do sistema entram no vídeo:
@@ -66,7 +66,7 @@ O vídeo é publicado no Instagram e, se der, no LinkedIn.
 - **LinkedIn:** a liberação automática do "Share on LinkedIn" vem de fontes de terceiros. Confirmar no portal.
 
 ## Checklist (quando aprovado, entra no PLANO-fases.md)
-- [ ] 13.1 Roteiro em cenas
+- [x] 13.1 Roteiro em cenas (no código; falta ligar)
 - [ ] 13.2 Avatar por cena na HeyGen
 - [ ] 13.3 Montagem com avatar posicionável
 - [ ] 14.1 LinkedIn perfil pessoal

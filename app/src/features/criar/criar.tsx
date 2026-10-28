@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Clapperboard, Facebook, ImagePlus, Images, Instagram, Linkedin, type LucideIcon, Sparkles, UserRoundCheck, WandSparkles, Youtube } from "lucide-react";
+import { Clapperboard, Facebook, ImagePlus, Images, Instagram, Linkedin, type LucideIcon, Presentation, Sparkles, UserRoundCheck, WandSparkles, Youtube } from "lucide-react";
 import { Badge } from "@/components/ui/hig";
 import { Tile, type CorTile } from "@/components/ui/tile";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ type Tipo = {
 };
 
 const TIPOS: Tipo[] = [
+  { titulo: "Vídeo explicativo com avatar", texto: "Você (avatar) apresentando um sistema, com as telas dele no vídeo: avatar no canto, em bolha, tela dividida ou sentado explicando.", icone: Presentation, cor: "indigo", redes: [Instagram, Linkedin], custo: "Pago por uso · HeyGen", gratis: false, para: "/criar/explicativo" },
   { titulo: "Vídeo narrado com avatar", texto: "Seu avatar fala o roteiro com a sua voz, com legenda, cenas e CTA. Ideal para Reels de venda.", icone: UserRoundCheck, cor: "purple", redes: [Instagram, Youtube, Linkedin], custo: "Pago por uso · provedor de IA", gratis: false, para: "/criar/avatar" },
   { titulo: "Post com suas fotos", texto: "Fotos e vídeos do Banco de mídias em tela cheia, com texto opcional. Mistura com slides de template no mesmo carrossel.", icone: ImagePlus, cor: "orange", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · suas fotos", gratis: true, para: "/criar/fotos" },
   { titulo: "Posts de template", texto: "Post e carrossel a partir dos templates da WSA, com a IA escrevendo os textos. Dá para pôr foto de fundo.", icone: Images, cor: "pink", redes: [Instagram, Facebook, Linkedin], custo: "Grátis · template + IA de texto", gratis: true, para: "/criar/imagem" },
