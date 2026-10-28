@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mídia real · Estúdio imobinsta</title>
+<style>
+/* Mockup para aprovação: Fase 12 (fotos e vídeos reais em post, carrossel, Reels e Stories).
+ * Mesmo visual do estúdio. Gradientes representam fotos do Banco de mídias (dados de exemplo). */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
+  --bg: #000; --bg2: #1c1c1e; --bg3: #2c2c2e; --fill: rgba(118,118,128,.24); --sep: rgba(84,84,88,.6);
+  --label: #fff; --label2: rgba(235,235,245,.6); --label3: rgba(235,235,245,.3);
+  --blue: #0a84ff; --green: #30d158; --orange: #ff9f0a; --pink: #ff375f; --purple: #bf5af2; --indigo: #5e5ce6; --yellow: #ffd60a; --red: #ff453a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--label); -webkit-font-smoothing: antialiased; font-size: 15px; }
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+nav.lado { background: #1c1c1e; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; }
+nav.lado .marca { display: flex; gap: 10px; align-items: center; padding: 6px 8px 16px; font-weight: 700; font-size: 14px; }
+nav.lado .marca i { width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #0a4fd6; display: grid; place-items: center; font: 800 10px var(--font); font-style: normal; }
+nav.lado small { padding: 14px 10px 6px; font-size: 11px; color: var(--label2); letter-spacing: .04em; }
+nav.lado button { all: unset; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+nav.lado button[aria-current="page"] { background: rgba(10,132,255,.18); color: var(--blue); }
+nav.lado .t { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 13px; }
+nav.lado .novo { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: rgba(48,209,88,.2); color: var(--green); }
+main { padding: 28px 36px 60px; max-width: 1180px; }
+.pag { display: none; } .pag.on { display: block; }
+.cab { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+.cab .t { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; }
+.cab h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+.cab p { margin: 2px 0 0; color: var(--label2); font-size: 15px; }
+.cab .acoes { margin-left: auto; display: flex; gap: 10px; }
+.card { background: var(--bg2); border-radius: 20px; padding: 20px; }
+.grid { display: grid; gap: 16px; } .g2 { grid-template-columns: repeat(2, 1fr); } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+h2 { margin: 0 0 4px; font-size: 20px; font-weight: 600; } h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.mut { color: var(--label2); } .peq { font-size: 13px; }
+.b { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; flex: none; min-height: 36px; padding: 0 16px; border-radius: 9999px; border: 0; font: 600 14px var(--font); cursor: pointer; }
+.b.p { background: var(--blue); color: #fff; } .b.s { background: rgba(10,132,255,.16); color: var(--blue); } .b.v { background: var(--purple); color: #fff; }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+.ok { background: rgba(48,209,88,.16); color: var(--green); } .wait { background: rgba(255,159,10,.16); color: var(--orange); } .neu { background: var(--fill); color: var(--label2); } .no { background: rgba(255,69,58,.16); color: var(--red); }
+.conn { display: flex; gap: 14px; align-items: flex-start; }
+.tile { width: 48px; height: 48px; flex: none; border-radius: 12px; display: grid; place-items: center; font: 700 15px var(--font); color: #fff; }
+.campo { width: 100%; min-height: 44px; border-radius: 12px; border: 0; background: var(--fill); color: var(--label); padding: 0 14px; font: 16px var(--font); }
+.nota { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--bg3); color: var(--label2); font-size: 13px; line-height: 1.5; }
+.nota b { color: var(--label); }
+.ex { font-size: 11px; font-weight: 700; color: var(--orange); letter-spacing: .04em; text-transform: uppercase; }
+.paleta { display: flex; gap: 10px; flex-wrap: wrap; }
+.cor { width: 74px; } .cor i { display: block; height: 56px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); } .cor small { display: block; margin-top: 6px; font: 12px ui-monospace, Menlo, monospace; color: var(--label2); }
+.fontes div { padding: 12px 14px; border-radius: 12px; background: var(--bg3); margin-top: 8px; }
+.imgs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; } .imgs i { aspect-ratio: 1; border-radius: 12px; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; } .chip { padding: 5px 11px; border-radius: 9999px; background: var(--fill); font-size: 13px; } .chip.ev { background: rgba(255,69,58,.14); color: var(--red); }
+.tom { font-size: 15px; line-height: 1.5; } .tom q { color: var(--label2); font-style: italic; }
+.camp { border: 1px solid var(--sep); border-radius: 16px; padding: 16px; }
+.camp ol { margin: 10px 0 0; padding-left: 18px; color: var(--label2); font-size: 13px; line-height: 1.8; }
+.camp ol b { color: var(--label); font-weight: 600; }
+.passos { counter-reset: p; display: grid; gap: 12px; }
+.passo { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 16px; background: var(--bg2); }
+.passo::before { counter-increment: p; content: counter(p); flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; font-weight: 700; }
+.passo.manual::before { background: var(--orange); }
+.arq { font: 13px ui-monospace, Menlo, monospace; background: var(--bg3); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.7; color: var(--label2); }
+.lista td, .lista th { padding: 10px 8px; border-bottom: .5px solid var(--sep); text-align: left; font-size: 14px; } .lista th { color: var(--label2); font-weight: 500; font-size: 12px; }
+.lista { width: 100%; border-collapse: collapse; }
+@media (max-width: 900px) { .app { grid-template-columns: 1fr; } nav.lado { flex-direction: row; overflow-x: auto; } nav.lado small, nav.lado .marca { display: none; } .g2, .g3, .g4 { grid-template-columns: 1fr; } main { padding: 20px 16px; } }
+/* ---- Fase 12: mídia real ---- */
+.fotoA { background: linear-gradient(160deg,#c9b79c 0%,#8a6f4e 45%,#3b2f25 100%); }
+.fotoB { background: linear-gradient(200deg,#9ec5e8 0%,#4f7fa8 50%,#1f3347 100%); }
+.fotoC { background: linear-gradient(140deg,#e8d6c0 0%,#b88a5a 55%,#5a3a22 100%); }
+.fotoD { background: linear-gradient(180deg,#d7e3d0 0%,#7f9d72 50%,#2f3f2a 100%); }
+.fotoE { background: linear-gradient(170deg,#f3c7a0 0%,#d07a4a 50%,#4a2414 100%); }
+.ia { background: linear-gradient(150deg,#b8c4ff 0%,#6d5df0 50%,#24135f 100%); }
+.tpl { background: linear-gradient(160deg,#0b1220,#0a4fd6); }
+.mini { position: relative; border-radius: 12px; overflow: hidden; }
+.mini .tag { position: absolute; left: 6px; top: 6px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; }
+.mini .play { position: absolute; inset: 0; display: grid; place-items: center; font-size: 26px; color: rgba(255,255,255,.9); text-shadow: 0 2px 8px rgba(0,0,0,.5); }
+.mini .faixa { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px; background: linear-gradient(transparent, rgba(0,0,0,.75)); font-weight: 700; font-size: 13px; line-height: 1.25; }
+.tira { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.tira .mini { flex: none; width: 96px; aspect-ratio: 4/5; cursor: pointer; }
+.tira .mini.sel { outline: 3px solid var(--blue); outline-offset: 2px; }
+.tira .mais { flex: none; width: 96px; aspect-ratio: 4/5; border-radius: 12px; border: 1.5px dashed var(--sep); display: grid; place-items: center; color: var(--label2); font-size: 28px; }
+.palco { aspect-ratio: 4/5; max-width: 420px; margin: 0 auto; }
+.palco .faixa { font-size: 26px; padding: 28px 24px 22px; }
+.palco .faixa small { display: block; font-size: 15px; font-weight: 500; margin-top: 6px; color: rgba(255,255,255,.85); }
+.seg { display: inline-flex; background: var(--fill); border-radius: 10px; padding: 2px; gap: 2px; flex-wrap: wrap; }
+.seg span { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--label2); cursor: pointer; }
+.seg span.on { background: #636366; color: #fff; }
+.banco { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.banco .mini { aspect-ratio: 1; }
+.banco .mini.sel::after { content: "✓"; position: absolute; right: 6px; top: 6px; width: 22px; height: 22px; border-radius: 50%; background: var(--blue); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.linha { display: flex; gap: 6px; align-items: stretch; overflow-x: auto; padding: 8px 0; }
+.cena { flex: none; border-radius: 10px; position: relative; height: 74px; overflow: hidden; }
+.cena small { position: absolute; left: 6px; bottom: 5px; font-size: 11px; font-weight: 700; text-shadow: 0 1px 3px #000; }
+.trilha { height: 30px; border-radius: 8px; background: repeating-linear-gradient(90deg, rgba(48,209,88,.55) 0 3px, transparent 3px 6px); }
+.regua { display: flex; justify-content: space-between; font-size: 11px; color: var(--label3); }
+.celular { width: 260px; aspect-ratio: 9/16; border-radius: 30px; overflow: hidden; position: relative; margin: 0 auto; border: 6px solid #2c2c2e; }
+.celular .txt { position: absolute; left: 16px; right: 16px; font-weight: 800; font-size: 22px; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.celular .logo { position: absolute; right: 12px; top: 14px; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #0a4fd6; display: grid; place-items: center; font: 800 9px var(--font); }
+.prog { height: 8px; border-radius: 99px; background: var(--fill); overflow: hidden; } .prog i { display: block; height: 100%; width: 62%; background: var(--blue); border-radius: 99px; }
+.tipos .card { padding: 0; overflow: hidden; } .tipos .capa { height: 120px; display: grid; place-items: center; font-size: 34px; } .tipos .corpo { padding: 16px; }
+.storybar { display: flex; gap: 4px; position: absolute; top: 8px; left: 10px; right: 10px; } .storybar i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.45); } .storybar i.on { background: #fff; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="lado" aria-label="Telas do mockup">
+    <div class="marca"><i>WSA</i>Estúdio imobinsta</div>
+    <small>MOCKUP · FASE 12 · MÍDIA REAL</small>
+    <button data-p="criar" aria-current="page"><span class="t" style="background:var(--blue)">＋</span>Criar</button>
+    <button data-p="carrossel"><span class="t" style="background:var(--pink)">▦</span>Post e carrossel<span class="novo">NOVO</span></button>
+    <button data-p="reels"><span class="t" style="background:var(--purple)">▶︎</span>Reels / vídeo<span class="novo">NOVO</span></button>
+    <button data-p="stories"><span class="t" style="background:var(--orange)">◎</span>Stories<span class="novo">NOVO</span></button>
+    <small>RESUMO</small>
+    <button data-p="limites"><span class="t" style="background:var(--indigo)">✓</span>O que é possível</button>
+  </nav>
+
+  <main>
+    <!-- ================= CRIAR ================= -->
+    <section class="pag on" id="criar">
+      <div class="cab"><span class="t" style="background:var(--blue)">＋</span><div><h1>O que você quer criar?</h1><p>Agora com as suas fotos e vídeos, não só com templates de texto</p></div></div>
+      <div class="grid g3 tipos">
+        <div class="card" data-ir="carrossel" style="cursor:pointer;outline:2px solid var(--blue)"><div class="capa fotoA">▦</div><div class="corpo"><h3>Post e carrossel</h3><p class="mut peq">Fotos e vídeos do Banco de mídias em tela cheia, com texto por cima se quiser. Mistura foto, vídeo, imagem por IA e template no mesmo carrossel.</p><span class="badge ok">Grátis</span> <span class="badge neu">até 10 itens</span></div></div>
+        <div class="card" data-ir="reels" style="cursor:pointer;outline:2px solid var(--purple)"><div class="capa fotoB">▶︎</div><div class="corpo"><h3>Reels / vídeo</h3><p class="mut peq">Monte o vídeo com suas fotos (com movimento) e vídeos: corte, texto por cena, trilha e logo. O MP4 sai no próprio navegador.</p><span class="badge ok">Grátis · no navegador</span></div></div>
+        <div class="card" data-ir="stories" style="cursor:pointer;outline:2px solid var(--orange)"><div class="capa fotoE">◎</div><div class="corpo"><h3>Stories</h3><p class="mut peq">Sequência de stories 9:16 com foto ou vídeo e texto. Publica e agenda como os posts.</p><span class="badge ok">Grátis</span></div></div>
+        <div class="card"><div class="capa ia">✦</div><div class="corpo"><h3>Imagem gerada por IA</h3><p class="mut peq">Foto realista criada do zero. Já existe (Fase 7); agora também entra como item do carrossel, cena do Reels ou story.</p><span class="badge wait">Pago por uso · com teto</span></div></div>
+        <div class="card"><div class="capa" style="background:linear-gradient(160deg,#bf5af2,#5e5ce6)">☺︎</div><div class="corpo"><h3>Vídeo narrado com avatar</h3><p class="mut peq">Continua igual (HeyGen) ou pelo Google Vids (grátis).</p><span class="badge wait">Pago · ou Vids grátis</span></div></div>
+        <div class="card"><div class="capa tpl" style="font-size:20px;font-weight:800">WSA</div><div class="corpo"><h3>Só template (texto)</h3><p class="mut peq">O editor de hoje, para quem quer arte só com texto e cores da marca.</p><span class="badge ok">Grátis</span></div></div>
+      </div>
+    </section>
+
+    <!-- ================= CARROSSEL ================= -->
+    <section class="pag" id="carrossel">
+      <div class="cab"><span class="t" style="background:var(--pink)">▦</span><div><h1>Post e carrossel</h1><p>Cada item pode ser foto, vídeo, imagem por IA ou template</p></div>
+        <div class="acoes"><button class="b s">Escrever textos com IA</button><button class="b p">Continuar para publicar</button></div></div>
+      <p class="ex">Exemplo · as cores representam fotos do seu Banco de mídias</p>
+      <div class="grid" style="grid-template-columns:1fr 360px;align-items:start">
+        <div class="card">
+          <div class="tira">
+            <div class="mini fotoA sel"><span class="tag">FOTO</span><div class="faixa">Seu ERP fala com o RM?</div></div>
+            <div class="mini fotoB"><span class="tag">VÍDEO 0:12</span><span class="play">▶</span></div>
+            <div class="mini fotoC"><span class="tag">FOTO</span></div>
+            <div class="mini ia"><span class="tag">IA</span><div class="faixa">Tudo num lugar</div></div>
+            <div class="mini tpl"><span class="tag">TEMPLATE</span><div class="faixa">Comente QUERO</div></div>
+            <div class="mais">＋</div>
+          </div>
+          <div class="mini palco fotoA" style="margin-top:14px"><span class="tag">1 de 5 · 1080 × 1350</span>
+            <div class="faixa">Seu ERP fala com o TOTVS RM?<small>Sem planilha no meio do caminho.</small></div></div>
+          <p class="mut peq" style="text-align:center;margin-top:10px">Arraste a foto para enquadrar · clique no texto para editar</p>
+        </div>
+        <div class="grid">
+          <div class="card"><h3>Item 1 · foto</h3>
+            <p class="mut peq" style="margin:10px 0 6px">Texto na imagem</p>
+            <div class="seg"><span>Sem texto</span><span class="on">Faixa embaixo</span><span>Centro</span><span>Topo</span></div>
+            <p class="mut peq" style="margin:14px 0 6px">Formato</p>
+            <div class="seg"><span class="on">4:5 retrato</span><span>1:1</span><span>Original</span></div>
+            <p class="mut peq" style="margin:14px 0 6px">Ajustes</p>
+            <div class="seg"><span class="on">Escurecer para ler</span><span>Logo no canto</span></div>
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="b s">Trocar foto</button><button class="b s">Gerar por IA</button></div>
+          </div>
+          <div class="card"><div style="display:flex;align-items:center"><h3>Banco de mídias</h3><span class="mut peq" style="margin-left:auto">Pasta: Ecossistema ▾</span></div>
+            <div class="seg" style="margin:10px 0"><span class="on">Fotos</span><span>Vídeos</span><span>Logos</span><span>Marca</span><span>Vids</span></div>
+            <div class="banco">
+              <div class="mini fotoA sel"></div><div class="mini fotoC"></div><div class="mini fotoD"></div><div class="mini fotoE"></div>
+              <div class="mini fotoB"><span class="play" style="font-size:16px">▶</span></div><div class="mini ia"></div><div class="mini fotoD"></div><div class="mini fotoC"></div>
+            </div>
+            <button class="b s" style="margin-top:12px;width:100%;justify-content:center">Enviar do computador</button>
+          </div>
+        </div>
+      </div>
+      <div class="nota" style="margin-top:16px"><span>ℹ︎</span><div><b>Vídeo no carrossel:</b> entra como está (sem texto por cima) na primeira etapa. Texto sobre vídeo usa o motor de vídeo da etapa 12.2.</div></div>
+    </section>
+
+    <!-- ================= REELS ================= -->
+    <section class="pag" id="reels">
+      <div class="cab"><span class="t" style="background:var(--purple)">▶︎</span><div><h1>Reels / vídeo</h1><p>Monte com suas fotos e vídeos · o MP4 é gerado no seu navegador</p></div>
+        <div class="acoes"><button class="b s">Roteiro com IA</button><button class="b v">Gerar MP4</button></div></div>
+      <p class="ex">Exemplo</p>
+      <div class="grid" style="grid-template-columns:300px 1fr;align-items:start">
+        <div class="card">
+          <div class="celular fotoA"><div class="logo">WSA</div><div class="txt" style="bottom:90px">Seu financeiro ainda vive de planilha?</div></div>
+          <div class="regua" style="margin-top:10px"><span>0:03</span><span>cena 1 de 5</span><span>0:24</span></div>
+        </div>
+        <div class="grid">
+          <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h3>Linha do tempo</h3>
+              <div class="seg" style="margin-left:auto"><span class="on">Reels 9:16</span><span>Story 9:16</span><span>Feed 4:5</span></div></div>
+            <div class="linha">
+              <div class="cena fotoA" style="width:120px;outline:3px solid var(--blue)"><small>Foto · 4 s · zoom</small></div>
+              <div class="cena fotoB" style="width:180px"><small>Vídeo · 6 s (corte 0:02–0:08)</small></div>
+              <div class="cena fotoC" style="width:120px"><small>Foto · 4 s</small></div>
+              <div class="cena ia" style="width:120px"><small>IA · 4 s</small></div>
+              <div class="cena tpl" style="width:150px"><small>CTA · 5 s</small></div>
+              <div class="cena" style="width:60px;border:1.5px dashed var(--sep);display:grid;place-items:center;color:var(--label2)">＋</div>
+            </div>
+            <div class="trilha"></div>
+            <div class="regua" style="margin-top:4px"><span>Trilha: "Corporate leve" (Banco · Trilhas)</span><span>Total 0:23</span></div>
+          </div>
+          <div class="grid g2">
+            <div class="card"><h3>Cena 1 · foto</h3>
+              <p class="mut peq" style="margin:10px 0 6px">Texto da cena</p>
+              <input class="campo" value="Seu financeiro ainda vive de planilha?" />
+              <p class="mut peq" style="margin:12px 0 6px">Movimento</p>
+              <div class="seg"><span class="on">Zoom lento</span><span>Panorâmica</span><span>Parado</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Duração</p>
+              <div class="seg"><span>3 s</span><span class="on">4 s</span><span>5 s</span><span>6 s</span></div>
+            </div>
+            <div class="card"><h3>Vídeo inteiro</h3>
+              <p class="mut peq" style="margin:10px 0 6px">Transição</p>
+              <div class="seg"><span class="on">Corte seco</span><span>Esmaecer</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Extras</p>
+              <div class="seg"><span class="on">Logo no canto</span><span class="on">Legenda grande</span><span>Som do vídeo</span></div>
+              <p class="mut peq" style="margin:12px 0 6px">Gerando MP4 · 1080 × 1920 · 30 fps</p>
+              <div class="prog"><i></i></div>
+              <p class="mut" style="font-size:12px;margin:6px 0 0">62% · não feche a aba. Funciona no Chrome e no Edge.</p>
+            </div>
+          </div>
+          <div class="nota"><span>➜</span><div>Pronto, o MP4 vai para o <b>Banco de mídias (pasta Reels)</b> e segue para <b>Publicar</b> com a legenda e a automação "QUERO", como o vídeo do avatar.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= STORIES ================= -->
+    <section class="pag" id="stories">
+      <div class="cab"><span class="t" style="background:var(--orange)">◎</span><div><h1>Stories</h1><p>Sequência de stories 9:16 com foto ou vídeo</p></div>
+        <div class="acoes"><button class="b s">Agendar</button><button class="b p">Publicar agora</button></div></div>
+      <p class="ex">Exemplo</p>
+      <div class="grid" style="grid-template-columns:repeat(4, 1fr);align-items:start">
+        <div><div class="celular fotoE" style="width:100%"><div class="storybar"><i class="on"></i><i></i><i></i></div><div class="txt" style="top:40%">Bastidores de hoje 👀</div></div><p class="peq mut" style="text-align:center">1 · foto + texto</p></div>
+        <div><div class="celular fotoB" style="width:100%"><div class="storybar"><i class="on"></i><i class="on"></i><i></i></div><span class="mini play" style="position:absolute;inset:0;display:grid;place-items:center;font-size:30px">▶</span></div><p class="peq mut" style="text-align:center">2 · vídeo 0:12</p></div>
+        <div><div class="celular tpl" style="width:100%"><div class="storybar"><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="txt" style="top:38%">Comente QUERO no último post</div></div><p class="peq mut" style="text-align:center">3 · template</p></div>
+        <div style="display:grid;place-items:center;aspect-ratio:9/16;border:1.5px dashed var(--sep);border-radius:30px;color:var(--label2);font-size:30px">＋</div>
+      </div>
+      <div class="nota" style="margin-top:16px"><span>ℹ︎</span><div><b>Limite da API da Meta:</b> enquete, link, contagem regressiva e menção não podem ser colocados pela API. O story sai com a imagem/vídeo e o texto desenhado nele. Para link, use o story manual pelo app.</div></div>
+    </section>
+
+    <!-- ================= LIMITES ================= -->
+    <section class="pag" id="limites">
+      <div class="cab"><span class="t" style="background:var(--indigo)">✓</span><div><h1>O que é possível</h1><p>Fase 12 · custo R$ 0 (a IA de imagem continua opcional e paga)</p></div></div>
+      <div class="card"><table class="lista">
+        <tr><th>Recurso</th><th>Como</th><th>Custo</th><th>Etapa</th></tr>
+        <tr><td><b>Foto do Banco no post/carrossel</b></td><td>Foto em tela cheia, enquadrada, com texto opcional; o PNG sai no navegador como hoje</td><td><span class="badge ok">R$ 0</span></td><td>12.1</td></tr>
+        <tr><td><b>Vídeo no carrossel</b></td><td>Vídeo do Banco como item do carrossel (API da Meta aceita mistura)</td><td><span class="badge ok">R$ 0</span></td><td>12.1</td></tr>
+        <tr><td><b>Imagem por IA como item</b></td><td>Reaproveita a Fase 7 dentro do carrossel</td><td><span class="badge wait">pago · teto</span></td><td>12.1</td></tr>
+        <tr><td><b>Reels montado</b></td><td>Motor de vídeo no navegador (WebCodecs): fotos com movimento, cortes, texto, trilha, logo</td><td><span class="badge ok">R$ 0</span></td><td>12.2</td></tr>
+        <tr><td><b>Stories</b></td><td>Foto ou vídeo 9:16 com texto; publicar e agendar (tipo STORIES da API)</td><td><span class="badge ok">R$ 0</span></td><td>12.3</td></tr>
+        <tr><td><b>IA escolhe e escreve</b></td><td>Gemini sugere ordem das fotos e o texto de cada item/cena a partir do DNA</td><td><span class="badge ok">cota Gemini</span></td><td>12.4</td></tr>
+        <tr><td>Figurinhas de story (link, enquete)</td><td>Não existe na API da Meta</td><td><span class="badge no">não</span></td><td>—</td></tr>
+      </table></div>
+      <div class="nota" style="margin-top:16px"><span>⚖︎</span><div>Substitui a <b>Fase 8 (Remotion no seu PC)</b>: o vídeo passa a ser gerado no navegador, sem instalar nada. Vídeos longos (acima de ~90 s) seguem pelo Google Vids (Fase 11).</div></div>
+    </section>
+  </main>
+</div>
+<script>
+  const ir = (p) => {
+    document.querySelectorAll(".pag").forEach((s) => s.classList.toggle("on", s.id === p));
+    document.querySelectorAll("nav.lado button").forEach((b) => b.setAttribute("aria-current", b.dataset.p === p ? "page" : "false"));
+    scrollTo(0, 0);
+  };
+  document.querySelectorAll("nav.lado [data-p]").forEach((b) => b.addEventListener("click", () => ir(b.dataset.p)));
+  document.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => ir(b.dataset.ir)));
+  document.querySelectorAll(".seg").forEach((g) => g.addEventListener("click", (e) => { if (e.target.tagName === "SPAN") { g.querySelectorAll("span").forEach((s) => s.classList.remove("on")); e.target.classList.add("on"); } }));
+</script>
+</body>
+</html>
