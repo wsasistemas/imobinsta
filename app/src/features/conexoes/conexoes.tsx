@@ -100,8 +100,9 @@ export function Conexoes() {
     },
   });
 
-  // O Google aparece na seção "Google · grátis", não na grade.
-  const lista = (data ?? []).filter((c) => c.provedor !== "google").sort((a, b) => ORDEM.indexOf(a.provedor) - ORDEM.indexOf(b.provedor));
+  // O Google aparece na seção "Google · grátis", não na grade. Provedor que este front não conhece (migration
+  // aplicada antes do deploy) é ignorado, em vez de derrubar a tela.
+  const lista = (data ?? []).filter((c) => c.provedor !== "google" && c.provedor in VISUAL).sort((a, b) => ORDEM.indexOf(a.provedor) - ORDEM.indexOf(b.provedor));
   const google = data?.find((c) => c.provedor === "google");
 
   return (
