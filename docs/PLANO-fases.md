@@ -201,12 +201,22 @@ e quebraria a publicação num banco sem essas colunas. Em 27/10 a produção fi
 
 ## Fase 9: Radar de prospecção
 
-- [ ] Confirmar a busca por hashtag no tipo de app da Meta escolhido (PRD pergunta 2)
-- [ ] Migration `radar_hashtags` e `radar_oportunidades`
-- [ ] `ig-hashtag`: busca semanal (até 30 hashtags), guarda permalink e legenda
-- [ ] `ia-texto`: classifica a dor, o produto WSA e sugere um comentário
-- [ ] Tela Radar igual ao mockup, com "Copiar e abrir post" e limite de 20 por dia
-- [ ] **Nenhum envio automático** de comentário ou DM
+- [ ] Confirmar a busca por hashtag no app da Meta (Facebook Login for Business, modo Desenvolvimento): primeiro "Buscar
+  agora" real (Wagner). Se a Meta recusar, a tela mostra o erro na hashtag (recurso Instagram Public Content Access)
+- [x] Migration `20261028010000_fase9_radar.sql`: `radar_hashtags` (até 30 ativas, trigger) e `radar_oportunidades`, RLS por
+  membro, RPC `radar_contato` (20 por dia e 3 min entre contatos, no servidor), retenção de 30 dias (LGPD, decisão do
+  Wagner em 28/10: apaga o que tem mais de 30 dias; dos contatos fica só o link) e pg_cron (busca segunda 07:00, limpeza
+  diária). PGlite 23/23 + mutação detectada
+- [x] `ig-hashtag`: `ig_hashtag_search` + `top_media` + `recent_media`, até 25 novas por hashtag, ignora posts próprios;
+  botão "Buscar agora" e pg_cron semanal (mesmo segredo do sync diário)
+- [x] `ia-texto` ação `radar`: lê até 15 legendas por vez, marca relevância, dor, produto WSA e sugere o comentário
+- [x] Tela Radar igual ao mockup: hashtags (pausar, remover), abas Novas / Em contato / Descartadas, abordagem com
+  comentário editável, conteúdo para indicar (último post publicado do produto), "Copiar e abrir post" e contador do limite.
+  "Salvar na lista" do mockup virou "Descartar"/"Recuperar"
+- [x] **Nenhum envio automático** de comentário ou DM: a Meta só é lida; o comentário é colado e publicado pelo Wagner
+
+**Para ligar (Wagner):** SQL Editor: `20261028010000_fase9_radar.sql`. Publicar `ig-hashtag` (`--no-verify-jwt`) e `ia-texto`.
+Depois: Radar → adicionar hashtags → Buscar agora.
 
 ---
 

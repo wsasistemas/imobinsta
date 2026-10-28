@@ -10,6 +10,7 @@
 //   dna     { url }  (só o dono)                     → DNA da marca: cores, fontes, imagens (banco de mídias) e tom (Gemini)
 //   campanhas {}                                     → 3 campanhas sugeridas (status "sugerida")
 //   aprovar_campanha { campanha_id, inicio }         → as sugestões viram pautas no Calendário
+//   radar   {}                                       → { classificadas, restantes }  lê até 15 legendas do Radar (Fase 9)
 // Toda geração recebe o DNA da marca da conta (textoDna), se existir.
 //   chave   { chave }  (só o dono)                   → { ok }  grava a chave do Gemini no Vault
 //
@@ -648,6 +649,62 @@ Responda em JSON: {"titulo": "...", "texto": "<o que o avatar fala>", "legenda":
   return await gerarJson(ctx, Roteiro, instrucao, `Produto: ${produto}\nTema: ${tema}`);
 }
 
+// ---------- Radar de prospecção (Fase 9) -------------------------------------------------------
+
+const RADAR_LOTE = 15;
+const RadarIa = z.object({
+  itens: z.array(z.object({
+    i: z.number().int().min(0),
+    relevante: z.boolean(),
+    dor: z.string().trim().max(40),
+    produto: z.enum([...PRODUTOS, "Nenhum"]),
+    comentario: z.string().trim().max(500),
+  })),
+});
+
+/** Lê as legendas ainda não classificadas (até 15 por chamada) e grava dor, produto e comentário sugerido. */
+async function acaoRadar(ctx: Parameters<typeof gerarJson>[0]) {
+  const { data: lote, error } = await ctx.db.from("radar_oportunidades").select("id, hashtag, legenda")
+    .eq("conta_id", ctx.contaId).eq("status", "nova").is("classificado_em", null)
+    .order("criado_em", { ascending: true }).limit(RADAR_LOTE);
+  if (error) throw error;
+  if (!lote?.length) return { classificadas: 0, restantes: 0 };
+
+  const instrucao = `${MARCA}
+Você faz prospecção no Instagram para a WSA. Recebe legendas de posts públicos achados por hashtag (não sabemos quem postou).
+Para cada item:
+- "relevante": true só se quem postou parece um possível cliente (empresa ou profissional) com uma dor que um produto da WSA resolve.
+  false para: concorrente vendendo software, sorteio, spam, vaga de emprego, conteúdo pessoal sem dor de negócio, post em outro idioma.
+- "dor": rótulo curto da dor, de 2 a 4 palavras, minúsculas (ex.: "follow-up manual", "retrabalho no ERP"). Vazio se não relevante.
+- "produto": o produto da WSA que resolve, com o texto exato da lista, ou "Nenhum".
+- "comentario": se relevante, um comentário para a WSA publicar no post, em até 280 caracteres. Ele soma à conversa, mostra que leu o
+  post e soa como uma pessoa, não como anúncio. Proibido: link, "chama no direct", "manda DM", hashtag, preço, prometer resultado ou
+  inventar número, fingir que conhece a pessoa. No máximo 1 emoji. Pode terminar com um convite leve ao conteúdo do perfil
+  (ex.: "falei disso num carrossel lá no perfil"). Se não relevante, vazio.
+Produtos (texto exato): ${PRODUTOS.join(" | ")}.
+Responda em JSON: {"itens": [{"i": 0, "relevante": true, "dor": "...", "produto": "...", "comentario": "..."}]} com um item para cada legenda.`;
+  const pedido = lote.map((o, i) => `[${i}] #${o.hashtag}\n${String(o.legenda ?? "").slice(0, 700)}`).join("\n\n");
+  const r = await gerarJson(ctx, RadarIa, instrucao, pedido);
+
+  const agora = new Date().toISOString();
+  let classificadas = 0;
+  for (const item of r.itens) {
+    const o = lote[item.i];
+    if (!o) continue;
+    const relevante = item.relevante && item.produto !== "Nenhum" && item.comentario.length > 0;
+    const { error: eUp } = await ctx.db.from("radar_oportunidades").update({
+      relevante, dor: item.dor || null, produto_sugerido: item.produto === "Nenhum" ? null : item.produto,
+      comentario_sugerido: relevante ? item.comentario : null, classificado_em: agora,
+      ...(relevante ? {} : { status: "descartada" }),
+    }).eq("id", o.id).eq("conta_id", ctx.contaId);
+    if (eUp) throw eUp;
+    classificadas++;
+  }
+  const { count } = await ctx.db.from("radar_oportunidades").select("id", { count: "exact", head: true })
+    .eq("conta_id", ctx.contaId).eq("status", "nova").is("classificado_em", null);
+  return { classificadas, restantes: count ?? 0 };
+}
+
 async function acaoChave(db: Db, contaId: string, userId: string, corpo: Record<string, unknown>) {
   if ((await papelNaConta(db, contaId, userId)) !== "dono") throw new ErroUsuario("Só o dono da conta pode trocar a chave.", 403);
   const chave = z.string().trim().min(20).max(200).parse(corpo.chave);
@@ -707,6 +764,8 @@ Deno.serve(async (req) => {
         return json(await acaoCampanhas(ctx));
       case "aprovar_campanha":
         return json(await acaoAprovarCampanha(ctx, corpo));
+      case "radar":
+        return json(await acaoRadar(ctx));
       case "chave":
         return json(await acaoChave(db, contaId, user.id, corpo));
       default:

@@ -11,6 +11,7 @@ import { Calendario } from "@/features/calendario/calendario";
 import { MeusAvatares } from "@/features/avatares/avatares";
 import { MarcaDna } from "@/features/marca/marca";
 import { Campanhas } from "@/features/marca/campanhas";
+import { Radar } from "@/features/radar/radar";
 import { VideoAvatar } from "@/features/criar/avatar";
 import { Biblioteca } from "@/features/instagram/biblioteca";
 import { BancoDeMidias } from "@/features/midias/midias";
@@ -38,6 +39,7 @@ const PRONTAS: Record<string, React.ReactNode> = {
   avatares: <MeusAvatares />,
   marca: <MarcaDna />,
   campanhas: <Campanhas />,
+  radar: <Radar />,
   "criar-avatar": <VideoAvatar />,
 };
 

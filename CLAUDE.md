@@ -22,6 +22,8 @@ faltam a migration 20261027100000 e publicar a `google-drive`. Depois: pg_cron d
 Fase 12 (mídia real) aprovada em 28/10: 12.1 (fotos/vídeos do Banco no post e carrossel) no código; falta publicar a
 `ig-publicar`. 12.2 (Reels montado no navegador, `/criar/reels`, Mediabunny) no código. Próximo: 12.3 (Stories).
 A Fase 8 (Remotion) foi substituída pela 12.2.
+Fase 9 (Radar de prospecção) no código em 28/10: falta a migration 20261028010000, publicar `ig-hashtag` e `ia-texto`
+e confirmar na primeira busca real que a Meta libera a busca por hashtag.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 

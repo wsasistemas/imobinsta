@@ -186,4 +186,4 @@ Render local (PC do Wagner): Remotion CLI para Reels de fotos → upload no Stor
 | 5 | Chave Gemini: usar a que já existe em outros projetos WSA ou criar uma? | Wagner | Fase 4 |
 | 6 | Teto de gasto mensal inicial com IA paga (sugestão: US$ 30) | Wagner | Fase 7 |
 | 7 | O Chatfyre aceita chamadas de backend (MCP por HTTP) com o mesmo token do script? | Teste na Fase 5 | Fase 5 |
-| 8 | Por quanto tempo guardar oportunidades do radar com legendas de terceiros (LGPD)? | Wagner | Fase 9 |
+| 8 | Por quanto tempo guardar oportunidades do radar com legendas de terceiros (LGPD)? **Respondida em 28/10/2026: 30 dias; das que viraram contato fica só o link.** | Wagner | Fase 9 |
