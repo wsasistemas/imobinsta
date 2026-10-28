@@ -56,17 +56,27 @@ async function chaveGemini(db: Db, contaId: string) {
 
 type Uso = { promptTokenCount?: number; candidatesTokenCount?: number };
 
+// Sobrecarga do Gemini (500/503) costuma passar em segundos: tenta de novo antes de desistir.
+const ESPERAS_SOBRECARGA_MS = [2_000, 5_000];
+
 async function gemini(chave: string, instrucao: string, pedido: string) {
-  const resp = await fetch(`${GEMINI}/models/${MODELO}:generateContent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: instrucao }] },
-      contents: [{ role: "user", parts: [{ text: pedido }] }],
-      generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
-    }),
-  });
+  let resp: Response;
+  for (let tentativa = 0; ; tentativa++) {
+    resp = await fetch(`${GEMINI}/models/${MODELO}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: instrucao }] },
+        contents: [{ role: "user", parts: [{ text: pedido }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0.8 },
+      }),
+    });
+    if ((resp.status !== 503 && resp.status !== 500) || tentativa >= ESPERAS_SOBRECARGA_MS.length) break;
+    await resp.body?.cancel();
+    await new Promise((ok) => setTimeout(ok, ESPERAS_SOBRECARGA_MS[tentativa]));
+  }
   const corpo = await resp.json().catch(() => ({}));
+  if (resp.status === 503) throw new ErroUsuario("O Gemini está sobrecarregado agora (pico de uso no Google). Tente de novo em alguns minutos.", 503);
   if (resp.status === 429) throw new ErroUsuario("Cota gratuita do Gemini esgotada por agora. Tente de novo em 1 minuto.", 429);
   if (resp.status === 400 && /API key/i.test(corpo?.error?.message ?? "")) throw new ErroUsuario("Chave do Gemini inválida. Troque em Conexões e custos.", 409);
   // Recusa do Gemini (crédito, região, modelo sobrecarregado...): a mensagem dele ajuda mais que um "falha inesperada".
