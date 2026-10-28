@@ -24,6 +24,9 @@ Fase 12 (mídia real) aprovada em 28/10: 12.1 (fotos/vídeos do Banco no post e 
 A Fase 8 (Remotion) foi substituída pela 12.2.
 Fase 9 (Radar de prospecção) no código em 28/10: falta a migration 20261028010000, publicar `ig-hashtag` e `ia-texto`
 e confirmar na primeira busca real que a Meta libera a busca por hashtag.
+HeyGen migrada para a API v3 em 28/10 (as v1/v2 são desligadas em 01/11/2026): publicar `ia-avatar` e `ia-imagem` ANTES de 01/11.
+Fases 13 (vídeo com avatar + telas do sistema) e 14 (LinkedIn) propostas: `docs/PLANO-video-avatar.md` e
+`docs/mockups/video-avatar.html`, aguardando aprovação.
 Supabase: schema `imobinsta` no projeto compartilhado ikvj (`ikvjaowvpvxojvcfwnct`).
 Nunca clicar em "Reset override" na Data API do painel.
 
